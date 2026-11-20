@@ -42,8 +42,8 @@ def generar_voz(g, escenas, tmp):
     trozos = []
     if motor == "chatterbox" and Path(PY_VOZ).exists():
         pet = dict(textos=[e["texto"] for e in escenas],
-                   referencia=str(REPO / g.get("voz_referencia", "shorts/voces/narrador.wav")),
-                   expresividad=g.get("expresividad", 0.6), cfg=g.get("cfg", 0.4), salida=str(tmp / "voz"))
+                   referencia=str(REPO / g.get("voz_referencia", "shorts/voces/narrador_vivo.wav")),
+                   expresividad=g.get("expresividad", 1.0), cfg=g.get("cfg", 0.3), salida=str(tmp / "voz"))
         (tmp / "voz.json").write_text(json.dumps(pet, ensure_ascii=False), encoding="utf-8")
         subprocess.run([PY_VOZ, str(RAIZ / "voz_chatterbox.py"), str(tmp / "voz.json")], check=True)
         for i in range(len(escenas)):
@@ -56,7 +56,7 @@ def generar_voz(g, escenas, tmp):
         for e in escenas:
             trozos.append(np.concatenate([r.audio.numpy() for r in tts(e["texto"], voice=g.get("voz", "em_alex"),
                                                                        speed=g.get("velocidad", 1.1))]))
-    vel = g.get("velocidad_audio", 1.0)
+    vel = g.get("velocidad_audio", 1.1)
     audio, tiempos, t = [], [], 0.0
     for a in trozos:
         tiempos.append((t, t + len(a) / SR))

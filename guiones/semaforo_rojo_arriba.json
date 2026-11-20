@@ -7,7 +7,6 @@
     "#historia",
     "#shorts"
   ],
-  "voz": "em_alex",
   "escenas": [
     {
       "texto": "¿Por qué la luz roja del semáforo siempre está arriba?",
@@ -122,6 +121,5 @@
       ]
     }
   ],
-  "motor_voz": "chatterbox",
-  "velocidad_audio": 1.1
+  "motor_voz": "chatterbox"
 }

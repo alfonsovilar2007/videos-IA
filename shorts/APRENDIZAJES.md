@@ -11,3 +11,5 @@ Correcciones y preferencias del usuario. **Mandan sobre las reglas generales de 
 - 2026-11-20 · El escenario **no puede ser una imagen plana**: tiene que verse en 3D, con la cámara moviéndose (paralaje real) → motor3d (malla 3D a partir de la profundidad). No volver al zoom 2D.
 - 2026-11-20 · El muñeco tiene que **moverse de forma natural**: articulado, con gestos, parpadeo, respiración y al caminar → rig.py. Usar `accion: caminar` y poses variadas.
 - 2026-11-20 · La voz de Kokoro suena **demasiado robótica** → por defecto Chatterbox Multilingual con voz de referencia.
+- 2026-11-20 · Voz elegida: **C** = Chatterbox con referencia enérgica `shorts/voces/narrador_vivo.wav`, expresividad 1.0, cfg 0.3, velocidad 1.1. La quiere **viva**, no plana.
+- 2026-11-20 · El diseño del muñeco era **demasiado simple** → versión trabajada: sombreado, guantes, zapatos, mangas y pantalones con volumen, ropa con detalle.

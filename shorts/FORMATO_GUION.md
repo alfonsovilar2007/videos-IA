@@ -25,9 +25,9 @@
 | Campo | Valores |
 |---|---|
 | `motor_voz` | `chatterbox` (natural, por defecto, ~5 s por cada segundo de audio) o `kokoro` (rápida, más robótica) |
-| `voz_referencia` | Audio de 8-15 s cuya voz imita Chatterbox. Por defecto `shorts/voces/narrador.wav` |
-| `expresividad` | 0.3-0.9 (Chatterbox). Más alto, más emoción y teatralidad. Por defecto 0.6 |
-| `velocidad_audio` | 1.0-1.2. Acelera la voz sin cambiar el tono. Por defecto 1.0 |
+| `voz_referencia` | Audio de 8-15 s cuya voz imita Chatterbox. Por defecto `shorts/voces/narrador_vivo.wav` (voz C elegida por el usuario) |
+| `expresividad` | 0.3-0.9 (Chatterbox). Más alto, más emoción y teatralidad. Por defecto 1.0 |
+| `velocidad_audio` | 1.0-1.2. Acelera la voz sin cambiar el tono. Por defecto 1.1 |
 | `voz` | Solo para Kokoro: `em_alex`, `em_santa` o `ef_dora` |
 | `musica` | Ruta opcional a un MP3 libre de derechos (se mezcla bajito) |
 

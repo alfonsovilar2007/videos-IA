@@ -14,7 +14,9 @@ Animación:
 import math, random
 from functools import lru_cache
 from PIL import Image, ImageDraw
-from personaje import VESTUARIOS, TINTA, _c, _cara, _sombrero
+from personaje import VESTUARIOS
+import estilo
+from estilo import TINTA
 
 SS = 2
 G = 9                 # grosor de línea (unidades de diseño)
@@ -58,51 +60,13 @@ def _suave(t):
 @lru_cache(maxsize=256)
 def capa_cabeza(vestuario, expresion, boca, parpadeo, mirar):
     """Cabeza + cara + sombrero en su propia capa. Pivote (cuello) en (300, 625) de la capa."""
-    v = VESTUARIOS.get(vestuario, VESTUARIOS["normal"])
-    OX, OY = 0, 120
-    im = Image.new("RGBA", (600 * SS, 760 * SS), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    s = lambda *xs: [(x + (OX if i % 2 == 0 else OY)) * SS for i, x in enumerate(xs)]
-    hx, hy, hrx, hry = 300, 330, 190, 175
-    g = G * SS
-    if v.get("pelo_loco"):
-        for ang in range(-160, -10, 18):
-            a = math.radians(ang)
-            d.line(s(hx + hrx * 0.9 * math.cos(a), hy + hry * 0.9 * math.sin(a),
-                     hx + (hrx + 60) * math.cos(a), hy + (hry + 60) * math.sin(a)), fill=(150, 150, 160, 255), width=14 * SS)
-    d.ellipse(s(hx - hrx, hy - hry, hx + hrx, hy + hry), fill=(255, 255, 255, 255), outline=TINTA, width=g)
-    if not v.get("sombrero") or v.get("sombrero") in ("gorra", "gorra_policia"):
-        for i, ang in enumerate((-20, 0, 20)):
-            a = math.radians(ang - 90)
-            x0, y0 = hx + 10 * i - 10, hy - hry + 5
-            d.line(s(x0, y0, x0 + 45 * math.cos(a) + ang, y0 + 45 * math.sin(a)), fill=TINTA, width=g)
-    _cara(d, s, hx + mirar * 22, hy + 20, expresion, boca, v, parpadeo)
-    _sombrero(d, s, v.get("sombrero"), hx, hy - hry, hrx)
-    return im
+    return estilo.cabeza(vestuario, expresion, boca, parpadeo, mirar)
 
 
 @lru_cache(maxsize=64)
 def capa_cuerpo(vestuario):
     """Cuerpo en su propia capa. Pivote (cadera) en el centro de la base."""
-    v = VESTUARIOS.get(vestuario, VESTUARIOS["normal"])
-    m = 20
-    w, h = CUERPO_W + 2 * m, CUERPO_H + 2 * m
-    im = Image.new("RGBA", (w * SS, h * SS), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    s = lambda *xs: [x * SS for x in xs]
-    x0, y0, x1, y1 = m, m, m + CUERPO_W, m + CUERPO_H
-    cx = (x0 + x1) / 2
-    d.rounded_rectangle(s(x0, y0, x1, y1), radius=60 * SS, fill=_c(v["cuerpo"]), outline=TINTA, width=G * SS)
-    if v.get("rayas") or v.get("rayas_azules"):
-        col = (40, 40, 40, 255) if v.get("rayas") else (40, 70, 170, 255)
-        for y in range(y0 + 50, y1 - 20, 55):
-            d.line(s(x0 + 12, y, x1 - 12, y), fill=col, width=12 * SS)
-    if v.get("botones"):
-        for y in range(y0 + 70, y1 - 30, 60):
-            d.ellipse(s(cx - 15, y, cx + 15, y + 30), fill=TINTA)
-    if v.get("flor"):
-        d.ellipse(s(cx + 30, y0 + 40, cx + 80, y0 + 90), fill=(220, 30, 50, 255), outline=TINTA, width=4 * SS)
-    return im, (w / 2, y1 - 10)
+    return estilo.cuerpo(vestuario, CUERPO_W, CUERPO_H)
 
 
 class Personaje:
@@ -224,10 +188,9 @@ class Personaje:
             a2 = ah - ar
             fx = kx + L_PIERNA * math.sin(math.radians(a2))
             fy = min(SUELO, ky + L_PIERNA * math.cos(math.radians(a2)))
-            d.line(S(hx, cadera_y - 15, kx, ky, fx, fy), fill=TINTA, width=g, joint="curve")
-            for (x, y) in ((kx, ky),):
-                d.ellipse(S(x - G / 2, y - G / 2, x + G / 2, y + G / 2), fill=TINTA)
-            d.ellipse(S(fx - 30 + 8, fy - 15, fx + 30 + 8, fy + 18), fill=TINTA)
+            ext = estilo.EXTRA.get(self.vest, estilo.EXTRA["normal"])
+            estilo.manguera(d, [(hx, cadera_y - 15), (kx, ky), (fx, fy - 12)], 30, estilo._c(ext["pantalon"]))
+            estilo.zapato(d, fx, fy, sgn, ext["zapatos"])
 
         # cuerpo (rotado por el balanceo alrededor de la cadera)
         cuerpo, (pvx, pvy) = capa_cuerpo(self.vest)
@@ -259,9 +222,9 @@ class Personaje:
             a2 = a1 + math.radians(ae)
             hx, hy = ex + sgn * L_ANTEBRAZO * math.sin(a2), ey + L_ANTEBRAZO * math.cos(a2)
             d = ImageDraw.Draw(im)
-            d.line(S(sx, sy, ex, ey, hx, hy), fill=TINTA, width=g, joint="curve")
-            d.ellipse(S(sx - G / 2, sy - G / 2, sx + G / 2, sy + G / 2), fill=TINTA)
-            d.ellipse(S(hx - 18, hy - 18, hx + 18, hy + 18), fill=TINTA)
+            manga = estilo.oscuro(estilo._c(VESTUARIOS.get(self.vest, VESTUARIOS["normal"])["cuerpo"]), 0.9)
+            estilo.manguera(d, [(sx, sy), (ex, ey), (hx, hy)], 24, manga)
+            estilo.guante(d, hx, hy, a2, sgn)
 
         out = im.reduce(SS)
         if self.cfg.get("voltear"):
