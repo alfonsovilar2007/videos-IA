@@ -2,3 +2,4 @@ salida/
 .cache_fondos/
 tmp_test/
 __pycache__/
+node_modules/
