@@ -1,55 +1,127 @@
 {
   "titulo": "Por Qué El Rojo Siempre Va Arriba",
   "descripcion": "El motivo por el que todos los semáforos del mundo ponen la luz roja en lo más alto.",
-  "hashtags": ["#curiosidades", "#sabiasque", "#historia", "#shorts"],
+  "hashtags": [
+    "#curiosidades",
+    "#sabiasque",
+    "#historia",
+    "#shorts"
+  ],
   "voz": "em_alex",
-  "velocidad": 1.1,
   "escenas": [
     {
       "texto": "¿Por qué la luz roja del semáforo siempre está arriba?",
       "fondo": "a busy city street intersection at dusk with a tall traffic light glowing red",
-      "personajes": [{"vestuario": "conductor", "expresion": "pensativo", "pose": "normal"}]
+      "personajes": [
+        {
+          "vestuario": "conductor",
+          "expresion": "pensativo",
+          "pose": "normal"
+        }
+      ]
     },
     {
       "texto": "En los años veinte, los primeros semáforos eran un caos.",
       "fondo": "a 1920s american city street with vintage cars and old wooden traffic signals",
-      "personajes": [{"vestuario": "policia", "expresion": "asustado", "pose": "brazos_arriba"}]
+      "personajes": [
+        {
+          "vestuario": "policia",
+          "expresion": "asustado",
+          "pose": "normal"
+        }
+      ]
     },
     {
       "texto": "Cada ciudad ponía las luces como le daba la gana.",
       "fondo": "chaotic old town square with several different strange traffic lights",
-      "personajes": [{"vestuario": "caballero", "expresion": "enfadado", "pose": "jarras", "x": 0.3},
-                     {"vestuario": "conductor", "expresion": "sorprendido", "pose": "normal", "x": 0.72, "habla": false}]
+      "personajes": [
+        {
+          "vestuario": "caballero",
+          "expresion": "enfadado",
+          "pose": "jarras",
+          "x": 0.3
+        },
+        {
+          "vestuario": "conductor",
+          "expresion": "sorprendido",
+          "pose": "normal",
+          "x": 0.72,
+          "habla": false
+        }
+      ]
     },
     {
       "texto": "Y había un problema que nadie veía venir: la nieve.",
       "fondo": "snowy street at night with heavy snowfall covering a traffic light",
-      "personajes": [{"vestuario": "granjero", "expresion": "asustado", "pose": "normal"}]
+      "personajes": [
+        {
+          "vestuario": "granjero",
+          "expresion": "asustado",
+          "pose": "normal",
+          "accion": "caminar",
+          "desde": 0.25,
+          "hasta": 0.6
+        }
+      ],
+      "particulas": "nieve"
     },
     {
       "texto": "La nieve se acumula abajo, y tapaba justo la luz más importante.",
       "fondo": "close up of an old traffic light covered with thick snow on the bottom part",
-      "personajes": [{"vestuario": "obrero", "expresion": "sorprendido", "pose": "senyala"}]
+      "personajes": [
+        {
+          "vestuario": "obrero",
+          "expresion": "sorprendido",
+          "pose": "senyala"
+        }
+      ],
+      "particulas": "nieve"
     },
     {
       "texto": "Así que los ingenieros movieron el rojo arriba, donde nada lo tapa.",
       "fondo": "engineering workshop with blueprints of traffic lights on the walls",
-      "personajes": [{"vestuario": "cientifico", "expresion": "feliz", "pose": "saludo"}]
+      "personajes": [
+        {
+          "vestuario": "cientifico",
+          "expresion": "feliz",
+          "pose": "saludo"
+        }
+      ]
     },
     {
       "texto": "Pero el truco genial es otro: así un daltónico sabe qué luz es solo por su posición.",
       "fondo": "street corner on a sunny day with a modern traffic light",
-      "personajes": [{"vestuario": "normal", "expresion": "chulo", "pose": "senyala"}]
+      "personajes": [
+        {
+          "vestuario": "normal",
+          "expresion": "chulo",
+          "pose": "senyala"
+        }
+      ]
     },
     {
       "texto": "Arriba, para. Abajo, sigue. Sin necesidad de ver el color.",
       "fondo": "highway at sunset with cars waiting at a red traffic light",
-      "personajes": [{"vestuario": "conductor", "expresion": "feliz", "pose": "brazos_arriba"}]
+      "personajes": [
+        {
+          "vestuario": "conductor",
+          "expresion": "feliz",
+          "pose": "brazos_arriba"
+        }
+      ]
     },
     {
       "texto": "Y por eso, la próxima vez que pares, fíjate en por qué la luz roja siempre está arriba.",
       "fondo": "a busy city street intersection at dusk with a tall traffic light glowing red",
-      "personajes": [{"vestuario": "conductor", "expresion": "chulo", "pose": "normal"}]
+      "personajes": [
+        {
+          "vestuario": "conductor",
+          "expresion": "chulo",
+          "pose": "normal"
+        }
+      ]
     }
-  ]
+  ],
+  "motor_voz": "chatterbox",
+  "velocidad_audio": 1.1
 }

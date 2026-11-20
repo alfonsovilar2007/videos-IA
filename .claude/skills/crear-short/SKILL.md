@@ -40,13 +40,13 @@ El formato exacto está en `shorts/FORMATO_GUION.md`. Reglas:
 
 Estilo: frases cortas, lenguaje hablado, segunda persona ("fíjate", "imagina"), números escritos con letras ("mil ochocientos") para que la voz los lea bien.
 
-**Escenas:** el `fondo` es un prompt **en inglés** que describe solo el lugar (sin personas). Cambia de lugar o de plano en cada escena. Los personajes salen de `shorts/personaje.py`: elige vestuario por época y rol, y una expresión que exagere la emoción de la frase.
+**Escenas:** el `fondo` es un prompt **en inglés** que describe solo el lugar (sin personas). Evita objetos grandes en primer plano a los lados, porque se estiran al mover la cámara 3D. Cambia de lugar en cada escena y varía `camara` (avance para tensión, orbita para revelar, grua para el final). Pon `particulas: nieve` si hay nieve. Los personajes son muñecos articulados (`shorts/rig.py`): elige vestuario por época y rol, una expresión que exagere la emoción y una pose de base. Gesticulan solos al hablar. Usa `accion: caminar` cuando la frase hable de ir a algún sitio.
 
 ## 4. Genera
 ```bash
 /opt/shorts-venv/bin/python shorts/generar.py guiones/<slug>.json
 ```
-Tarda unos 10 min, sobre todo por los fondos, que tardan ~55 s cada uno y se guardan en caché. Lánzalo en segundo plano.
+Tarda unos 20-25 min: voz Chatterbox (~3 min), fondos (~55 s cada uno, se guardan en caché), escenario 3D (~5 min) y montaje. Lánzalo en segundo plano con `nohup … > log &` y revisa el log.
 
 ## 5. Revisa antes de entregar
 - Mira `salida/<slug>/vista_previa.jpg` y extrae algún fotograma más con ffmpeg si hace falta. Comprueba que el fondo encaja, que no aparecen personas ni texto raro generados por la IA y que los subtítulos no tapan caras.

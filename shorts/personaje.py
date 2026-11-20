@@ -121,7 +121,7 @@ def dibujar_personaje(vestuario="normal", expresion="neutral", boca_abierta=Fals
     return img.resize((W, H), Image.LANCZOS)
 
 
-def _cara(d, s, cx, cy, expr, boca, v):
+def _cara(d, s, cx, cy, expr, boca, v, parpadeo=False):
     g = 8 * SS
     ex = 70  # separación de ojos
     ey = cy - 25
@@ -131,7 +131,9 @@ def _cara(d, s, cx, cy, expr, boca, v):
     # ojos
     for lado in (-1, 1):
         x = cx + lado * ex
-        if expr == "feliz":
+        if parpadeo and expr not in ("feliz", "chulo"):
+            d.arc(s(x - 26, ey - 20, x + 26, ey + 12), 20, 160, fill=TINTA, width=g)
+        elif expr == "feliz":
             d.arc(s(x - 28, ey - 10, x + 28, ey + 35), 200, 340, fill=TINTA, width=g)
         elif expr == "chulo":
             d.chord(s(x - 26, ey - 26, x + 26, ey + 26), 0, 180, fill=TINTA)
@@ -162,7 +164,8 @@ def _cara(d, s, cx, cy, expr, boca, v):
     # boca
     my = cy + 70
     if boca:
-        alto = 45 if expr in ("sorprendido", "asustado", "furioso", "feliz") else 32
+        alto = 45 if expr in ("sorprendido", "asustado", "furioso", "feliz") else 34
+        alto = int(alto * (0.55 if boca == 1 else 1.0)) + 6
         d.ellipse(s(cx - 30, my - 10, cx + 30, my - 10 + alto), fill=(120, 30, 50, 255), outline=TINTA, width=6 * SS)
         d.ellipse(s(cx - 16, my + alto - 30, cx + 16, my + alto - 14), fill=(240, 110, 130, 255))
     elif expr == "feliz":

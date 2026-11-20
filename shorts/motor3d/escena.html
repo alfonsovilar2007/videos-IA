@@ -1,0 +1,137 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"http://local/three.module.js"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+
+// Convierte una imagen + su mapa de profundidad en una malla 3D vista desde la cámara original.
+// Desde la posición inicial se ve idéntica a la imagen; al mover la cámara aparece el paralaje real.
+let renderer, scene, camera, malla, particulas, cfg, anclas3d = [];
+const FOV_GEN = 58;            // campo de visión vertical supuesto de la imagen generada
+const CERCA = 3.2, LEJOS = 45; // distancias mínima y máxima de la escena
+
+function cargarImagen(url) {
+  return new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = mal; i.src = url; });
+}
+
+function leerPixeles(img, w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+  return x.getImageData(0, 0, w, h).data;
+}
+
+// distancia (a lo largo del rayo) a partir de la "disparidad" 0..1 (1 = cerca)
+const dist = d => 1 / (d * (1 / CERCA - 1 / LEJOS) + 1 / LEJOS);
+
+function puntoDesdePantalla(u, v, disp, aspecto) {
+  // u,v en 0..1 (v=0 arriba). Rayo desde el origen mirando a -Z.
+  const t = Math.tan(THREE.MathUtils.degToRad(FOV_GEN / 2));
+  const x = (u * 2 - 1) * t * aspecto, y = (1 - v * 2) * t;
+  const dir = new THREE.Vector3(x, y, -1).normalize();
+  return dir.multiplyScalar(dist(disp));
+}
+
+window.prepararEscena = async (p) => {
+  cfg = p;
+  if (!renderer) {
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+  }
+  renderer.setSize(p.ancho, p.alto);
+  scene = new THREE.Scene();
+  const img = await cargarImagen(p.imagen);
+  const dimg = await cargarImagen(p.profundidad);
+  const aspecto = img.width / img.height;
+  const GX = 180, GY = Math.round(180 / aspecto);
+  const dpx = leerPixeles(dimg, GX + 1, GY + 1);
+  const geo = new THREE.BufferGeometry();
+  const pos = [], uv = [], idx = [];
+  const dispEn = (i, j) => dpx[(j * (GX + 1) + i) * 4] / 255;
+  for (let j = 0; j <= GY; j++) for (let i = 0; i <= GX; i++) {
+    const u = i / GX, v = j / GY;
+    const P = puntoDesdePantalla(u, v, dispEn(i, j), aspecto);
+    pos.push(P.x, P.y, P.z); uv.push(u, 1 - v);
+  }
+  for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+    const a = j * (GX + 1) + i, b = a + 1, c = a + GX + 1, d = c + 1;
+    idx.push(a, c, b, b, c, d);
+  }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4; tex.needsUpdate = true;
+  malla = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex }));
+  scene.add(malla);
+  scene.background = new THREE.Color(0x000000);
+
+  // partículas flotando en 3D (polvo / nieve / chispas): refuerzan la sensación de profundidad
+  const n = p.particulas === 'nieve' ? 1400 : 500;
+  const pp = new Float32Array(n * 3);
+  for (let k = 0; k < n; k++) {
+    pp[k * 3] = (Math.random() - .5) * 8; pp[k * 3 + 1] = (Math.random() - .5) * 12; pp[k * 3 + 2] = -1.5 - Math.random() * 14;
+  }
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+  const colorP = p.particulas === 'nieve' ? 0xffffff : 0xfff1c8;
+  particulas = new THREE.Points(pg, new THREE.PointsMaterial({
+    color: colorP, size: p.particulas === 'nieve' ? 0.045 : 0.022, transparent: true,
+    opacity: p.particulas === 'ninguna' ? 0 : (p.particulas === 'nieve' ? 0.9 : 0.55), depthWrite: false
+  }));
+  scene.add(particulas);
+
+  camera = new THREE.PerspectiveCamera(FOV_GEN * 0.8, p.ancho / p.alto, 0.05, 200);
+  // anclas: puntos del suelo donde están los pies de cada personaje (en coords de pantalla originales)
+  anclas3d = (p.anclas || []).map(([u, v]) => {
+    const i = Math.min(GX, Math.max(0, Math.round(u * GX))), j = Math.min(GY, Math.max(0, Math.round(v * GY)));
+    return puntoDesdePantalla(u, v, dispEn(i, j), aspecto);
+  });
+  return { ok: true };
+};
+
+const suave = t => t * t * (3 - 2 * t);
+
+function moverCamara(t) {   // t: 0..1 a lo largo de la escena
+  const s = suave(t), m = cfg.movimiento, A = cfg.intensidad ?? 1;
+  let x = 0, y = 0, z = 0, ry = 0, rx = 0;
+  switch (m) {
+    case 'avance':     z = -1.1 * s * A; y = -0.05 * s; break;
+    case 'retroceso':  z = -1.1 * (1 - s) * A; break;
+    case 'paneo_izq':  x = (0.22 - 0.44 * s) * A; ry = (-0.025 + 0.05 * s) * A; z = -0.45; break;
+    case 'paneo_der':  x = (-0.22 + 0.44 * s) * A; ry = (0.025 - 0.05 * s) * A; z = -0.45; break;
+    case 'orbita':     { const a = (-0.5 + s) * 0.16 * A, R = 4.5; x = Math.sin(a) * R; z = -0.6 + (1 - Math.cos(a)) * R; ry = a; } break;
+    case 'grua':       y = (-0.25 + 0.5 * s) * A; rx = (0.03 - 0.06 * s) * A; z = -0.5; break;
+    default:           z = -0.8 * s * A;
+  }
+  // pequeño balanceo de "cámara en mano"
+  const tt = t * cfg.duracion;
+  x += Math.sin(tt * 1.3) * 0.012; y += Math.sin(tt * 1.7 + 1) * 0.01;
+  camera.position.set(x, y, z);
+  camera.rotation.set(rx, ry, Math.sin(tt * 0.9) * 0.003);
+}
+
+window.renderFrame = (k) => {
+  const t = cfg.frames > 1 ? k / (cfg.frames - 1) : 0;
+  moverCamara(t);
+  const tt = t * cfg.duracion;
+  const pa = particulas.geometry.attributes.position;
+  for (let i = 0; i < pa.count; i++) {
+    let y = pa.getY(i) - (cfg.particulas === 'nieve' ? 0.012 : 0.002);
+    if (y < -6) y = 6;
+    pa.setY(i, y); pa.setX(i, pa.getX(i) + Math.sin(tt + i) * 0.0015);
+  }
+  pa.needsUpdate = true;
+  camera.updateMatrixWorld();
+  renderer.render(scene, camera);
+  // proyección de cada ancla: posición en pantalla y escala relativa (para pegar el muñeco al suelo)
+  const res = anclas3d.map(P => {
+    const q = P.clone().project(camera);
+    const d0 = P.length(), d = P.distanceTo(camera.position);
+    return [(q.x + 1) / 2, (1 - q.y) / 2, d0 / d];
+  });
+  return { img: renderer.domElement.toDataURL('image/jpeg', 0.92), anclas: res };
+};
+</script></body></html>

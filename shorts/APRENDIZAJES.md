@@ -8,4 +8,6 @@ Correcciones y preferencias del usuario. **Mandan sobre las reglas generales de 
 - 2026-11-20 · Referencia de formato: @RicksClips3000 (ver `analisis/ricksclips3000/ANALISIS.md`). Se copia el formato, **no** sus personajes ni sus temas exactos.
 
 ## Correcciones
-_(vacío: aquí irán las correcciones del usuario)_
+- 2026-11-20 · El escenario **no puede ser una imagen plana**: tiene que verse en 3D, con la cámara moviéndose (paralaje real) → motor3d (malla 3D a partir de la profundidad). No volver al zoom 2D.
+- 2026-11-20 · El muñeco tiene que **moverse de forma natural**: articulado, con gestos, parpadeo, respiración y al caminar → rig.py. Usar `accion: caminar` y poses variadas.
+- 2026-11-20 · La voz de Kokoro suena **demasiado robótica** → por defecto Chatterbox Multilingual con voz de referencia.
