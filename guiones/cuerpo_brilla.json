@@ -1,46 +1,111 @@
 {
   "titulo": "Tu Cuerpo Brilla En La Oscuridad",
   "descripcion": "En 2009 unos científicos japoneses grabaron la luz que emite el cuerpo humano. Es real, pero 1000 veces más débil de lo que ve tu ojo. (Kobayashi et al., PLoS ONE, 2009)",
-  "hashtags": ["#ciencia", "#curiosidades", "#sabiasque", "#shorts"],
+  "hashtags": [
+    "#ciencia",
+    "#curiosidades",
+    "#sabiasque",
+    "#shorts"
+  ],
   "gancho": true,
   "escenas": [
     {
       "texto": "Ahora mismo, tu cuerpo está brillando en la oscuridad.",
-      "fondo": "cartoon mad scientist laboratory with a big green chalkboard full of formulas, glowing green flasks on a workbench, dark moody lighting",
+      "fondo": "empty cartoon chemistry classroom interior with a big green chalkboard covered in formulas, workbench with glowing green flasks, nobody in the room, dark moody lighting",
       "camara": "avance",
       "intensidad_camara": 1.3,
-      "personajes": [{"vestuario": "cientifico_loco", "expresion": "sorprendido", "pose": "sostener", "objeto": "matraz", "aura": [190, 255, 200]}]
+      "personajes": [
+        {
+          "vestuario": "cientifico_loco",
+          "expresion": "sorprendido",
+          "pose": "sostener",
+          "objeto": "matraz",
+          "aura": [
+            190,
+            255,
+            200
+          ]
+        }
+      ]
     },
     {
       "texto": "En dos mil nueve, unos científicos japoneses lo grabaron con cámaras especiales.",
-      "fondo": "cartoon science laboratory corner with a big vintage camera on a tripod, shelves of colorful chemicals, warm lamp light",
+      "fondo": "empty cartoon science laboratory with shelves of colorful chemical bottles, a small vintage camera on a tripod far in the background, warm lamp light",
       "camara": "orbita",
-      "personajes": [{"vestuario": "cientifico_loco", "expresion": "feliz", "pose": "sostener", "objeto": "matraz"}]
+      "personajes": [
+        {
+          "vestuario": "cientifico_loco",
+          "expresion": "feliz",
+          "pose": "sostener",
+          "objeto": "matraz"
+        }
+      ]
     },
     {
       "texto": "Y sí: todos emitimos luz visible. De verdad.",
       "fondo": "dark cartoon laboratory at night with glowing test tubes and bubbling beakers casting green light",
       "camara": "paneo_der",
       "particulas": "polvo",
-      "personajes": [{"vestuario": "cientifico_loco", "expresion": "chulo", "pose": "sostener", "objeto": "matraz", "aura": [190, 255, 200]}]
+      "personajes": [
+        {
+          "vestuario": "cientifico_loco",
+          "expresion": "chulo",
+          "pose": "sostener",
+          "objeto": "matraz",
+          "aura": [
+            190,
+            255,
+            200
+          ]
+        }
+      ]
     },
     {
       "texto": "Pero es mil veces más débil de lo que ve tu ojo.",
       "fondo": "cartoon laboratory workbench with a giant microscope and magnifying glass, blue cold lighting",
       "camara": "grua",
-      "personajes": [{"vestuario": "cientifico_loco", "expresion": "pensativo", "pose": "normal"}]
+      "personajes": [
+        {
+          "vestuario": "cientifico_loco",
+          "expresion": "pensativo",
+          "pose": "normal"
+        }
+      ]
     },
     {
       "texto": "Y lo más raro: tu cara es lo que más brilla, sobre todo por la tarde.",
       "fondo": "cartoon mad scientist lab with a tesla coil, sparks and electric glow, purple and teal lighting",
       "camara": "avance",
-      "personajes": [{"vestuario": "cientifico_loco", "expresion": "feliz", "pose": "sostener", "objeto": "matraz", "aura": [190, 255, 200]}]
+      "personajes": [
+        {
+          "vestuario": "cientifico_loco",
+          "expresion": "feliz",
+          "pose": "sostener",
+          "objeto": "matraz",
+          "aura": [
+            190,
+            255,
+            200
+          ]
+        }
+      ]
     },
     {
       "texto": "Así que sí: ahora mismo, estás brillando.",
-      "fondo": "cartoon mad scientist laboratory with a big green chalkboard full of formulas, glowing green flasks on a workbench, dark moody lighting",
+      "fondo": "empty cartoon chemistry classroom interior with a big green chalkboard covered in formulas, workbench with glowing green flasks, nobody in the room, dark moody lighting",
       "camara": "retroceso",
-      "personajes": [{"vestuario": "cientifico_loco", "expresion": "chulo", "pose": "senyala", "aura": [190, 255, 200]}]
+      "personajes": [
+        {
+          "vestuario": "cientifico_loco",
+          "expresion": "chulo",
+          "pose": "senyala",
+          "aura": [
+            190,
+            255,
+            200
+          ]
+        }
+      ]
     }
   ]
 }
