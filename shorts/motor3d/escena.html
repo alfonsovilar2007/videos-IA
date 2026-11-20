@@ -87,6 +87,7 @@ window.prepararEscena = async (p) => {
   // anclas: puntos del suelo donde están los pies de cada personaje (en coords de pantalla originales)
   // (u, v) son coordenadas de la PANTALLA FINAL en el primer fotograma: se lanza un rayo desde la cámara
   // inicial y el ancla es el punto donde toca la malla 3D (el suelo).
+  anclas3d = []; anclasD0 = [];
   moverCamara(0); camera.updateMatrixWorld();
   const rc = new THREE.Raycaster();
   anclas3d = (p.anclas || []).map(([u, v]) => {
