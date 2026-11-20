@@ -229,7 +229,7 @@ def componer_frame(k):
             s_ = min(1, (t - t0) / max(0.1, t1 - t0))
             u, v, esc = u + (u2 - u) * s_, v + (v2 - v) * s_, esc + (esc2 - esc) * s_
         im, (fx, fy) = pj.frame(t - t0, voz if p.get("habla", j == 0) else 0.0)
-        tam = p.get("escala", 1.0 if len(e.get("personajes", [])) == 1 else 0.8) * esc
+        tam = p.get("escala", 1.0 if len(e.get("personajes", [])) == 1 else 0.8) * min(1.2, max(0.8, esc))
         im = im.resize((int(im.width * tam), int(im.height * tam)), Image.BILINEAR)
         px, py = u * ANCHO - fx * tam, v * ALTO - fy * tam
         # sombra de contacto en el suelo
@@ -292,7 +292,7 @@ def render(guion_path):
         plan_esc.append(dict(imagen=str(f), profundidad=str(p), frames=int(math.ceil((b - a) * FPS)) + 1,
                              duracion=b - a, movimiento=e.get("camara", CAMARAS[i % len(CAMARAS)]),
                              intensidad=e.get("intensidad_camara", 1.0), particulas=e.get("particulas", "polvo"),
-                             anclas=anclas or [[0.5, 0.9]], salida=str(tmp / "3d" / f"{i:02d}")))
+                             anclas=anclas or [[0.5, 0.9]], seguir_idx=idx or [0], salida=str(tmp / "3d" / f"{i:02d}")))
     (tmp / "plan3d.json").write_text(json.dumps(dict(ancho=ANCHO, alto=ALTO, fps=FPS, escenas=plan_esc)))
     subprocess.run(["node", str(RAIZ / "motor3d" / "render.js"), str(tmp / "plan3d.json")], check=True)
     anclas_frames = [json.load(open(Path(pe["salida"]) / "anclas.json")) for pe in plan_esc]
