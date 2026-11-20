@@ -35,6 +35,7 @@ EXTRA = {
     "conductor":  dict(pantalon=(50, 60, 90), zapatos=(230, 230, 230), cuello="redondo"),
     "obrero":     dict(pantalon=(50, 80, 140), zapatos=(110, 70, 30), cuello="redondo", chaleco=True),
     "granjero":   dict(pantalon=(60, 100, 160), zapatos=(100, 65, 35), cuello="camisa", tirantes=True),
+    "cientifico_loco": dict(pantalon=(125, 92, 52), zapatos=(55, 50, 50), cuello="bata"),
     "doctor":     dict(pantalon=(90, 140, 160), zapatos=(240, 240, 240), cuello="solapas", bolsillo=True),
     "ninio":      dict(pantalon=(50, 90, 160), zapatos=(220, 50, 50), cuello="redondo"),
 }
@@ -96,6 +97,35 @@ def guante(d, x, y, ang, sgn, abierta=False):
     d.arc(S(x - 16, y - 16, x + 16, y + 16), 20, 160, fill=GUANTE_SOMBRA, width=5 * SS)
 
 
+def matraz(d, x, y, t, liquido=(110, 235, 90, 255)):
+    """Matraz Erlenmeyer sujeto por el cuello en (x, y), con líquido y burbujas animadas."""
+    S = lambda *xs: [v * SS for v in xs]
+    cuerpo = [x - 14, y + 30, x + 14, y + 30, x + 62, y + 140, x - 62, y + 140]
+    d.polygon(S(x - 22, y + 24, x + 22, y + 24, x + 72, y + 148, x - 72, y + 148), fill=TINTA)
+    d.rounded_rectangle(S(x - 22, y - 40, x + 22, y + 40), radius=6 * SS, fill=TINTA)
+    d.rectangle(S(x - 14, y - 34, x + 14, y + 36), fill=(225, 245, 250, 255))
+    d.polygon(S(*cuerpo), fill=(225, 245, 250, 255))
+    nivel = y + 78
+    d.polygon(S(x - 38, nivel, x + 38, nivel, x + 62, y + 140, x - 62, y + 140), fill=liquido)
+    d.line(S(x - 38, nivel, x + 38, nivel), fill=claro(liquido, 0.5), width=5 * SS)
+    for k in range(6):  # burbujas que suben
+        fase = (t * 0.9 + k * 0.37) % 1.0
+        bx = x - 30 + (k * 23) % 60 + 4 * math.sin(t * 6 + k)
+        by = y + 135 - fase * 60
+        r = 4 + (k % 3) * 2
+        if by > nivel + r:
+            d.ellipse(S(bx - r, by - r, bx + r, by + r), fill=claro(liquido, 0.55))
+    d.line(S(x - 40, y + 70, x - 54, y + 128), fill=(255, 255, 255, 200), width=5 * SS)
+    d.rounded_rectangle(S(x - 26, y - 46, x + 26, y - 34), radius=5 * SS, fill=TINTA)
+    # vapor
+    for k in range(3):
+        fase = (t * 0.6 + k / 3) % 1.0
+        vy = y - 50 - fase * 90
+        vx = x + 10 * math.sin(t * 3 + k * 2)
+        r = 8 + fase * 14
+        d.ellipse(S(vx - r, vy - r, vx + r, vy + r), fill=(200, 255, 190, int(150 * (1 - fase))))
+
+
 def zapato(d, x, y, sgn, color):
     S = lambda *xs: [v * SS for v in xs]
     cx = x + sgn * 16
@@ -123,6 +153,20 @@ def cabeza(vestuario, expr, boca, parpadeo, mirar):
                      hx + (rx + 70) * math.cos(a), hy + (ry + 70) * math.sin(a)), fill=TINTA, width=24 * SS)
             d.line(s(hx + rx * 0.85 * math.cos(a), hy + ry * 0.85 * math.sin(a),
                      hx + (rx + 65) * math.cos(a), hy + (ry + 65) * math.sin(a)), fill=(175, 175, 190, 255), width=14 * SS)
+    if v.get("pelo_pinchos"):
+        pts_o, pts_i = [], []
+        angs = list(range(-205, 26, 15))
+        for k, ang in enumerate(angs):
+            a = math.radians(ang)
+            r_ext = (95 + 25 * ((k * 7) % 3)) if k % 2 == 0 else 15
+            for lista, extra in ((pts_o, 12), (pts_i, 0)):
+                lista += [hx + (rx + r_ext + extra) * math.cos(a), hy - 10 + (ry + r_ext + extra) * math.sin(a)]
+        d.polygon(s(*pts_o), fill=TINTA)
+        d.polygon(s(*pts_i), fill=(222, 226, 236, 255))
+        for k, ang in enumerate(angs[::2]):
+            a = math.radians(ang)
+            d.line(s(hx + (rx + 10) * math.cos(a), hy + (ry + 0) * math.sin(a),
+                     hx + (rx + 70) * math.cos(a), hy - 10 + (ry + 70) * math.sin(a)), fill=(185, 190, 205, 255), width=6 * SS)
     # orejas
     for sg in (-1, 1):
         ex = hx + sg * (rx - 8)
@@ -141,7 +185,12 @@ def cabeza(vestuario, expr, boca, parpadeo, mirar):
     d.ellipse(s(hx - 120, hy - 140, hx - 60, hy - 100), fill=(255, 255, 255, 200))
     d.ellipse(s(hx - 50, hy - 150, hx - 30, hy - 132), fill=(255, 255, 255, 200))
     # mechón
-    if not v.get("sombrero") or v.get("sombrero") in ("gorra", "gorra_policia"):
+    if v.get("pelo_pinchos"):  # flequillo de pinchos sobre la frente
+        for k in range(-2, 3):
+            x0 = hx + k * 38
+            d.polygon(s(x0 - 30, hy - ry + 30, x0 + 30, hy - ry + 30, x0 + 6, hy - ry - 22), fill=TINTA)
+            d.polygon(s(x0 - 22, hy - ry + 26, x0 + 22, hy - ry + 26, x0 + 5, hy - ry - 10), fill=(222, 226, 236, 255))
+    elif not v.get("sombrero") or v.get("sombrero") in ("gorra", "gorra_policia"):
         for k, (ang, lon) in enumerate(((-28, 50), (-5, 62), (20, 46))):
             a = math.radians(ang - 90)
             x0, y0 = hx - 12 + 12 * k, hy - ry + 8
@@ -245,6 +294,22 @@ def _cara_pro(d, s, cx, cy, expr, boca, v, parp):
             d.ellipse(s(cx - 30, my - 18, cx + 30, my + 24), fill=(110, 25, 45, 255), outline=T, width=6 * SS)
         else:
             d.arc(s(cx - 28, my - 26, cx + 28, my + 6), 30, 150, fill=T, width=8 * SS)
+    if v.get("gafas_gruesas"):
+        for sg in (-1, 1):
+            x = cx + sg * ex
+            d.line(s(x + sg * 52, ey - 4, cx + sg * 182, ey - 14), fill=T, width=16 * SS)
+            d.line(s(x + sg * 52, ey - 4, cx + sg * 182, ey - 14), fill=(95, 100, 112, 255), width=8 * SS)
+            d.ellipse(s(x - 58, ey - 56, x + 58, ey + 56), fill=T)
+            d.ellipse(s(x - 50, ey - 48, x + 50, ey + 48), fill=(110, 116, 128, 255))
+            d.ellipse(s(x - 40, ey - 38, x + 40, ey + 38), fill=(235, 245, 255, 255))
+            # el ojo se vuelve a dibujar grande (efecto lupa)
+            if parp:
+                d.arc(s(x - 26, ey - 16, x + 26, ey + 14), 15, 165, fill=T, width=9 * SS)
+            else:
+                d.ellipse(s(x - 17, ey - 17, x + 17, ey + 17), fill=T)
+                d.ellipse(s(x - 9, ey - 12, x + 1, ey - 2), fill=BRILLO)
+            d.arc(s(x - 34, ey - 32, x + 6, ey), 190, 260, fill=(255, 255, 255, 255), width=6 * SS)
+        d.line(s(cx - 22, ey - 6, cx + 22, ey - 6), fill=T, width=14 * SS)
     if v.get("gafas"):
         for sg in (-1, 1):
             x = cx + sg * ex
@@ -259,7 +324,8 @@ def cuerpo(vestuario, CW_, CH_):
     v = VESTUARIOS.get(vestuario, VESTUARIOS["normal"])
     e = EXTRA.get(vestuario, EXTRA["normal"])
     m = 26
-    w, h = CW_ + 2 * m, CH_ + 2 * m
+    bata = e.get("cuello") == "bata"
+    w, h = CW_ + 2 * m, CH_ + 2 * m + (150 if bata else 0)
     im = Image.new("RGBA", (w * SS, h * SS), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     S = lambda *xs: [x * SS for x in xs]
@@ -267,6 +333,12 @@ def cuerpo(vestuario, CW_, CH_):
     cx = (x0 + x1) / 2
     col = _c(v["cuerpo"])
     B = 10
+    if bata:  # faldones de la bata (por debajo de la cadera, abiertos en el centro)
+        for sg in (-1, 1):
+            xa, xb = (x0 - 4, cx - 6) if sg < 0 else (cx + 6, x1 + 4)
+            pts = [xa, y1 - 60, xb, y1 - 60, xb + sg * 6, y1 + 135, xa - sg * 18, y1 + 128]
+            d.polygon(S(*pts), fill=(250, 250, 252, 255), outline=TINTA, width=9 * SS)
+            d.line(S(xb - sg * 30, y1, xb - sg * 26, y1 + 120), fill=(215, 218, 232, 255), width=10 * SS)
     # forma: un poco más ancha abajo (tipo bolo)
     d.rounded_rectangle(S(x0 - B, y0 - B, x1 + B, y1 + B), radius=70 * SS, fill=TINTA)
     mascara = Image.new("L", im.size, 0)
@@ -301,6 +373,18 @@ def cuerpo(vestuario, CW_, CH_):
     elif cuello == "marinero":
         dd.polygon(S(cx - 90, y0, cx + 90, y0, cx, y0 + 90), fill=(40, 70, 170, 255))
         dd.polygon(S(cx - 20, y0 + 70, cx + 20, y0 + 70, cx + 30, y0 + 110, cx - 30, y0 + 110), fill=(220, 40, 40, 255))
+    elif cuello == "bata":
+        dd.rectangle(S(cx - 44, y0, cx + 44, y1), fill=(52, 72, 118, 255))
+        dd.chord(S(cx - 46, y0 - 30, cx + 46, y0 + 26), 0, 180, fill=(40, 58, 98, 255))
+        for sg in (-1, 1):
+            dd.polygon(S(cx + sg * 44, y0, cx + sg * 100, y0, cx + sg * 72, y0 + 90, cx + sg * 44, y0 + 150),
+                       fill=(244, 245, 250, 255), outline=TINTA)
+            dd.line(S(cx + sg * 44, y0, cx + sg * 44, y1), fill=TINTA, width=6 * SS)
+        px0 = cx + 58
+        for k, cc in enumerate([(40, 80, 200, 255), (210, 50, 50, 255), (240, 140, 30, 255)]):
+            xx = px0 + 8 + k * 12
+            dd.line(S(xx, y1 - 125, xx + (6 if k == 2 else 0), y1 - 75), fill=cc, width=7 * SS)
+        dd.rectangle(S(px0, y1 - 95, px0 + 52, y1 - 45), fill=(250, 250, 252, 255), outline=TINTA, width=5 * SS)
     elif cuello == "panuelo":
         dd.polygon(S(cx - 70, y0, cx + 70, y0, cx, y0 + 80), fill=(200, 40, 40, 255), outline=TINTA)
     elif cuello == "kimono":

@@ -235,15 +235,30 @@ def componer_frame(k):
         # sombra de contacto en el suelo
         sw, sh = 190 * tam, 38 * tam
         ds.ellipse((u * ANCHO - sw, v * ALTO - sh, u * ANCHO + sw, v * ALTO + sh * 0.7), fill=(0, 0, 0, 110))
-        sprites.append((v, im, int(px), int(py)))
+        aura = None
+        if p.get("aura"):
+            r_, g_, b_ = p["aura"]
+            pulso = 0.65 + 0.35 * math.sin((t - t0) * 4)
+            a = im.getchannel("A").filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(28))
+            aura = Image.new("RGBA", im.size, (r_, g_, b_, 255))
+            aura.putalpha(a.point(lambda x: int(min(255, x * 1.6) * pulso)))
+        sprites.append((v, im, int(px), int(py), aura))
     fondo.alpha_composite(capa.filter(ImageFilter.GaussianBlur(12)))
-    for _, im, px, py in sorted(sprites, key=lambda s: s[0]):  # el más cercano (más abajo) delante
+    for _, im, px, py, aura in sorted(sprites, key=lambda s: s[0]):  # el más cercano (más abajo) delante
+        if aura is not None:
+            fondo.alpha_composite(aura, (px, py))
         fondo.alpha_composite(im, (px, py))
     # subtítulo
     pal = W["palabras"]
     iw = max([i for i, (a, _, _) in enumerate(pal) if a <= t] or [0])
     if pal[iw][0] <= t <= pal[iw][1] + 0.25:
         dibujar_palabra(fondo, pal[iw][2], t - pal[iw][0])
+    # mega gancho: golpe de zoom en los primeros 0,4 s
+    if W["gancho"] and t < 0.4:
+        z = 1 + 0.28 * (1 - t / 0.4) ** 2
+        w2, h2 = int(ANCHO / z), int(ALTO / z)
+        x0, y0 = (ANCHO - w2) // 2, int((ALTO - h2) * 0.4)
+        fondo = fondo.crop((x0, y0, x0 + w2, y0 + h2)).resize((ANCHO, ALTO), Image.BILINEAR)
     # destello suave en cada corte
     if ie > 0 and t - t0 < 0.08:
         fondo = Image.blend(fondo, Image.new("RGBA", fondo.size, (255, 255, 255, 255)), 0.35 * (1 - (t - t0) / 0.08))
@@ -308,7 +323,7 @@ def render(guion_path):
     log(f"5/6 componiendo {nfr} frames en paralelo…")
     dirout = tmp / "frames"; dirout.mkdir()
     estado = dict(escenas=escenas, limites=limites, palabras=palabras, anclas=anclas_frames, indice_ancla=indice_ancla,
-                  nframes=[pe["frames"] for pe in plan_esc], voz=voz.tolist(), dir3d=str(tmp / "3d"), dirout=str(dirout))
+                  nframes=[pe["frames"] for pe in plan_esc], voz=voz.tolist(), gancho=g.get("gancho", True), dir3d=str(tmp / "3d"), dirout=str(dirout))
     with Pool(os.cpu_count() or 4, initializer=_ini_worker, initargs=(estado,)) as pool:
         for n, _ in enumerate(pool.imap_unordered(componer_frame, range(nfr), chunksize=8)):
             if n % 150 == 0:
@@ -320,6 +335,10 @@ def render(guion_path):
     wh = whoosh()
     for t0, _ in limites[1:]:
         i = max(0, int((t0 - 0.2) * SR)); mezcla[i:i + len(wh)] += wh[:len(mezcla) - i]
+    if g.get("gancho", True):
+        n = int(0.6 * SR); tt = np.arange(n) / SR
+        boom = np.sin(2 * np.pi * (35 + 90 * np.exp(-tt * 9)) * tt) * np.exp(-tt * 5) * 0.5
+        mezcla[:n] += boom.astype(np.float32)
     sf.write(tmp / "audio.wav", mezcla, SR)
     musica = g.get("musica")
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS), "-i", str(dirout / "%05d.jpg"),

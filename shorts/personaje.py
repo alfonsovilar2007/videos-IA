@@ -40,6 +40,7 @@ VESTUARIOS = {
     "obrero":      dict(cuerpo=(250, 160, 30), sombrero="casco_obra"),
     "granjero":    dict(cuerpo=(60, 110, 170), sombrero="paja"),
     "doctor":      dict(cuerpo=(250, 250, 250), sombrero=None, gafas=True),
+    "cientifico_loco": dict(cuerpo=(250, 250, 252), sombrero=None, gafas_gruesas=True, pelo_pinchos=True),
     "ninio":       dict(cuerpo=(240, 200, 50), sombrero="gorra"),
 }
 

@@ -29,6 +29,7 @@
 | `expresividad` | 0.3-0.9 (Chatterbox). Más alto, más emoción y teatralidad. Por defecto 1.0 |
 | `velocidad_audio` | 1.0-1.2. Acelera la voz sin cambiar el tono. Por defecto 1.1 |
 | `voz` | Solo para Kokoro: `em_alex`, `em_santa` o `ef_dora` |
+| `gancho` | `true` (por defecto): golpe de zoom y "boom" grave en el primer instante |
 | `musica` | Ruta opcional a un MP3 libre de derechos (se mezcla bajito) |
 
 ## Campos de cada escena
@@ -41,13 +42,15 @@
 ## Campos de cada personaje
 | Campo | Valores |
 |---|---|
-| `vestuario` | normal, preso, policia, guardia, millonario, caballero, minero, vaquero, soldado, general, marinero, capitan, samurai, rey, cientifico, conductor, obrero, granjero, doctor, ninio |
+| `vestuario` | normal, preso, policia, guardia, millonario, caballero, minero, vaquero, soldado, general, marinero, capitan, samurai, rey, cientifico, conductor, obrero, granjero, doctor, ninio, **cientifico_loco** (personaje recurrente) |
 | `expresion` | neutral, feliz, chulo, enfadado, furioso (ojos rojos), sorprendido, triste, asustado, pensativo |
-| `pose` | Pose de base a la que vuelve tras cada gesto: normal, saludo (saluda con la mano), senyala, brazos_arriba, jarras, pensar, cruzados |
+| `pose` | Pose de base a la que vuelve tras cada gesto: normal, saludo (saluda con la mano), senyala, brazos_arriba, jarras, pensar, cruzados, sostener (mano derecha en alto, para objetos) |
 | `accion` | `caminar`: cruza la escena de `desde` a `hasta` (posiciones x de 0 a 1) |
 | `x`, `y` | Dónde están sus pies en la imagen (0-1). `y` 0.9 por defecto. Se quedan pegados al suelo 3D |
 | `escala` | Tamaño (1.0 con un personaje, 0.8 con varios) |
 | `habla` | `true` si mueve la boca y gesticula con la voz (por defecto el primero) |
+| `objeto` | `matraz`: lo sujeta en la mano derecha (usar con `pose: sostener`); gesticula con la otra |
+| `aura` | Color `[r, g, b]` de un halo brillante pulsante alrededor del personaje |
 | `voltear` | `true` para que mire al otro lado |
 | `mirar` | -1, 0 o 1: desvío fijo de la mirada (además del movimiento natural de los ojos) |
 

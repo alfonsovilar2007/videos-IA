@@ -13,3 +13,6 @@ Correcciones y preferencias del usuario. **Mandan sobre las reglas generales de 
 - 2026-11-20 · La voz de Kokoro suena **demasiado robótica** → por defecto Chatterbox Multilingual con voz de referencia.
 - 2026-11-20 · Voz elegida: **C** = Chatterbox con referencia enérgica `shorts/voces/narrador_vivo.wav`, expresividad 1.0, cfg 0.3, velocidad 1.1. La quiere **viva**, no plana.
 - 2026-11-20 · El diseño del muñeco era **demasiado simple** → versión trabajada: sombreado, guantes, zapatos, mangas y pantalones con volumen, ropa con detalle.
+- 2026-11-20 · Personaje recurrente: **científico loco propio** (`vestuario: cientifico_loco`, pelo de pinchos, gafas gruesas, bata, `objeto: matraz`). El usuario pasó una imagen de Rick (Rick y Morty): **no copiar personajes con copyright**, solo el arquetipo.
+- 2026-11-20 · Fórmula pedida: fondo de **laboratorio** aunque el dato no sea de laboratorio (mini gancho visual) + **mega gancho** en la primera frase (afirmación imposible sobre el espectador: "ahora mismo tu cuerpo…") + `gancho: true` (golpe de zoom y boom).
+- 2026-11-20 · Duración pedida: **20 s** (≈ 55-60 palabras, 6 escenas).

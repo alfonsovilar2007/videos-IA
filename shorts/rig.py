@@ -35,6 +35,7 @@ POSES = {
     "jarras":        {"izq": (62, -132), "der": (62, -132)},
     "pensar":        {"izq": (62, -132), "der": (40, -150)},
     "cruzados":      {"izq": (30, -120), "der": (30, -120)},
+    "sostener":      {"izq": (18, 8),    "der": (100, 55)},
 }
 GESTOS = [
     {"der": (75, 55)},                       # explicar con una mano
@@ -93,7 +94,10 @@ class Personaje:
                 importante = len(w.strip("¿?¡!.,;:")) >= 7 or w[-1:] in "?!" or w[:1] in "¿¡"
                 if tp - ultimo > 1.0 and (importante or rng.random() < 0.18):
                     previo = self._brazos_en(tp)
-                    self.eventos.append((tp, previo, rng.choice(GESTOS)))
+                    gesto = rng.choice(GESTOS)
+                    if cfg.get("objeto"):  # la mano del objeto no gesticula: el gesto pasa a la otra
+                        gesto = {"izq": gesto.get("izq", gesto.get("der"))}
+                    self.eventos.append((tp, previo, gesto))
                     ultimo = tp
         # mirada: [(t, objetivo)]
         self.miradas, t, ant = [(0.0, 0.0)], rng.uniform(1.0, 2.5), 0.0
@@ -224,6 +228,10 @@ class Personaje:
             d = ImageDraw.Draw(im)
             manga = estilo.oscuro(estilo._c(VESTUARIOS.get(self.vest, VESTUARIOS["normal"])["cuerpo"]), 0.9)
             estilo.manguera(d, [(sx, sy), (ex, ey), (hx, hy)], 24, manga)
+            if lado == "der" and self.cfg.get("objeto") == "matraz":
+                gx = hx + sgn * math.sin(a2) * 22
+                gy = hy + math.cos(a2) * 22
+                estilo.matraz(d, gx, gy - 20, t)
             estilo.guante(d, hx, hy, a2, sgn)
 
         out = im.reduce(SS)
