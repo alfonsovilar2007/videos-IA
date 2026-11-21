@@ -1,0 +1,249 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Hangar del tanque</title>
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  canvas{display:block}
+  /* Viñeta suave para dar aspecto de cine */
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.45) 100%)}
+  /* Línea de contexto arriba */
+  #arriba{position:absolute;top:120px;left:60px;right:60px;text-align:center;font:700 46px/1.2 "DejaVu Sans",sans-serif;color:#fff;
+    paint-order:stroke;-webkit-text-stroke:10px #000;text-shadow:0 6px 0 rgba(0,0,0,.35)}
+  /* Subtítulo palabra a palabra */
+  #palabra{position:absolute;top:1540px;left:0;right:0;text-align:center;font:800 118px/1 "DejaVu Sans",sans-serif;color:#fff;
+    paint-order:stroke;-webkit-text-stroke:20px #000;text-shadow:0 10px 0 rgba(0,0,0,.4);letter-spacing:-2px}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="vineta"></div>
+<div id="arriba">Por qué las ventanillas de los aviones son redondas</div>
+<div id="palabra">piscina</div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1080, H = 1920;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = .92;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#3a352d');
+scene.fog = new THREE.FogExp2('#6a5f4e', 0.010);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// ---------- texturas procedurales (sin descargar nada) ----------
+function canvasTex(w, h, dibujo, rx = 1, ry = 1) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  dibujo(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
+}
+const ruido = (g, w, h, base, var_, n = 9000) => {
+  g.fillStyle = base; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < n; i++) { const v = (Math.random() - .5) * var_; g.fillStyle = `rgba(${v > 0 ? 255 : 0},${v > 0 ? 255 : 0},${v > 0 ? 255 : 0},${Math.abs(v)})`; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 3, 2 + Math.random() * 3); }
+};
+const texHormigon = canvasTex(512, 512, (g, w, h) => {
+  ruido(g, w, h, '#9c958a', .12, 14000);
+  g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 3;
+  for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * w / 4, 0); g.lineTo(i * w / 4, h); g.stroke(); g.beginPath(); g.moveTo(0, i * h / 4); g.lineTo(w, i * h / 4); g.stroke(); }
+  for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(40,30,20,.08)'; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 30 + Math.random() * 60, 20 + Math.random() * 40, 0, 0, 7); g.fill(); }
+}, 10, 10);
+const texChapa = canvasTex(256, 256, (g, w, h) => {
+  ruido(g, w, h, '#7d8186', .08, 3000);
+  for (let x = 0; x < w; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0); gr.addColorStop(0, 'rgba(255,255,255,.10)'); gr.addColorStop(.5, 'rgba(0,0,0,.12)'); gr.addColorStop(1, 'rgba(255,255,255,.10)'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); }
+}, 8, 2);
+const texTanque = canvasTex(256, 256, (g, w, h) => {
+  ruido(g, w, h, '#6f7a74', .10, 4000);
+  g.fillStyle = 'rgba(60,40,20,.25)'; for (let i = 0; i < 40; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 10 + Math.random() * 30);
+  g.fillStyle = '#4b544f'; for (let y = 16; y < h; y += 64) for (let x = 16; x < w; x += 32) { g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); }
+}, 6, 1);
+
+// ---------- materiales ----------
+const mat = {
+  suelo: new THREE.MeshStandardMaterial({ map: texHormigon, roughness: .85 }),
+  pared: new THREE.MeshStandardMaterial({ map: texChapa, color: '#a8a39a', roughness: .7, metalness: .2 }),
+  viga: new THREE.MeshStandardMaterial({ color: '#3d4148', roughness: .6, metalness: .5 }),
+  tanque: new THREE.MeshStandardMaterial({ map: texTanque, roughness: .6, metalness: .4 }),
+  agua: new THREE.MeshStandardMaterial({ color: '#1f5d66', roughness: .05, metalness: .3, transparent: true, opacity: .88, envMapIntensity: 2.5 }),
+  fuselaje: new THREE.MeshStandardMaterial({ color: '#d9dde2', roughness: .22, metalness: .85, envMapIntensity: 1.6 }),
+  ventana: new THREE.MeshStandardMaterial({ color: '#10161f', roughness: .1, metalness: .2, envMapIntensity: 3 }),
+  rojo: new THREE.MeshStandardMaterial({ color: '#b8322a', roughness: .5 }),
+  amarillo: new THREE.MeshStandardMaterial({ color: '#e0a92c', roughness: .55 }),
+  madera: new THREE.MeshStandardMaterial({ color: '#8a6440', roughness: .8 }),
+  tubo: new THREE.MeshStandardMaterial({ color: '#2f3a33', roughness: .4, metalness: .6 }),
+};
+const caja = (w, h, d, m, x, y, z, sombra = true) => {
+  const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z);
+  o.castShadow = sombra; o.receiveShadow = true; scene.add(o); return o;
+};
+
+// ---------- hangar ----------
+const suelo = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), mat.suelo);
+suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; scene.add(suelo);
+const ALTO = 22;
+caja(1, ALTO, 90, mat.pared, 26, ALTO / 2, -10, false);          // pared derecha
+caja(60, ALTO, 1, mat.pared, 0, ALTO / 2, -42, false);           // pared del fondo
+// pared izquierda con ventanales: zócalo + pilares + dintel (deja huecos para que entre el sol)
+const PX = -26;
+caja(1, 8, 90, mat.pared, PX, 4, -10);
+caja(1, 4, 90, mat.pared, PX, 20, -10);
+for (let z = -54; z <= 34; z += 7) caja(1.2, 10, 1.6, mat.pared, PX, 13, z);
+for (let z = -54; z < 34; z += 7) caja(.3, .25, 5.4, mat.viga, PX, 13, z + 3.5); // travesaño de cada ventanal
+// cerchas del techo
+caja(60, .6, 90, new THREE.MeshStandardMaterial({ color: '#2a2a2c', roughness: .9 }), 0, ALTO + .3, -10, false);
+for (let z = -50; z <= 30; z += 8) {
+  caja(52, .5, .5, mat.viga, 0, ALTO - .8, z, false);
+  caja(52, .35, .35, mat.viga, 0, ALTO - 3.2, z, false);
+  for (let x = -24; x <= 24; x += 4) { const d = caja(.25, 2.9, .25, mat.viga, x, ALTO - 2, z, false); d.rotation.z = (x / 4) % 2 ? .6 : -.6; }
+}
+// lámparas colgantes
+for (const [x, z] of [[-8, 6], [8, 6], [-8, -14], [8, -14], [0, -30]]) {
+  caja(.06, 5, .06, mat.viga, x, ALTO - 3.5, z, false);
+  const pantalla = new THREE.Mesh(new THREE.ConeGeometry(1, .8, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#2e4a3a', side: THREE.DoubleSide, roughness: .5, metalness: .4 }));
+  pantalla.position.set(x, ALTO - 6.2, z); scene.add(pantalla);
+  const bombilla = new THREE.Mesh(new THREE.SphereGeometry(.28, 16, 12), new THREE.MeshBasicMaterial({ color: '#fff1c9' }));
+  bombilla.position.set(x, ALTO - 6.6, z); scene.add(bombilla);
+  const pl = new THREE.PointLight('#ffc98a', 60, 28, 1.6); pl.position.set(x, ALTO - 7, z); scene.add(pl);
+}
+
+// ---------- tanque de agua ----------
+const TX = 10, TZ0 = -18, TZ1 = 13, TALTO = 3.6;
+caja(.8, TALTO, TZ1 - TZ0, mat.tanque, -TX, TALTO / 2, (TZ0 + TZ1) / 2);
+caja(.8, TALTO, TZ1 - TZ0, mat.tanque, TX, TALTO / 2, (TZ0 + TZ1) / 2);
+caja(TX * 2 + .8, TALTO, .8, mat.tanque, 0, TALTO / 2, TZ0);
+caja(TX * 2 + .8, TALTO, .8, mat.tanque, 0, TALTO / 2, TZ1);
+// borde amarillo de seguridad
+for (const [w, d, x, z] of [[.9, TZ1 - TZ0, -TX, (TZ0 + TZ1) / 2], [.9, TZ1 - TZ0, TX, (TZ0 + TZ1) / 2], [TX * 2 + .9, .9, 0, TZ0], [TX * 2 + .9, .9, 0, TZ1]])
+  caja(w, .12, d, mat.amarillo, x, TALTO + .06, z, false);
+const agua = new THREE.Mesh(new THREE.PlaneGeometry(TX * 2, TZ1 - TZ0), mat.agua);
+agua.rotation.x = -Math.PI / 2; agua.position.set(0, 2.55, (TZ0 + TZ1) / 2); agua.receiveShadow = true; scene.add(agua);
+
+// ---------- el Comet, medio sumergido ----------
+const avion = new THREE.Group(); scene.add(avion);
+const R = 1.9, LARGO = 24, CY = 3.2, CZ = -3;
+const fus = new THREE.Mesh(new THREE.CylinderGeometry(R, R, LARGO, 48), mat.fuselaje);
+fus.rotation.x = Math.PI / 2; fus.position.set(0, CY, CZ); fus.castShadow = fus.receiveShadow = true; avion.add(fus);
+const morro = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), mat.fuselaje);
+morro.scale.set(1, 2.1, 1); morro.rotation.x = Math.PI / 2; morro.position.set(0, CY, CZ + LARGO / 2); morro.castShadow = true; avion.add(morro);
+const cola = new THREE.Mesh(new THREE.ConeGeometry(R, 6, 48), mat.fuselaje);
+cola.rotation.x = -Math.PI / 2; cola.position.set(0, CY + .3, CZ - LARGO / 2 - 3); cola.castShadow = true; avion.add(cola);
+const deriva = new THREE.Mesh(new THREE.BoxGeometry(.4, 4.2, 3.6), new THREE.MeshStandardMaterial({ color: '#1d3f7a', roughness: .45, metalness: .4 }));
+deriva.position.set(0, CY + 3.2, CZ - LARGO / 2 - 1.8); deriva.rotation.x = -.35; deriva.castShadow = true; avion.add(deriva);
+const ala = new THREE.Mesh(new THREE.BoxGeometry(19, .3, 4.5), mat.fuselaje);
+// motores a reacción en la raíz de las alas
+for (const dx of [-3, 3]) { const mo = new THREE.Mesh(new THREE.CylinderGeometry(.55, .6, 4, 24), mat.fuselaje); mo.rotation.x = Math.PI / 2; mo.position.set(dx, CY - .25, CZ + 1.6); mo.castShadow = true; avion.add(mo); const bo = new THREE.Mesh(new THREE.CircleGeometry(.45, 24), mat.ventana); bo.position.set(dx, CY - .25, CZ + 3.62); avion.add(bo); }
+ala.position.set(0, CY - .45, CZ + 1); ala.rotation.z = .03; ala.castShadow = true; avion.add(ala);
+// cabina del piloto
+for (const dx of [-.45, .45]) { const pb = new THREE.Mesh(new THREE.BoxGeometry(.7, .35, .1), mat.ventana);
+  pb.position.set(dx, CY + 1.45, CZ + LARGO / 2 + 1.75); pb.rotation.x = -.9; pb.rotation.y = dx * .8; avion.add(pb); }
+// franja azul de la aerolínea
+const franja = new THREE.Mesh(new THREE.CylinderGeometry(R + .01, R + .01, LARGO, 48, 1, true, Math.PI * .5 - .32, .2), new THREE.MeshStandardMaterial({ color: '#1d3f7a', roughness: .4, metalness: .4 }));
+franja.rotation.x = Math.PI / 2; franja.position.copy(fus.position); avion.add(franja);
+// ventanillas cuadradas en el lado que mira a cámara
+const VA = .55;            // ángulo sobre la horizontal donde van las ventanas
+for (let z = CZ - LARGO / 2 + 2; z <= CZ + LARGO / 2 - 1.5; z += 1.55) {
+  const v = new THREE.Mesh(new THREE.BoxGeometry(.08, .62, .62), mat.ventana);
+  v.position.set(Math.cos(VA) * (R + .02), CY + Math.sin(VA) * (R + .02), z);
+  v.rotation.z = VA; avion.add(v);
+}
+// grieta en la esquina de la ventana más cercana (líneas oscuras)
+const zG = CZ + LARGO / 2 - 1.5 - ((LARGO - 3.5) % 1.55);
+const pts = [[0, .31, .31], [0, .48, .44], [0, .55, .62], [0, .7, .7], [0, .78, .9]].map(([a, b, c]) => new THREE.Vector3(0, b, c));
+const grieta = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#111' }));
+grieta.position.set(Math.cos(VA) * (R + .07), CY + Math.sin(VA) * (R + .07), zG); grieta.rotation.z = VA; avion.add(grieta);
+avion.rotation.y = .04;
+
+// ---------- pasarela, bomba de presión y contador ----------
+caja(9, .3, 3.2, mat.madera, 2.5, TALTO + .15, TZ1 + 2.0);                   // pasarela
+for (const x of [-2, 7]) for (const z of [TZ1 + .6, TZ1 + 3.4]) caja(.2, TALTO, .2, mat.viga, x, TALTO / 2, z);
+caja(9, .08, .08, mat.amarillo, 2.5, TALTO + 1.3, TZ1 + 3.5, false);          // barandilla
+for (const x of [-2, 2.5, 7]) caja(.08, 1.2, .08, mat.amarillo, x, TALTO + .9, TZ1 + 3.5, false);
+const bomba = caja(1.6, 1.6, 1.4, mat.rojo, -1.6, TALTO + 1.1, TZ1 + 1.4);
+const cil = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, 1.8, 24), mat.tubo); cil.position.set(-1.6, TALTO + 2.4, TZ1 + 1.4); cil.castShadow = true; scene.add(cil);
+// tubos de la bomba al avión
+const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(-1.6, TALTO + .5, TZ1 + .8), new THREE.Vector3(-1.6, TALTO - .2, TZ1 - 1), new THREE.Vector3(.5, CY + 1.2, CZ + LARGO / 2 - 3), new THREE.Vector3(1.0, CY + 1.7, CZ + LARGO / 2 - 5)]);
+const tubo = new THREE.Mesh(new THREE.TubeGeometry(curva, 40, .16, 12), mat.tubo); tubo.castShadow = true; scene.add(tubo);
+// manómetro
+const texDial = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = '#f4efe2'; g.beginPath(); g.arc(128, 128, 120, 0, 7); g.fill();
+  g.lineWidth = 12; g.strokeStyle = '#222'; g.stroke();
+  g.strokeStyle = '#c0392b'; g.lineWidth = 16; g.beginPath(); g.arc(128, 128, 96, -.4, .5); g.stroke();
+  g.strokeStyle = '#222'; g.lineWidth = 4; for (let a = -3.6; a <= .6; a += .35) { g.beginPath(); g.moveTo(128 + Math.cos(a) * 80, 128 + Math.sin(a) * 80); g.lineTo(128 + Math.cos(a) * 100, 128 + Math.sin(a) * 100); g.stroke(); }
+  g.lineWidth = 8; g.beginPath(); g.moveTo(128, 128); g.lineTo(128 + Math.cos(.2) * 90, 128 + Math.sin(.2) * 90); g.stroke();
+});
+const dial = new THREE.Mesh(new THREE.CircleGeometry(.55, 32), new THREE.MeshStandardMaterial({ map: texDial, roughness: .4 }));
+dial.position.set(-1.6, TALTO + 1.2, TZ1 + 2.11); scene.add(dial);
+// cartel contador de vuelos
+const texCartel = canvasTex(512, 256, (g, w, h) => {
+  g.fillStyle = '#1b1f22'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#e9e3d2'; g.font = 'bold 40px DejaVu Sans'; g.textAlign = 'center'; g.fillText('VUELOS SIMULADOS', w / 2, 62);
+  g.fillStyle = '#ffb02e'; g.font = 'bold 120px DejaVu Sans Mono'; g.fillText('1.204', w / 2, 200);
+});
+caja(.15, 5, .15, mat.viga, -9, 2.5, TZ1 + 4);
+const cartel = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.MeshStandardMaterial({ map: texCartel, emissive: '#ffffff', emissiveMap: texCartel, emissiveIntensity: .35 }));
+cartel.position.set(-9, 5.6, TZ1 + 4.1); cartel.rotation.y = .5; scene.add(cartel);
+
+// ---------- personajes 2D dentro del mundo 3D ----------
+const camPos = new THREE.Vector3(7.5, 9.2, 23.5);
+function sprite2D(url, x, y, z, alto) {
+  const t = new THREE.TextureLoader().load(url); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: .3, side: THREE.DoubleSide, fog: false });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(alto * 400 / 640, alto), m);
+  p.geometry.translate(0, alto / 2, 0); p.position.set(x, y, z);
+  p.lookAt(camPos.x, y, camPos.z);               // mira a cámara (solo gira en vertical)
+  p.castShadow = true;
+  p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  scene.add(p); return t;
+}
+const cargas = [sprite2D('toni.png', 4.4, TALTO + .3, TZ1 + 1.9, 3.4), sprite2D('operario.png', 1.3, TALTO + .3, TZ1 + 2.6, 3.1)];
+
+// ---------- luz: sol entrando por los ventanales + relleno ----------
+scene.add(new THREE.HemisphereLight('#9fb4c8', '#4a3b2a', .35));
+const sol = new THREE.DirectionalLight('#ffd6a0', 6);
+sol.position.set(-60, 42, 4); sol.target.position.set(0, 0, -4); scene.add(sol, sol.target);
+sol.castShadow = true; sol.shadow.mapSize.set(4096, 4096); sol.shadow.bias = -.0004; sol.shadow.normalBias = .03;
+Object.assign(sol.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 160 }); sol.shadow.camera.updateProjectionMatrix();
+// rayos de luz volumétricos falsos: prismas aditivos en la dirección del sol, uno por ventanal
+const dirSol = new THREE.Vector3().subVectors(sol.target.position, sol.position).normalize();
+const texRayo = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+texRayo.wrapS = texRayo.wrapT = THREE.ClampToEdgeWrapping; texRayo.repeat.set(1, 1);
+for (let z = -50.5; z < 34; z += 7) {
+  const L = 46;
+  const m = new THREE.MeshBasicMaterial({ color: '#ffe2b0', map: texRayo, transparent: true, opacity: .055, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+  const r = new THREE.Mesh(new THREE.BoxGeometry(5.2, 9, L), m);
+  r.geometry.translate(0, 0, L / 2);
+  r.position.set(PX, 13, z + .2);
+  r.lookAt(r.position.clone().add(dirSol));
+  scene.add(r);
+}
+// motas de polvo flotando en la luz
+const pos = []; for (let i = 0; i < 900; i++) pos.push(-24 + Math.random() * 30, 1 + Math.random() * 16, -30 + Math.random() * 55);
+const polvo = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)), new THREE.PointsMaterial({ color: '#fff0d0', size: .07, transparent: true, opacity: .7 }));
+scene.add(polvo);
+
+// ---------- cámara y render ----------
+const cam = new THREE.PerspectiveCamera(58, W / H, .1, 300);
+cam.position.copy(camPos); cam.lookAt(-1.8, 4.6, 2);
+const comp = new EffectComposer(renderer);
+comp.addPass(new RenderPass(scene, cam));
+comp.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), .28, .5, .9));
+comp.addPass(new OutputPass());
+
+const listo = () => Promise.all(cargas.map(t => new Promise(r => t.image ? r() : (t.onUpdate = r))));
+await new Promise(r => setTimeout(r, 800));
+await listo().catch(() => {});
+comp.render();
+window.LISTO = true;
+</script>
+</body></html>
