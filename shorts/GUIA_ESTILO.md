@@ -22,7 +22,8 @@ Las **instrucciones obligatorias** (v2) mandan sobre cualquier costumbre anterio
 ## 4. Subtítulos
 - **Bloques de 2 a 4 palabras, nunca palabra a palabra.**
 - Letra grande, blanca con borde negro, palabras clave en amarillo #FFD93B.
-- En el **tercio central** de la pantalla (entre 640 y 1280 px de alto), lejos de los botones de la derecha y del texto de abajo de TikTok/YouTube. Margen lateral ≥ 90 px.
+- **Posición: un poco por debajo del centro.** Bloque con `top: 1300px` (en Agloe estaba en 1220 px y el dueño lo quiere algo más abajo). Letra de 96 px, máximo 2 líneas: así el bloque acaba como mucho hacia los 1500 px, por encima del texto de abajo de TikTok/YouTube. Margen lateral ≥ 90 px, lejos de los botones de la derecha.
+  (Esta preferencia del dueño manda sobre el "tercio central" de las instrucciones v2.)
 - No repetir en pantalla un texto que ya está en el subtítulo (sellos y rótulos solo si dicen algo distinto).
 
 ## 5. Aspecto visual
