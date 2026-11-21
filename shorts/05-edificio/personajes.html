@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#F4EFE6;font-family:"DejaVu Sans",sans-serif}</style></head><body>
+<svg id="s" width="1600" height="1000" viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="../../personajes/personajes.js"></script>
+<script>
+let h = `<rect width="1600" height="1000" fill="#F4EFE6"/>
+<text x="50" y="78" font-size="40" font-weight="700" fill="${INK}">Personajes · "El edificio que giró con 600 personas dentro"</text>
+<text x="50" y="118" font-size="22" fill="#5B6478">Mismo estilo del canal · Indianápolis, 1930 · la compañía telefónica</text>`;
+const fichas = [
+  ['directivo', 'El directivo', 'Bombín, bigote y reloj.', '"¡Ni un día sin teléfono!"'],
+  ['obrero', 'El obrero', 'Gorra, mono azul y llave.', 'Gira los gatos poco a poco.'],
+  ['operadora', 'La operadora', 'Moño y cascos de centralita.', 'Sigue pasando llamadas.'],
+  ['oficinista', 'El oficinista', 'Sombrero, corbata y café.', 'Entra por la pasarela.'],
+];
+fichas.forEach((f, i) => { h += `<rect x="${40 + i * 385}" y="150" width="365" height="810" rx="28" fill="#fff" stroke="#E3DCCF" stroke-width="3"/>`; });
+fichas.forEach(([p, nom, l1, l2], i) => {
+  const x = 40 + i * 385;
+  h += dibujar(p, x + 182, 800, 1.0);
+  h += `<text x="${x + 182}" y="860" font-size="27" font-weight="700" text-anchor="middle" fill="${INK}">${nom}</text>`;
+  h += `<text x="${x + 182}" y="895" font-size="18" text-anchor="middle" fill="#5B6478">${l1}</text>`;
+  h += `<text x="${x + 182}" y="922" font-size="18" text-anchor="middle" fill="#5B6478">${l2}</text>`;
+});
+document.getElementById('s').innerHTML = h;
+</script></body></html>

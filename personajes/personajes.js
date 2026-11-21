@@ -167,3 +167,31 @@ Object.assign(PRESETS, {
     objeto: `<g transform="translate(70,-130)">${BOLSA}</g>`, cabeza: SOMBRERO_PLUMA + BIGOTE('#2A1E1A') },
 });
 PRESETS.toni_moneda = Object.assign({}, PRESETS.toni, { expr: 'eureka', brazoD: 'M46,-250 q80,-10 100,-50', manos: [[-90, -136], [146, -300]], objeto: `<g transform="translate(150,-350)">${MONEDA(46, '#E3B84A')}</g>` });
+
+// ---------- Short "El edificio que giró" (Indianápolis, 1930) ----------
+const MONYO = `<g stroke="${INK}" stroke-width="5"><path d="M-70,-20 C-76,-96 76,-96 70,-20 C60,-60 30,-70 0,-64 C-30,-70 -60,-60 -70,-20z" fill="#7A3B22"/><circle cx="0" cy="-96" r="24" fill="#7A3B22"/></g>`;
+const CASCOS_TEL = `<g stroke="${INK}" stroke-width="5" fill="none"><path d="M-74,-6 C-80,-110 80,-110 74,-6"/><rect x="-86" y="-16" width="18" height="30" rx="6" fill="#2B2B2B"/><rect x="68" y="-16" width="18" height="30" rx="6" fill="#2B2B2B"/><path d="M-76,10 q-6,26 34,30" /><circle cx="-40" cy="40" r="7" fill="#2B2B2B"/></g>`;
+const FEDORA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-90,-58 q90,-26 180,0 q-90,18 -180,0z" fill="#5A6B7A"/><path d="M-54,-64 q2,-46 54,-48 q52,2 54,48 q-54,10 -108,0z" fill="#6E8193"/><path d="M-52,-70 q52,8 104,0" stroke="#2B2B2B" stroke-width="9"/></g>`;
+const BOMBIN = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-80,-60 q80,-20 160,0 q-80,14 -160,0z" fill="#222"/><path d="M-50,-64 q0,-58 50,-58 q50,0 50,58z" fill="#2c2c2c"/></g>`;
+const GORRA_OBRERO = GORRA_PLANA.replace('#8A6A45', '#4A5A6A').replace('#6E5235', '#3A4856');
+const TAZA = `<g stroke="${INK}" stroke-width="4"><path d="M-16,-30 h32 l-4,34 h-24z" fill="#FAFAF5"/><path d="M16,-22 q14,0 12,12 q-2,8 -14,6" fill="none"/><path d="M-6,-40 q4,-8 0,-14 M6,-40 q4,-8 0,-14" stroke="#9AA3AD" fill="none"/></g>`;
+const LLAVE = `<g transform="rotate(-30)" stroke="${INK}" stroke-width="5"><rect x="-8" y="-110" width="16" height="110" rx="5" fill="#9AA3AD"/><path d="M-26,-130 h52 v26 h-14 v-10 h-24 v10 h-14z" fill="#9AA3AD"/></g>`;
+const RELOJ = `<g stroke="${INK}" stroke-width="4"><path d="M0,-30 q-20,-30 -40,-20" fill="none" stroke="#C9A24A"/><circle r="20" fill="#F2C14E"/><circle r="13" fill="#FFF8E0"/><path d="M0,0 v-9 M0,0 h7" stroke-width="3"/></g>`;
+Object.assign(PRESETS, {
+  operadora: { expr: 'eureka', pantalon: '#3B3B5A', torso: '#C7E0F4', manga: '#C7E0F4',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q40,30 50,-30', manos: [[-80, -136], [96, -280]],
+    detalle: `<path d="M-16,-266 l16,22 16,-22" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M-48,-160 h96 l10,0 -2,10 h-112z" fill="#3B3B5A"/>`,
+    objeto: `<g transform="translate(96,-280)"><path d="M0,0 q30,20 10,60" stroke="#2B2B2B" stroke-width="5" fill="none"/><circle cx="10" cy="62" r="7" fill="#C0392B" stroke="${INK}" stroke-width="3"/></g>`, cabeza: MONYO + CASCOS_TEL },
+  oficinista: { expr: 'neutral', pantalon: '#4A4F5A', torso: '#F1EEE6', manga: '#F1EEE6',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q40,30 50,-10', manos: [[-80, -136], [96, -240]],
+    detalle: `<path d="M0,-266 l-12,30 12,70 12,-70z" fill="#C0392B" stroke="${INK}" stroke-width="5"/><path d="M-40,-262 v100 M40,-262 v100" stroke="#5B4636" stroke-width="6"/>`,
+    objeto: `<g transform="translate(100,-236)">${TAZA}</g>`, cabeza: FEDORA },
+  obrero: { expr: 'neutral', pantalon: '#2F5D8A', torso: '#2F5D8A', manga: '#E7D9B8',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q80,0 100,-40', manos: [[-80, -136], [146, -290]],
+    detalle: `<path d="M-30,-268 v60 M30,-268 v60" stroke="#244A70" stroke-width="7"/><rect x="-22" y="-218" width="44" height="30" rx="4" fill="#2F5D8A" stroke="${INK}" stroke-width="4"/>`,
+    objeto: `<g transform="translate(146,-290)">${LLAVE.replace('rotate(-30)', 'rotate(15)')}</g>`, cabeza: GORRA_OBRERO + BIGOTE('#5A3B26') },
+  directivo: { expr: 'preocupado', pantalon: '#2B2B2B', torso: '#3A3F4A', manga: '#3A3F4A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M0,-240 l-8,10 8,50 8,-50z" fill="#7A2A3A"/>`,
+    objeto: `<g transform="translate(106,-320)">${RELOJ}</g>`, cabeza: BOMBIN + BIGOTE('#3A2A22') },
+});
