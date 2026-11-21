@@ -137,3 +137,33 @@ Object.assign(PRESETS, {
 // Toni con martillo (sudando) y con alicates: variantes de pose para este short
 PRESETS.toni_martillo = Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoD: 'M46,-250 q50,-10 60,-80', manos: [[-90, -136], [106, -330]], objeto: `<g transform="translate(106,-330)">${MARTILLO}</g>`, cabeza: PELO + GAFAS + SUDOR });
 PRESETS.toni_alicates = Object.assign({}, PRESETS.toni, { expr: 'eureka', brazoD: 'M46,-250 q50,-10 70,-50', manos: [[-90, -136], [116, -300]], objeto: `<g transform="translate(116,-300)">${ALICATES}</g>` });
+
+// ---------- Short "Por qué las monedas tienen rayas" ----------
+const TRICORNIO = `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round"><path d="M-90,-52 q90,-70 180,0 q-30,-12 -90,-8 q-60,-4 -90,8z" fill="#222"/><path d="M-60,-62 q60,-60 120,0z" fill="#2c2c2c"/></g>`;
+const SOMBRERO_PLUMA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-96,-56 q96,-30 192,0 q-96,20 -192,0z" fill="#3B2350"/><path d="M-52,-62 q0,-48 52,-50 q52,2 52,50z" fill="#4A2D63"/><path d="M30,-100 q60,-40 70,10 q-30,-30 -70,-10z" fill="#F2F2F2"/></g>`;
+const GORRO_MERCADER = `<g stroke="${INK}" stroke-width="5"><path d="M-66,-44 q-6,-56 66,-58 q72,2 66,58 q-66,-18 -132,0z" fill="#2E7D4F"/></g>`;
+const PELO_NEWTON = `<g stroke="${INK}" stroke-width="4">${[-1, 1].map(s => [0, 1, 2, 3].map(i => `<path d="M${s * 60},${-50 + i * 34} q${s * 30},10 ${s * 22},40 q${-s * 22},-4 ${-s * 30},-30z" fill="#C9C4BC"/>`).join('')).join('')}<path d="M-72,-20 C-78,-104 78,-104 72,-20 C52,-66 -52,-66 -72,-20z" fill="#C9C4BC"/></g>`;
+const LIMA = `<g transform="rotate(25)"><rect x="-6" y="-80" width="12" height="70" rx="2" fill="#9AA3AD" stroke="${INK}" stroke-width="4"/><path d="M-6,-70 h12 M-6,-60 h12 M-6,-50 h12 M-6,-40 h12 M-6,-30 h12" stroke="#5B6470" stroke-width="2"/><rect x="-8" y="-12" width="16" height="34" rx="5" fill="#8A5A34" stroke="${INK}" stroke-width="4"/></g>`;
+const MONEDA = (r = 26, c = '#D9DEE5') => `<g><circle r="${r}" fill="${c}" stroke="${INK}" stroke-width="4"/><circle r="${r * .7}" fill="none" stroke="#9AA3AD" stroke-width="3"/></g>`;
+const BALANZA = `<g stroke="${INK}" stroke-width="4"><path d="M0,0 v-90 M-50,-80 h100" fill="none"/><path d="M-50,-80 l-18,40 h36z M50,-80 l-18,40 h36z" fill="#F2C14E"/><circle cx="-50" cy="-44" r="9" fill="#D9DEE5"/></g>`;
+const MANZANA = `<g stroke="${INK}" stroke-width="3"><circle r="13" fill="#D63A2F"/><path d="M0,-12 q2,-8 8,-10" fill="none"/><path d="M2,-16 q10,-6 14,0 q-8,4 -14,0z" fill="#4CAF50"/></g>`;
+const BOLSA = `<g stroke="${INK}" stroke-width="4"><path d="M-30,0 q-10,-40 30,-46 q40,6 30,46 q-30,12 -60,0z" fill="#B08A4A"/><path d="M-10,-46 l10,-12 10,12" fill="none"/><text x="0" y="-12" font-size="26" font-weight="900" text-anchor="middle" fill="#5A3B1A" stroke="none" font-family="DejaVu Sans">£</text></g>`;
+Object.assign(PRESETS, {
+  ladron: { expr: 'eureka', pantalon: '#3A3A3A', torso: '#5B4636', manga: '#5B4636',
+    brazoI: 'M-46,-250 q-40,30 -20,70', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-60, -180], [106, -320]],
+    detalle: `<path d="M-52,-266 l-14,120 l30,0z M52,-266 l14,120 l-30,0z" fill="#2A2A2A" stroke="${INK}" stroke-width="4"/><g transform="translate(-60,-180)">${MONEDA(24)}</g>`,
+    objeto: `<g transform="translate(106,-320)">${LIMA}</g>`, cabeza: TRICORNIO },
+  mercader: { expr: 'neutral', pantalon: '#4B3B2B', torso: '#E7D9B8', manga: '#E7D9B8',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,20 70,60', manos: [[-80, -136], [116, -190]],
+    detalle: `<path d="M-36,-250 h72 l6,104 h-84z" fill="#2E7D4F" stroke="${INK}" stroke-width="5"/>`,
+    objeto: `<g transform="translate(130,-110)">${BALANZA}</g>`, cabeza: GORRO_MERCADER + BIGOTE('#6B4423') },
+  newton: { expr: 'neutral', pantalon: '#E9E4D6', torso: '#6B4A2E', manga: '#6B4A2E',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    detalle: `<path d="M-14,-266 l14,24 14,-24" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M0,-240 v90" stroke="#C9A24A" stroke-width="4"/>${[-215, -190, -165].map(y => `<circle cx="0" cy="${y}" r="5" fill="#C9A24A"/>`).join('')}<g transform="translate(-30,-176)">${MANZANA}</g>`,
+    objeto: `<g transform="translate(106,-320)">${LUPA}</g>`, cabeza: PELO_NEWTON },
+  falsificador: { expr: 'eureka', pantalon: '#2B2B2B', torso: '#5E2B7A', manga: '#5E2B7A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,40 24,90', manos: [[-80, -136], [70, -160]],
+    detalle: `<path d="M-14,-266 l14,24 14,-24" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M-50,-240 h100" stroke="#F2C14E" stroke-width="4"/>`,
+    objeto: `<g transform="translate(70,-130)">${BOLSA}</g>`, cabeza: SOMBRERO_PLUMA + BIGOTE('#2A1E1A') },
+});
+PRESETS.toni_moneda = Object.assign({}, PRESETS.toni, { expr: 'eureka', brazoD: 'M46,-250 q80,-10 100,-50', manos: [[-90, -136], [146, -300]], objeto: `<g transform="translate(150,-350)">${MONEDA(46, '#E3B84A')}</g>` });
