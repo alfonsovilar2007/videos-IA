@@ -182,7 +182,27 @@ def confeti():
     for i in range(30):
         c = pop() * .25; p = int(rng.uniform(.1, 1.3) * SR); out[p:p + len(c)] += c[:len(out) - p]
     return out
-SFX = {"frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
+def clank():
+    """Martillazo metálico: golpe seco + parciales inarmónicos."""
+    n = int(.9 * SR); tt = np.arange(n) / SR
+    ring = sum(np.sin(2 * np.pi * f * tt) * g for f, g in ((620, 1), (1475, .7), (2380, .5), (3910, .3))) * env(n, .0005, .18)
+    golpe = sello(); golpe = np.pad(golpe, (0, max(0, n - len(golpe))))[:n]
+    return ring * .5 + golpe * .9
+def cristal():
+    """Cristal que estalla en polvo: ráfaga de ruido agudo + cientos de tintineos."""
+    n = int(1.6 * SR); out = lowpass(rng.standard_normal(n), 9000) * env(n, .001, .12) * 1.2
+    out -= lowpass(out, 2500)
+    tt = np.arange(int(.08 * SR)) / SR
+    for i in range(140):
+        f = rng.uniform(2500, 7500); c = np.sin(2 * np.pi * f * tt) * env(len(tt), .0005, .02) * rng.uniform(.05, .2)
+        p = int(rng.exponential(.18) * SR); 
+        if p + len(c) < n: out[p:p + len(c)] += c
+    return out
+def chisporroteo(dur=1.4):
+    n = int(dur * SR); tt = np.arange(n) / SR
+    r = rng.standard_normal(n); r = r - lowpass(r, 3000)
+    return r * (np.abs(rng.standard_normal(n)) > 1.6) * np.minimum(1, tt / .05) * np.exp(-tt * 2) * 3 + lowpass(rng.standard_normal(n), 6000) * np.exp(-tt * 3) * .4
+SFX = {"clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
 for c in ev["cortes"]:
     poner(fx, whoosh(), c - .2, .28)
 for t, nombre in ev["efectos"]:

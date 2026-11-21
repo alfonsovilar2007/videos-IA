@@ -1,0 +1,413 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>El cristal que un martillo no puede romper</title>
+<!-- Short v2 (30-40 s): función pura del tiempo window.renderAt(t). Ver shorts/GUIA_ESTILO.md -->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  #lienzo{position:absolute;inset:0;transform-origin:50% 50%}
+  canvas{display:block}
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 60%,rgba(0,0,0,.42) 100%)}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0}
+  .txt{position:absolute;left:90px;right:90px;text-align:center;font-family:"DejaVu Sans",sans-serif;font-weight:800;color:#fff;paint-order:stroke}
+  /* gancho: grande, solo los primeros ~2 s */
+  #gancho{top:360px;left:50px;right:50px;font-size:104px;line-height:1.02;letter-spacing:-2px;-webkit-text-stroke:24px #000;text-shadow:0 12px 0 rgba(0,0,0,.45);opacity:0}
+  /* subtítulos: bloques de 2-4 palabras, un poco por debajo del centro */
+  #sub{top:1300px;font-size:96px;line-height:1.08;-webkit-text-stroke:19px #000;text-shadow:0 9px 0 rgba(0,0,0,.45)}
+  #sub b{color:#FFD93B}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="lienzo"></div>
+<div id="vineta"></div>
+<div id="gancho" class="txt">UN MARTILLAZO<br><span style="color:#FFD93B">NO LA ROMPE</span></div>
+<div id="sub" class="txt"></div>
+<div id="flash"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1080, H = 1920;
+let semilla = 31;
+const rnd = () => { semilla |= 0; semilla = semilla + 0x6D2B79F5 | 0; let t = Math.imul(semilla ^ semilla >>> 15, 1 | semilla); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const suave = k => { k = clamp(k); return k * k * (3 - 2 * k); };
+const salida = k => 1 - Math.pow(1 - clamp(k), 3);
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const lerpV = (a, b, k) => a.clone().lerp(b, k);
+
+const PAL = await (await fetch('voz_ritmo.json')).json();
+const T = i => PAL[i].t0;
+const DURACION = PAL[PAL.length - 1].t1 + .35;     // sin pantalla final: termina y vuelve a empezar (bucle)
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.localClippingEnabled = true;
+document.getElementById('lienzo').appendChild(renderer.domElement);
+const entorno = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+function canvasTex(w, h, dibujo, rx = 1, ry = 1) { const c = document.createElement('canvas'); c.width = w; c.height = h; dibujo(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData.canvas = c; return t; }
+const ruido = (g, w, h, base, v, n) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < n; i++) { const a = (rnd() - .5) * v; g.fillStyle = a > 0 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${-a})`; g.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2 + rnd() * 3); } };
+const texRadial = c => canvasTex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+const fondoDegradado = (a, b) => { const t = canvasTex(16, 512, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
+const CARGAS = []; const cargador = new THREE.TextureLoader();
+const spriteTex = n => { let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+function personaje(escena, nombre, alto) {
+  const t = spriteTex(nombre);
+  const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: .25, side: THREE.DoubleSide, fog: false });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(alto * 400 / 640, alto), m); p.geometry.translate(0, alto / 2, 0); p.castShadow = true;
+  p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  escena.add(p); return p;
+}
+const mirar = (p, cam) => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(cam.position.x - w.x, cam.position.z - w.z); };
+
+// ---------- la gota (lágrima del príncipe Rupert): cabeza en x=0, cola hacia +x ----------
+const L = 7;   // largo de la cola
+function perfilGota(escala = 1) {
+  const pts = [];
+  for (let i = 0; i <= 24; i++) { const a = i / 24 * Math.PI * .62; pts.push(new THREE.Vector2(Math.sin(a) * escala, -Math.cos(a) * escala)); }
+  const yb = pts[pts.length - 1].y, rb = pts[pts.length - 1].x;
+  for (let i = 1; i <= 40; i++) { const k = i / 40; pts.push(new THREE.Vector2(Math.max(.025 * escala, rb * Math.pow(1 - k, 1.6)), yb + k * L * escala)); }
+  return pts;
+}
+function geoGota(escala = 1) {
+  const g = new THREE.LatheGeometry(perfilGota(escala), 48);
+  g.rotateZ(-Math.PI / 2);                                  // eje a lo largo de +x
+  const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i); if (x > 0) p.setY(i, p.getY(i) + Math.pow(x / L, 2) * .6); }   // cola curvada
+  g.computeVertexNormals(); return g;
+}
+const vidrio = () => new THREE.MeshStandardMaterial({ color: '#cfeeff', transparent: true, opacity: .5, metalness: .3, roughness: .06, envMap: entorno, envMapIntensity: 1.1, emissive: '#2a6fb0', emissiveIntensity: .08, side: THREE.DoubleSide });
+// Estallido: partículas que salen al pasar el frente de la grieta (de la cola a la cabeza)
+function crearEstallido(escena, escala, n = 700) {
+  const datos = []; for (let i = 0; i < n; i++) { const x = (-1 + rnd() * (L + 1)) * escala; const r = (x < 0 ? Math.sqrt(Math.max(0, 1 - (x / escala) ** 2)) : Math.max(.03, .78 * Math.pow(1 - x / (L * escala), 1.6))) * escala * rnd(); const a = rnd() * Math.PI * 2; datos.push({ p: v3(x, Math.cos(a) * r + (x > 0 ? (x / (L * escala)) ** 2 * .6 * escala : 0), Math.sin(a) * r), v: v3((rnd() - .5) * 2, rnd() * 2.2, (rnd() - .5) * 2).multiplyScalar(escala * (.8 + rnd() * 1.6)) }); }
+  const pos = new Float32Array(n * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#e8f8ff', size: Math.max(.05, .13 * escala), transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false, map: texRadial('rgba(255,255,255,1)') }));
+  escena.add(pts);
+  return { pts, set(frente, tFrente) {   // frente: posición x de la grieta (L→-1); tFrente(x): instante en que la grieta pasa por x
+    let vis = false;
+    datos.forEach((d, i) => { const dt = tFrente(d.p.x); if (dt > 0) { vis = true; pos[i * 3] = d.p.x + d.v.x * dt; pos[i * 3 + 1] = d.p.y + d.v.y * dt - 1.5 * escala * dt * dt; pos[i * 3 + 2] = d.p.z + d.v.z * dt; } else { pos[i * 3] = 9999; } });
+    geo.attributes.position.needsUpdate = true; pts.visible = vis;
+  } };
+}
+const flechaMat = new THREE.MeshStandardMaterial({ color: '#FFD93B', emissive: '#FFB800', emissiveIntensity: .7, roughness: .4 });
+const flecha = (largo = 1, grosor = .08) => { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(grosor, grosor, largo * .7, 12), flechaMat); c.position.y = largo * .35; const p = new THREE.Mesh(new THREE.ConeGeometry(grosor * 2.6, largo * .3, 16), flechaMat); p.position.y = largo * .85; g.add(c, p); return g; };
+
+// =================== ESCENARIO 1: TALLER ===================
+function crearTaller() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = new THREE.Color('#123b4a');
+  const pared = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#0F8FB0'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.22)'; for (let y = 16; y < h; y += 32) for (let x = 16; x < w; x += 32) { g.beginPath(); g.arc(x, y, 3.5, 0, 7); g.fill(); } }, 8, 4);
+  const caja = (w, h, d, m, x, y, z, s = true) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = s; o.receiveShadow = true; e.add(o); return o; };
+  const suelo = canvasTex(256, 256, (g, w, h) => { ruido(g, w, h, '#B07A45', .12, 4000); for (let y = 0; y < h; y += 32) { g.fillStyle = 'rgba(60,30,10,.35)'; g.fillRect(0, y, w, 3); } }, 6, 6);
+  caja(40, .2, 30, new THREE.MeshStandardMaterial({ map: suelo, roughness: .75 }), 0, -.1, 0);
+  caja(40, 14, .3, new THREE.MeshStandardMaterial({ map: pared, roughness: .8 }), 0, 7, -6, false);
+  caja(40, .5, .35, new THREE.MeshStandardMaterial({ color: '#F2C14E' }), 0, 3.2, -5.8, false);   // franja amarilla
+  // herramientas en el panel
+  const herr = new THREE.MeshStandardMaterial({ color: '#E04A3F', roughness: .5 });
+  for (let i = 0; i < 7; i++) caja(.25, 1.2 + rnd(), .1, i % 2 ? herr : new THREE.MeshStandardMaterial({ color: '#F2C14E' }), -7 + i * 1.1, 6 + rnd(), -5.8, false);
+  // yunque
+  const hierro = new THREE.MeshStandardMaterial({ color: '#3d4652', metalness: .8, roughness: .35 });
+  caja(1.6, 1.1, 1.2, hierro, 0, .55, 0); caja(1.1, .5, .9, hierro, 0, 1.3, 0); caja(3, .5, 1.3, hierro, 0, 1.8, 0);
+  const cojin = caja(1.6, .16, 1.0, new THREE.MeshStandardMaterial({ color: '#C2273A', roughness: .9 }), 0, 2.13, 0);
+  // la gota pequeña sobre el yunque
+  const ES = .16;
+  const gota = new THREE.Mesh(geoGota(ES), vidrio()); gota.position.set(-.55, 2.21 + ES, 0); gota.castShadow = true; e.add(gota);
+  const corte = new THREE.Plane(v3(-1, 0, 0), 999); gota.material.clippingPlanes = [corte];
+  const cortar = f => { gota.updateMatrixWorld(true); corte.set(v3(-1, 0, 0), f).applyMatrix4(gota.matrixWorld); };
+  const est = crearEstallido(e, ES, 500); est.pts.position.copy(gota.position);
+  // martillo grande (pivote en el extremo del mango)
+  const martillo = new THREE.Group(); e.add(martillo);
+  const mango = new THREE.Mesh(new THREE.CylinderGeometry(.09, .11, 3.2, 12), new THREE.MeshStandardMaterial({ color: '#8A5A34', roughness: .6 })); mango.position.y = 1.6; mango.castShadow = true;
+  const cabeza = new THREE.Mesh(new THREE.BoxGeometry(1.1, .5, .5), new THREE.MeshStandardMaterial({ color: '#9aa3ad', metalness: .9, roughness: .25 })); cabeza.position.set(0, 3.2, 0); cabeza.castShadow = true;
+  martillo.add(mango, cabeza);
+  // alicates
+  const alicates = new THREE.Group(); e.add(alicates);
+  const rojo = new THREE.MeshStandardMaterial({ color: '#D9534F', roughness: .5 }), acero = new THREE.MeshStandardMaterial({ color: '#b9c1c9', metalness: .9, roughness: .2 });
+  const brazoA = new THREE.Group(), brazoB = new THREE.Group(); alicates.add(brazoA, brazoB);
+  for (const [b, s] of [[brazoA, 1], [brazoB, -1]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(.12, 1.6, .1), rojo); m.position.set(0, -.85, 0); const j = new THREE.Mesh(new THREE.BoxGeometry(.1, .45, .08), acero); j.position.set(0, .22, 0); b.add(m, j); }
+  // chispas del martillazo
+  const nCh = 120, chPos = new Float32Array(nCh * 3), chG = new THREE.BufferGeometry(); chG.setAttribute('position', new THREE.BufferAttribute(chPos, 3));
+  const chispas = new THREE.Points(chG, new THREE.PointsMaterial({ color: '#FFC24A', size: .14, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, map: texRadial('rgba(255,220,120,1)') })); e.add(chispas);
+  const chV = [...Array(nCh)].map(() => v3((rnd() - .5) * 6, 2 + rnd() * 5, (rnd() - .5) * 6));
+  // horno de vidrio y cubo de agua
+  const ladrillo = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#7a2e1e'; g.fillRect(0, 0, w, h); g.fillStyle = '#B4462E'; for (let y = 0; y < h; y += 32) for (let x = (y / 32) % 2 * 32; x < w; x += 64) g.fillRect(x + 3, y + 3, 58, 26); }, 2, 2);
+  caja(3.6, 4.4, 3, new THREE.MeshStandardMaterial({ map: ladrillo, roughness: .9 }), 8, 2.2, -3);
+  const boca = new THREE.Mesh(new THREE.CircleGeometry(.9, 32), new THREE.MeshBasicMaterial({ color: '#FFB347' })); boca.position.set(8, 2.4, -1.49); e.add(boca);
+  const fuego = new THREE.PointLight('#ff8a2a', 80, 14, 1.5); fuego.position.set(8, 2.4, -.6); e.add(fuego);
+  const cubo = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1, 1.5, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#3B82C4', metalness: .5, roughness: .3, side: THREE.DoubleSide })); cubo.position.set(8, .75, 1.2); cubo.castShadow = true; e.add(cubo);
+  const agua = new THREE.Mesh(new THREE.CircleGeometry(1.15, 32), new THREE.MeshStandardMaterial({ color: '#2fb3ff', roughness: .05, metalness: .2, emissive: '#0b4f8a', emissiveIntensity: .4 })); agua.rotation.x = -Math.PI / 2; agua.position.set(8, 1.3, 1.2); e.add(agua);
+  const vapor = [...Array(16)].map(() => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,255,255,.7)'), transparent: true, depthWrite: false })); s.userData = { x: (rnd() - .5) * 1.4, z: (rnd() - .5) * 1.4, f: rnd() }; e.add(s); return s; });
+  const varilla = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 3, 8), acero); varilla.rotation.z = Math.PI / 2.5; e.add(varilla);
+  const gotaFundida = new THREE.Mesh(new THREE.SphereGeometry(.22, 24, 16), new THREE.MeshBasicMaterial({ color: '#FF8C1A' })); e.add(gotaFundida);
+  const brilloFundido = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,140,30,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); brilloFundido.scale.setScalar(1.4); e.add(brilloFundido);
+  const P = { martillo: personaje(e, 'toni_martillo', 3.6), alicates: personaje(e, 'toni_alicates', 3.6), eureka: personaje(e, 'toni_eureka', 3.6) };
+  e.add(new THREE.HemisphereLight('#bfe8ff', '#6a3a1a', .7));
+  const sol = new THREE.SpotLight('#fff1d8', 300, 50, .8, .6, 1.3); sol.position.set(-4, 12, 8); sol.target.position.set(0, 1.5, 0); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -.0004; e.add(sol, sol.target);
+  const rim = new THREE.PointLight('#6fd3ff', 30, 12, 1.5); rim.position.set(2, 4, -3); e.add(rim);
+  const cam = new THREE.PerspectiveCamera(45, W / H, .02, 200);
+  return {
+    escena: e, cam, gota, ES,
+    // golpe: ángulo del martillo (0 = en contacto); chispasT: segundos desde el impacto; rotura: instante relativo de la grieta (o -1)
+    preparar({ tiempo, golpe = null, chispasT = -1, alicatesK = null, rotura = -1, quien = null, quienPos = v3(0, 0, -1.6), fundido = null }) {
+      martillo.visible = golpe !== null;
+      if (golpe !== null) { martillo.position.set(2.6, 2.21 + 2 * ES + .27, 0); martillo.rotation.set(0, 0, Math.PI / 2 - golpe); }
+      chispas.visible = chispasT >= 0;
+      if (chispasT >= 0) chV.forEach((v, i) => { const d = chispasT * (.6 + (i % 7) / 10); chPos[i * 3] = -.6 + v.x * d * .25; chPos[i * 3 + 1] = 2.6 + v.y * d * .25 - 3 * d * d; chPos[i * 3 + 2] = v.z * d * .25; });
+      chG.attributes.position.needsUpdate = true; chispas.material.opacity = clamp(1 - chispasT / .6);
+      alicates.visible = alicatesK !== null;
+      if (alicatesK !== null) { const x = -.55 + (L - .25) * ES; alicates.position.set(x, 2.21 + ES + .17 + (1 - alicatesK) * .25, 0); alicates.rotation.set(0, -.3, 0); brazoA.rotation.z = lerp(.5, .04, alicatesK); brazoB.rotation.z = -lerp(.5, .04, alicatesK); }
+      // grieta: el corte avanza de la cola a la cabeza a velocidad de "cámara lenta"
+      const xCola = L * ES, xCab = -1.1 * ES, vel = 6;
+      if (rotura >= 0) { const f = xCola - rotura * vel; cortar(f); gota.visible = f > xCab; est.set(f, x => rotura - (xCola - x) / vel); }
+      else { cortar(999); gota.visible = true; est.pts.visible = false; }
+      for (const k in P) P[k].visible = k === quien; if (quien) { P[quien].position.copy(quienPos); mirar(P[quien], cam); }
+      vapor.forEach(s => { const u = s.userData; const k = (tiempo * .6 + u.f) % 1; s.position.set(8 + u.x, 1.4 + k * 3, 1.2 + u.z); s.scale.setScalar(.6 + k * 1.6); s.material.opacity = (1 - k) * .5; });
+      gotaFundida.visible = brilloFundido.visible = varilla.visible = fundido !== null;
+      if (fundido !== null) { const y = lerp(3.4, 1.3, Math.pow(clamp(fundido), 2)); gotaFundida.position.set(8, y, 1.2); gotaFundida.scale.set(1, 1 + clamp(fundido) * .8, 1); brilloFundido.position.copy(gotaFundida.position); varilla.position.set(7.2, 3.9, 1.2); }
+    },
+  };
+}
+
+// =================== ESCENARIO 2: ESTUDIO (macro de la gota) ===================
+function crearEstudio() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = fondoDegradado('#0a1240', '#1d4fb8');
+  e.add(new THREE.HemisphereLight('#a8c8ff', '#140a30', .8));
+  const key = new THREE.DirectionalLight('#ffffff', 1.6); key.position.set(4, 8, 6); e.add(key);
+  const magenta = new THREE.PointLight('#ff4fd8', 60, 30, 1.4); magenta.position.set(-6, 3, -4); e.add(magenta);
+  const cian = new THREE.PointLight('#4fe3ff', 60, 30, 1.4); cian.position.set(8, -2, 4); e.add(cian);
+  // todo lo de la gota va en un pivote girado para que quede de pie (vídeo vertical)
+  const pivote = new THREE.Group(); pivote.rotation.z = Math.PI / 2 - .22; pivote.position.set(0, -3.2, 0); e.add(pivote);
+  // gota entera de cristal
+  const gota = new THREE.Mesh(geoGota(1), vidrio()); pivote.add(gota);
+  const corte = new THREE.Plane(v3(-1, 0, 0), 999); gota.material.clippingPlanes = [corte];
+  const cortar = f => { gota.updateMatrixWorld(true); corte.set(v3(-1, 0, 0), f).applyMatrix4(gota.matrixWorld); };
+  const est = crearEstallido(pivote, 1, 900);
+  const frente = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,255,255,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); pivote.add(frente);
+  // gota cortada por la mitad: capa exterior (azul) y núcleo (rojo)
+  const mitad = new THREE.Plane(v3(0, 0, -1), 0);
+  const capa = new THREE.Mesh(geoGota(1), new THREE.MeshStandardMaterial({ color: '#cfeeff', roughness: .2, metalness: .1, side: THREE.DoubleSide, clippingPlanes: [mitad], emissive: '#1a6fff', emissiveIntensity: 0 }));
+  const nucleo = new THREE.Mesh(geoGota(.62), new THREE.MeshStandardMaterial({ color: '#ff3b2f', roughness: .4, side: THREE.DoubleSide, clippingPlanes: [mitad], emissive: '#ff2a00', emissiveIntensity: .6 }));
+  nucleo.position.x = -.05; pivote.add(capa, nucleo);
+  // flechas que tiran hacia dentro (cabeza) y se amontonan en la cola
+  const anillo = [...Array(12)].map((_, i) => { const f = flecha(.55, .05); f.userData.a = i / 12 * Math.PI * 2; pivote.add(f); return f; });
+  const cola = [...Array(10)].map((_, i) => { const f = flecha(.45, .04); f.userData.x = .8 + i * .55; f.userData.s = i % 2 ? 1 : -1; pivote.add(f); return f; });
+  const peligro = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,40,30,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); pivote.add(peligro);
+  const brilloOro = new THREE.PointLight('#ffd27a', 0, 20, 1.4); brilloOro.position.set(-2, 3, 4); e.add(brilloOro);
+  const cam = new THREE.PerspectiveCamera(40, W / H, .02, 200);
+  pivote.updateMatrixWorld(true);
+  return {
+    escena: e, cam, W: (x, y, z) => pivote.localToWorld(v3(x, y, z)),
+    preparar({ tiempo, modo = 'entera', frio = 0, encoge = 0, flechasK = 0, colaK = 0, rotura = -1, giro = 0, oro = 0, peligroK = 0 }) {
+      const entera = modo === 'entera';
+      gota.visible = entera; capa.visible = nucleo.visible = !entera;
+      gota.rotation.set(giro * .3, giro, 0); est.pts.rotation.copy(gota.rotation);
+      capa.material.emissiveIntensity = frio * .8; capa.material.color.set('#cfeeff').lerp(new THREE.Color('#5aa8ff'), frio);
+      const s = 1 - encoge * .12; nucleo.scale.set(s, s, s); nucleo.material.emissiveIntensity = .6 + Math.sin(tiempo * 6) * .15;
+      anillo.forEach(f => { f.visible = flechasK > 0 && !entera; const r = lerp(1.55, 1.15, (Math.sin(tiempo * 5) + 1) / 2 * flechasK); f.position.set(Math.cos(f.userData.a) * r, Math.sin(f.userData.a) * r, .15); f.rotation.set(0, 0, f.userData.a + Math.PI / 2); f.scale.setScalar(flechasK); });
+      cola.forEach((f, i) => { f.visible = colaK > 0 && !entera; const x = f.userData.x, y0 = Math.pow(x / L, 2) * .6; const r = .9 * Math.pow(1 - x / L, 1.6) + .35; f.position.set(x, y0 + f.userData.s * r * (1 + Math.sin(tiempo * 7 + i) * .08), .2); f.rotation.z = f.userData.s > 0 ? Math.PI : 0; f.scale.setScalar(colaK * (.6 + i * .06)); });
+      peligro.visible = peligroK > 0; peligro.position.set(L - .2, .6, .2); peligro.scale.setScalar((1 + Math.sin(tiempo * 12) * .3) * peligroK * 1.6);
+      brilloOro.intensity = oro * 120;
+      const xCola = L, xCab = -1.1, vel = 8;
+      if (rotura >= 0) { const f = xCola - rotura * vel; cortar(f); gota.visible = entera && f > xCab; est.set(f, x => rotura - (xCola - x) / vel); frente.visible = f > xCab; frente.position.set(f, f > 0 ? (f / L) ** 2 * .6 : 0, 0).applyEuler(gota.rotation); frente.scale.setScalar(f > 0 ? 1.4 : 2.6); }
+      else { cortar(999); est.pts.visible = false; frente.visible = false; }
+    },
+  };
+}
+
+// =================== ESCENARIO 3: PALACIO (1661) ===================
+function crearPalacio() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = new THREE.Color('#2a0a10');
+  const caja = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; e.add(o); return o; };
+  const damasco = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#A3182B'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(255,200,120,.12)'; for (let y = 0; y < h; y += 64) for (let x = (y / 64) % 2 * 32; x < w; x += 64) { g.beginPath(); g.ellipse(x, y, 14, 22, 0, 0, 7); g.fill(); } }, 6, 3);
+  caja(40, .2, 30, new THREE.MeshStandardMaterial({ color: '#5a3a22', roughness: .5, metalness: .1 }), 0, -.1, 0);
+  caja(40, 14, .3, new THREE.MeshStandardMaterial({ map: damasco, roughness: .8 }), 0, 7, -6);
+  const alfombra = canvasTex(64, 256, (g, w, h) => { g.fillStyle = '#C4162E'; g.fillRect(0, 0, w, h); g.fillStyle = '#F2C14E'; g.fillRect(0, 0, 6, h); g.fillRect(w - 6, 0, 6, h); });
+  const alf = new THREE.Mesh(new THREE.PlaneGeometry(4, 30), new THREE.MeshStandardMaterial({ map: alfombra, roughness: .9 })); alf.rotation.x = -Math.PI / 2; alf.position.set(0, .01, 8); alf.receiveShadow = true; e.add(alf);
+  const oro = new THREE.MeshStandardMaterial({ color: '#E0B040', metalness: .9, roughness: .25 });
+  for (const x of [-6, 6]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, 13, 24), oro); c.position.set(x, 6.5, -4.5); c.castShadow = true; e.add(c); }
+  caja(3.2, 1, 2.4, oro, 0, .5, -3.6); caja(3.2, 5, .5, new THREE.MeshStandardMaterial({ color: '#7A1020', roughness: .7 }), 0, 3.5, -4.6); caja(3.6, .5, .6, oro, 0, 6.1, -4.6);
+  // calendario de la pared que avanza de 1661 a 2017
+  const calTex = canvasTex(256, 320, () => {});
+  const dibujarCal = n => { const g = calTex.userData.canvas.getContext('2d'); g.fillStyle = '#FFF6E0'; g.fillRect(0, 0, 256, 320); g.fillStyle = '#C0392B'; g.fillRect(0, 0, 256, 70); g.fillStyle = '#fff'; g.font = 'bold 40px DejaVu Sans'; g.textAlign = 'center'; g.fillText('AÑO', 128, 50); g.fillStyle = '#1F2A44'; g.font = 'bold 92px DejaVu Sans'; g.fillText(String(n), 128, 220); calTex.needsUpdate = true; };
+  const cal = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.25), new THREE.MeshStandardMaterial({ map: calTex, roughness: .7, emissive: '#fff', emissiveMap: calTex, emissiveIntensity: .25 })); cal.position.set(-3.2, 7.5, -5.8); e.add(cal);
+  const P = { rey: personaje(e, 'rey', 3.6), c1: personaje(e, 'cientifico1', 3.4), c2: personaje(e, 'cientifico2', 3.4) };
+  e.add(new THREE.HemisphereLight('#ffe0c0', '#401018', .9));
+  const luz = new THREE.SpotLight('#fff0d0', 420, 50, .7, .6, 1.3); luz.position.set(4, 12, 9); luz.target.position.set(0, 2, -2); luz.castShadow = true; luz.shadow.mapSize.set(2048, 2048); e.add(luz, luz.target);
+  const vela = new THREE.PointLight('#ffb050', 25, 12, 1.5); vela.position.set(-4, 4, 0); e.add(vela);
+  const cam = new THREE.PerspectiveCamera(48, W / H, .1, 200);
+  return {
+    escena: e, cam,
+    preparar({ tiempo, anio = 1661, entrega = 0 }) {
+      dibujarCal(Math.round(anio));
+      P.rey.position.set(lerp(-.2, .9, entrega), 0, lerp(-2.6, -1.6, entrega));
+      P.c1.position.set(2.6, 0, -1.2); P.c2.position.set(4.3, 0, -.6);
+      for (const k in P) mirar(P[k], cam);
+    },
+  };
+}
+
+const taller = crearTaller(), estudio = crearEstudio(), palacio = crearPalacio();
+const comp = new EffectComposer(renderer);
+const rp = new RenderPass(taller.escena, taller.cam); comp.addPass(rp);
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .3, .5, .9); comp.addPass(bloom); comp.addPass(new OutputPass());
+
+// =================== PLANOS (un cambio cada ~1,5-2,5 s) ===================
+const G = v3(-.55, 2.21 + taller.ES, 0);       // gota sobre el yunque
+const angGolpe = t => { // martillo: 0 = contacto. Impacto en t=0 (primer fotograma) y bajada final que enlaza con el principio
+  if (t < .5) return lerp(0, .9, salida(t / .5));
+  return .9;
+};
+const SW = (x, y, z) => estudio.W(x, y, z);
+const camE = (obj, mas, fov) => { const c = estudio.cam; c.fov = fov; const o = SW(...obj); c.position.copy(o.clone().add(mas)); c.lookAt(o); };
+const camT = (pos, mira, fov) => { const c = taller.cam; c.fov = fov; c.position.copy(pos); c.lookAt(mira); };
+const PLANOS = [
+  { desde: 0, nombre: 'GANCHO: martillazo en pleno impacto', esc: 'taller', f(k, t) {
+      taller.preparar({ tiempo: t, golpe: angGolpe(t), chispasT: t + .1 });
+      camT(G.clone().add(v3(lerp(1.7, 1.4, k), lerp(1.1, .95, k), lerp(5.4, 4.8, k))), G.clone().add(v3(.1, .45, 0)), 42);
+    } },
+  { desde: 5, nombre: 'un pellizco: alicates en la cola y estalla', esc: 'taller', f(k, t) {
+      const cierre = clamp((t - T(6) - .25) / .35), tr = T(6) + .62;
+      taller.preparar({ tiempo: t, alicatesK: cierre, rotura: t > tr ? (t - tr) * .5 : -1 });
+      camT(G.clone().add(v3(lerp(1.3, 1.0, k), lerp(.8, .7, k), lerp(3.6, 3.1, k))), G.clone().add(v3(.5, .1, 0)), 40);
+    } },
+  { desde: 8, nombre: 'es una lágrima del príncipe Rupert (gota entera girando)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, giro: lerp(-.5, .4, k), oro: .4 });
+      camE([3.2, .3, 0], v3(lerp(2, -1, k), .5, lerp(13, 11.5, k)), 40);
+    } },
+  { desde: 14, nombre: 'vidrio fundido cae en agua helada', esc: 'taller', f(k, t) {
+      taller.preparar({ tiempo: t, fundido: k * 1.15 });
+      camT(v3(lerp(11.5, 12, k), lerp(4, 2.8, k), lerp(8.5, 7.5, k)), v3(8, lerp(2.8, 1.6, k), 1.2), 45);
+    } },
+  { desde: 21, nombre: 'por fuera se enfría (capa azul)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: suave(k * 1.5) });
+      camE([2.6, .3, 0], v3(lerp(-1.5, 1, k), .5, lerp(11, 9.5, k)), 40);
+    } },
+  { desde: 27, nombre: 'se queda rígido (zoom a la cabeza)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: 1 });
+      camE([0, 0, 0], v3(lerp(-1, -.3, k), .8, lerp(6, 4.8, k)), 36);
+    } },
+  { desde: 31, nombre: 'por dentro sigue caliente (núcleo rojo)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: 1 });
+      camE([.3, 0, 0], v3(lerp(1.2, .6, k), lerp(-.4, 0, k), lerp(4.6, 4.0, k)), 36);
+    } },
+  { desde: 35, nombre: 'al enfriarse encoge y tira', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: 1, encoge: suave(k), flechasK: suave(k * 2) });
+      camE([0, 0, 0], v3(lerp(-1, 0, k), .4, lerp(5, 4.5, k)), 38);
+    } },
+  { desde: 42, nombre: 'de la capa de fuera hacia dentro', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: 1, encoge: 1, flechasK: 1 });
+      camE([1.5, 0, 0], v3(lerp(2, 2.8, k), 1, lerp(8, 8.8, k)), 40);
+    } },
+  { desde: 48, nombre: 'la cabeza apretada como un puño', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: 1, encoge: 1 + Math.sin(t * 9) * .15, flechasK: 1.25 });
+      const a = lerp(-.5, .5, k); camE([0, 0, 0], v3(Math.sin(a) * 4.3, .3, Math.cos(a) * 4.3), 34);
+    } },
+  { desde: 57, nombre: 'aguanta martillazos (Toni golpea y suda)', esc: 'taller', f(k, t) {
+      const tl = t - T(57), fase = (tl % .5) / .5;
+      taller.preparar({ tiempo: t, chispasT: (tl % .5) - .1, quien: 'martillo', quienPos: v3(.9, Math.max(0, Math.sin(fase * Math.PI)) * .25, -1.3) });
+      camT(v3(lerp(-.2, .1, k), lerp(2.9, 2.8, k), lerp(5.2, 4.6, k)), v3(.4, 2.5, -.8), 46);
+    } },
+  { desde: 60, nombre: 'la cola es tan fina (travelling)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, giro: .15 });
+      camE([lerp(1.8, 6.8, suave(k)), .5, 0], v3(.8, -.3, 3.6), 36);
+    } },
+  { desde: 67, nombre: 'esa tensión no tiene dónde esconderse', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, modo: 'corte', frio: 1, encoge: 1, colaK: suave(k * 2), peligroK: suave(k * 1.5) });
+      camE([4.4, .4, 0], v3(lerp(1, .4, k), .3, lerp(7.5, 6.5, k)), 40);
+    } },
+  { desde: 73, nombre: 'rompes la punta (Toni con alicates)', esc: 'taller', f(k, t) {
+      taller.preparar({ tiempo: t, alicatesK: suave(k * 1.6), quien: 'alicates', quienPos: v3(1.3, 0, -1.6) });
+      camT(G.clone().add(v3(lerp(1.4, 1.1, k), lerp(1.3, 1.1, k), lerp(5.6, 4.8, k))), G.clone().add(v3(.9, .9, -.6)), 44);
+    } },
+  { desde: 76, nombre: 'una grieta la atraviesa (cámara lenta)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, giro: .15, rotura: (t - T(76)) * .55 });
+      camE([lerp(5, 1.5, k), .3, 0], v3(1, .4, lerp(9, 8, k)), 40);
+    } },
+  { desde: 81, nombre: 'a 6.000 km/h (llega a la cabeza y estalla)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, giro: .15, rotura: (T(81) - T(76)) * .55 + (t - T(81)) * .6 });
+      camE([0, 0, 0], v3(lerp(.5, -1, k), .8, lerp(7, 9.5, k)), 44);
+    } },
+  { desde: 89, nombre: '1661: el rey con la gota', esc: 'palacio', f(k, t) {
+      palacio.preparar({ tiempo: t, anio: 1661 });
+      const c = palacio.cam; c.fov = 46; c.position.set(lerp(-.5, 0, k), lerp(3.3, 3.1, k), lerp(7, 5.6, k)); c.lookAt(0, 2.4, -2.5);
+    } },
+  { desde: 91, nombre: 'se la dio a sus científicos', esc: 'palacio', f(k, t) {
+      palacio.preparar({ tiempo: t, anio: 1661, entrega: suave(k * 1.3) });
+      const c = palacio.cam; c.fov = 48; c.position.set(lerp(-3, -2.4, k), lerp(3.4, 3.2, k), lerp(7, 6, k)); c.lookAt(2, 2.4, -1.5);
+    } },
+  { desde: 101, nombre: 'tardamos más de 350 años (calendario)', esc: 'palacio', f(k, t) {
+      palacio.preparar({ tiempo: t, anio: lerp(1661, 2017, Math.pow(clamp(k * 1.1), 2)), entrega: 1 });
+      const c = palacio.cam; c.fov = 44; c.position.set(lerp(-1, -2.2, k), lerp(5, 6.6, k), lerp(4.5, 3.2, k)); c.lookAt(-3.2, 7, -5.8);
+    } },
+  { desde: 107, nombre: 'en entenderla del todo (Toni eureka)', esc: 'taller', f(k, t) {
+      taller.preparar({ tiempo: t, quien: 'eureka', quienPos: v3(-1.9, 0, -1.2) });
+      camT(v3(lerp(0, -.6, k), 3, lerp(7, 6.2, k)), v3(-1.2, 2.3, -.8), 46);
+    } },
+  { desde: 111, nombre: 'es casi indestructible (gota dorada)', esc: 'estudio', f(k, t) {
+      estudio.preparar({ tiempo: t, giro: lerp(.4, 1.1, k), oro: 1 });
+      camE([3.2, .3, 0], v3(lerp(1.5, -1, k), lerp(-.5, .5, k), lerp(10.5, 12, k)), 40);
+    } },
+  { desde: 114, nombre: 'BUCLE: el martillo baja… y vuelve al primer fotograma', esc: 'taller', f(k, t) {
+      taller.preparar({ tiempo: t, golpe: lerp(1.2, .03, Math.pow(k, 1.8)) });
+      camT(G.clone().add(v3(lerp(2.1, 1.7, k), lerp(1.3, 1.1, k), lerp(6.2, 5.4, k))), G.clone().add(v3(.1, .45, 0)), 42);
+    } },
+];
+PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
+PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
+const ESC = { taller, estudio, palacio };
+
+// =================== SUBTÍTULOS EN BLOQUES DE 2-4 PALABRAS ===================
+// Unidades: palabras de la voz, con números escritos en cifras (no se repiten rótulos en pantalla)
+const unidades = []; for (let i = 0; i < PAL.length; i++) {
+  if (i === 84) { unidades.push({ w: '6.000 km/h.', t0: PAL[84].t0, t1: PAL[88].t1 }); i = 88; continue; }
+  if (i === 104) { unidades.push({ w: '350', t0: PAL[104].t0, t1: PAL[105].t1 }); i = 105; continue; }
+  unidades.push({ w: PAL[i].w, t0: PAL[i].t0, t1: PAL[i].t1, i });
+}
+const finFrase = w => /[.,:;…!?]$/.test(w);
+const cuerpo = unidades.filter(u => u.i === undefined || u.i >= 5);           // las palabras del gancho van en grande, no como subtítulo
+const frases = []; let f0 = [];
+cuerpo.forEach((u, j) => { f0.push(u); if (finFrase(u.w) || j === cuerpo.length - 1) { frases.push(f0); f0 = []; } });
+// frases de 1 palabra: se unen a la anterior si no es final de oración; si no, a la siguiente
+for (let i = 0; i < frases.length; i++) if (frases[i].length === 1) {
+  const prev = frases[i - 1], ant = prev && !/[.:…!?]$/.test(prev[prev.length - 1].w);
+  if (ant) { prev.push(...frases[i]); frases.splice(i, 1); i--; } else if (frases[i + 1]) { frases[i + 1].unshift(...frases[i]); frases.splice(i, 1); i--; } else if (prev) { prev.push(...frases[i]); frases.splice(i, 1); i--; }
+}
+const bloques = [];
+frases.forEach(fr => { const n = fr.length, k = Math.ceil(n / 4); let i = 0; for (let b = 0; b < k; b++) { const tam = Math.floor(n / k) + (b < n % k ? 1 : 0); bloques.push(fr.slice(i, i + tam)); i += tam; } });
+const CLAVE = new Set(['martillazo', 'pellizco', 'Rupert', 'fundido', 'helada', 'rígido', 'caliente', 'encoge', 'puño', 'martillazos', 'cola', 'tensión', 'punta', 'grieta', '6.000', 'km/h', '1661', 'científicos', '350', 'indestructible']);
+const marcar = w => w.split(' ').map(p => CLAVE.has(p.replace(/[^\wáéíóúñü.\/0-9]/gi, '').replace(/\.$/, '')) ? `<b>${p}</b>` : p).join(' ');
+const FIN_GANCHO = T(5) - .06;   // el gancho grande ocupa los primeros ~1,8 s (no se repite como subtítulo)
+
+// =================== CAPA DE EDICIÓN ===================
+const golpes = [0, T(7) - .2, T(58), T(58) + .5, T(58) + 1.0, T(81) + .72];
+const $ = id => document.getElementById(id);
+function edicion(t) {
+  const g = $('gancho'); g.style.opacity = t < FIN_GANCHO ? 1 : 0; g.style.transform = `scale(${lerp(1.12, 1, salida(t / .25))})`;
+  const sub = $('sub');
+  const b = t >= FIN_GANCHO ? bloques.find((bl, i) => bl[0].t0 - .05 <= t && t < (bloques[i + 1]?.[0].t0 ?? DURACION) - .05) : null;
+  if (b) { sub.innerHTML = marcar(b.map(u => u.w.replace('…', '...')).join(' ')); const k = clamp((t - b[0].t0) / .1); sub.style.transform = `scale(${lerp(1.18, 1, salida(k))})`; sub.style.opacity = 1; } else sub.style.opacity = 0;
+  $('flash').style.opacity = [[T(6) + .62, .55], [T(81) + .72, .6]].reduce((a, [ti, f]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / .22) : 0), 0);
+  let escala = 1; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .25) escala = Math.max(escala, lerp(1.06, 1, salida(d / .25))); }
+  let sx = 0, sy = 0; for (const gp of golpes) { const d = t - gp; if (d >= 0 && d < .35) { const a = (1 - d / .35) * 20; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
+  $('lienzo').style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.03})`;
+}
+
+window.DURACION = DURACION;
+window.PLANOS = PLANOS.map(p => ({ nombre: p.nombre, t0: p.t0, t1: p.t1, esc: p.esc }));
+window.BLOQUES = bloques.map(b => b.map(u => u.w).join(' '));
+window.renderAt = (t) => {
+  const p = PLANOS.find(p => t >= p.t0 && t < p.t1) || PLANOS[PLANOS.length - 1];
+  const k = clamp((t - p.t0) / (p.t1 - p.t0));
+  p.f(k, t);
+  const s = ESC[p.esc]; s.cam.aspect = W / H; s.cam.updateProjectionMatrix();
+  rp.scene = s.escena; rp.camera = s.cam;
+  renderer.toneMappingExposure = p.esc === 'estudio' ? .9 : .85;
+  bloom.strength = p.esc === 'estudio' ? .25 : .15;
+  comp.render(); edicion(t);
+};
+await Promise.all(CARGAS);
+window.LISTO = true;
+</script>
+</body></html>
