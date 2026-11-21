@@ -24,6 +24,16 @@ async def main(src, out, voice="es-ES-AlvaroNeural", rate="+10%", pitch="-2Hz"):
         for i, (a, b, w) in enumerate(words):
             end = words[i + 1][0] if i + 1 < len(words) and words[i + 1][0] - b < 4_000_000 else b
             f.write(f"{i+1}\n{ts(a)} --> {ts(end)}\n{w}\n\n")
+    # Palabras con su puntuación original (edge-tts la quita) en JSON para el montaje
+    import json, re
+    tokens = re.findall(r"\S+", text); j = 0; out_words = []
+    for a, b, w in words:
+        tok = w
+        for k in range(j, min(j + 4, len(tokens))):
+            if re.sub(r"[^\wáéíóúñü]", "", tokens[k].lower()) == re.sub(r"[^\wáéíóúñü]", "", w.lower()):
+                tok, j = tokens[k], k + 1; break
+        out_words.append({"t0": a / 1e7, "t1": b / 1e7, "w": tok})
+    json.dump(out_words, open(out + "_palabras.json", "w", encoding="utf-8"), ensure_ascii=False, indent=0)
     print(f"{len(words)} palabras, {words[-1][1]/1e7:.1f} s")
 
 asyncio.run(main(*sys.argv[1:]))
