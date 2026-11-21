@@ -109,3 +109,31 @@ Object.assign(PRESETS, {
     detalle: `<path d="M-38,-250 h76 l8,106 h-92z" fill="#FAFAF5" stroke="${INK}" stroke-width="5"/><path d="M-38,-250 l-10,-14 M38,-250 l10,-14" stroke="#FAFAF5" stroke-width="5"/><rect x="-16" y="-200" width="32" height="20" rx="3" fill="none" stroke="#C9C2B0" stroke-width="3"/>`,
     objeto: `<g transform="translate(0,-150)">${CARTEL_AGLOE.replace('x="-70"', 'x="-100"').replace('width="130"', 'width="200"').replace('x="-5"', 'x="0"')}</g>`, cabeza: GORRA_PLANA + BIGOTE() },
 });
+
+// ---------- Short "Lágrimas del príncipe Rupert" ----------
+const rizos = (color, sombra) => { let r = ''; for (const s of [-1, 1]) for (let i = 0; i < 5; i++) r += `<circle cx="${s * (74 - (i % 2) * 6)}" cy="${-40 + i * 28}" r="22" fill="${color}" stroke="${sombra}" stroke-width="4"/>`; return `<g>${r}<path d="M-76,-30 C-80,-100 80,-100 76,-30 C50,-70 -50,-70 -76,-30z" fill="${color}" stroke="${sombra}" stroke-width="5"/></g>`; };
+const PELUCA_REY = rizos('#2A1E1A', '#1F2A44');
+const PELUCA_BLANCA = rizos('#F2F0EA', '#1F2A44');
+const CORONA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-46,-84 l-6,-46 l24,22 l28,-36 l28,36 l24,-22 l-6,46z" fill="#F2C14E"/><circle cx="0" cy="-104" r="7" fill="#C0392B"/><circle cx="-30" cy="-96" r="5" fill="#3E7BD9"/><circle cx="30" cy="-96" r="5" fill="#3E7BD9"/></g>`;
+const SUDOR = `<g fill="#7EC8F2" stroke="${INK}" stroke-width="3"><path d="M84,-40 q8,14 0,20 q-8,-6 0,-20z"/><path d="M96,-6 q7,12 0,17 q-7,-5 0,-17z"/><path d="M-90,-30 q7,12 0,17 q-7,-5 0,-17z"/></g>`;
+const MARTILLO = `<g transform="rotate(35)"><rect x="-7" y="-110" width="14" height="110" rx="5" fill="#8A5A34" stroke="${INK}" stroke-width="5"/><rect x="-38" y="-138" width="76" height="34" rx="6" fill="#7D8790" stroke="${INK}" stroke-width="5"/></g>`;
+const ALICATES = `<g transform="rotate(-20)" stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-6,0 l-16,70 l14,0 l12,-66z" fill="#D9534F"/><path d="M6,0 l16,70 l-14,0 l-12,-66z" fill="#D9534F"/><path d="M-6,0 l-4,-50 l8,0z M6,0 l4,-50 l-8,0z" fill="#9AA3AD"/><circle cx="0" cy="-2" r="7" fill="#9AA3AD"/></g>`;
+const LUPA = `<g transform="rotate(-30)"><rect x="-6" y="0" width="12" height="60" rx="5" fill="#5A3B26" stroke="${INK}" stroke-width="4"/><circle cx="0" cy="-30" r="30" fill="rgba(190,230,255,.6)" stroke="#C9A24A" stroke-width="9"/></g>`;
+const GOTA = `<g><path d="M0,-18 c14,0 22,10 22,22 c0,14 -10,22 -22,22 c-10,0 -16,-6 -20,-14 c-10,-6 -30,-12 -60,-14 c28,-4 46,-10 56,-16 c6,-0 14,0 24,0z" fill="rgba(210,240,255,.85)" stroke="${INK}" stroke-width="4"/></g>`;
+Object.assign(PRESETS, {
+  rey: { expr: 'eureka', pantalon: '#F2EEE4', torso: '#B3262E', manga: '#B3262E',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 70,-60', manos: [[-80, -136], [116, -310]],
+    detalle: `<path d="M-50,-268 q50,-18 100,0 l4,30 q-54,14 -108,0z" fill="#FAFAF5" stroke="${INK}" stroke-width="5"/><g fill="#1F2A44">${[-34, -12, 10, 32].map(x => `<path d="M${x},-252 l3,8 l-3,4 l-3,-4z"/>`).join('')}</g><path d="M-6,-232 v80 M6,-232 v80" stroke="#F2C14E" stroke-width="5"/><circle cx="0" cy="-200" r="8" fill="#F2C14E" stroke="${INK}" stroke-width="3"/>`,
+    objeto: `<g transform="translate(116,-330)">${GOTA}</g>`, cabeza: PELUCA_REY + CORONA },
+  cientifico1: { expr: 'preocupado', pantalon: '#E9E4D6', torso: '#2F3F66', manga: '#2F3F66',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,10 10,-60', manos: [[-80, -136], [50, -312]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M0,-240 v90" stroke="#C9A24A" stroke-width="4"/><circle cx="0" cy="-215" r="5" fill="#C9A24A"/><circle cx="0" cy="-185" r="5" fill="#C9A24A"/>`,
+    cabeza: PELUCA_BLANCA },
+  cientifico2: { expr: 'sorprendido', pantalon: '#3E3A35', torso: '#6E2A3A', manga: '#6E2A3A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M0,-240 v90" stroke="#C9A24A" stroke-width="4"/>`,
+    objeto: `<g transform="translate(106,-320)">${LUPA}</g>`, cabeza: PELUCA_BLANCA + GAFAS },
+});
+// Toni con martillo (sudando) y con alicates: variantes de pose para este short
+PRESETS.toni_martillo = Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoD: 'M46,-250 q50,-10 60,-80', manos: [[-90, -136], [106, -330]], objeto: `<g transform="translate(106,-330)">${MARTILLO}</g>`, cabeza: PELO + GAFAS + SUDOR });
+PRESETS.toni_alicates = Object.assign({}, PRESETS.toni, { expr: 'eureka', brazoD: 'M46,-250 q50,-10 70,-50', manos: [[-90, -136], [116, -300]], objeto: `<g transform="translate(116,-300)">${ALICATES}</g>` });
