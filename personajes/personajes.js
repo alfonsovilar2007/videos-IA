@@ -78,3 +78,34 @@ const PRESETS={
 };
 // Devuelve el SVG (string) de un personaje con los pies en (x,y).
 function dibujar(nombre,x,y,sc,cambios){return personaje(x,y,sc,Object.assign({},PRESETS[nombre],cambios||{}));}
+
+// ---------- Short "El pueblo que no existía" (Agloe) ----------
+const VISERA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-70,-44 q70,-24 140,0 l0,9 q-70,-22 -140,0z" fill="#2E7D4F"/><path d="M-64,-38 q64,-16 128,0 q-14,20 -64,22 q-50,-2 -64,-22z" fill="rgba(80,200,130,.55)"/></g>`;
+const PELO_ROJO = PELO.replace('#3A2A22', '#B5532A');
+const CALVO = `<g fill="#6B6B6B" stroke="${INK}" stroke-width="5"><path d="M-70,-10 q-6,-30 10,-46 q4,24 -2,52z"/><path d="M70,-10 q6,-30 -10,-46 q-4,24 2,52z"/></g>`;
+const BIGOTE = (c = '#5A3B26') => `<path d="M-30,18 q15,-12 30,-2 q15,-10 30,2 q-14,14 -30,5 q-16,9 -30,-5z" fill="${c}" stroke="${INK}" stroke-width="3.5"/>`;
+const ANTIFAZ = `<g><path d="M-74,-22 q74,-16 148,0 l0,28 q-34,8 -52,-6 q-22,-12 -44,0 q-18,14 -52,6z" fill="#151515" stroke="${INK}" stroke-width="4"/><ellipse cx="-26" cy="-6" rx="12" ry="8" fill="#fff"/><ellipse cx="26" cy="-6" rx="12" ry="8" fill="#fff"/><circle cx="-20" cy="-6" r="4.5" fill="${INK}"/><circle cx="32" cy="-6" r="4.5" fill="${INK}"/><path d="M-40,-30 l26,8 M40,-30 l-26,8" stroke="${INK}" stroke-width="6" stroke-linecap="round"/></g>`;
+const GORRO_NEGRO = `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round"><path d="M-68,-40 q-4,-60 68,-62 q72,2 68,62z" fill="#2B2B2B"/><rect x="-72" y="-48" width="144" height="18" rx="8" fill="#3A3A3A"/></g>`;
+const GORRA_PLANA = `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round"><path d="M-66,-46 q66,-62 132,-4 q-66,-14 -132,4z" fill="#8A6A45"/><path d="M8,-52 q60,-6 84,10 q-40,8 -84,0z" fill="#6E5235"/></g>`;
+const REGLA = `<g transform="rotate(-25)"><rect x="-8" y="-90" width="16" height="96" rx="3" fill="#E9D8A6" stroke="${INK}" stroke-width="4"/><path d="M-8,-80 h7 M-8,-66 h5 M-8,-52 h7 M-8,-38 h5 M-8,-24 h7" stroke="${INK}" stroke-width="3"/></g>`;
+const ROLLO = `<g transform="rotate(30)"><rect x="-14" y="-80" width="28" height="100" rx="12" fill="#F3E7C9" stroke="${INK}" stroke-width="5"/><path d="M-14,-50 h28 M-14,-10 h28" stroke="#C9A96B" stroke-width="4"/></g>`;
+const CALCO = `<g transform="rotate(-12)"><rect x="-55" y="-75" width="80" height="62" rx="4" fill="rgba(255,255,255,.75)" stroke="${INK}" stroke-width="4"/><path d="M-45,-55 q20,10 30,-5 t30,8 M-40,-30 l50,-10" stroke="#5B8BD9" stroke-width="3" fill="none"/></g>`;
+const CARTEL_AGLOE = `<g><rect x="-70" y="-62" width="130" height="48" rx="6" fill="#B23A2E" stroke="${INK}" stroke-width="5"/><text x="-5" y="-29" font-size="24" font-weight="900" text-anchor="middle" fill="#FFF3D6" font-family="DejaVu Sans">AGLOE</text></g>`;
+Object.assign(PRESETS, {
+  cartografo1: { expr: 'neutral', pantalon: '#4A4F5A', torso: '#F1E9D8', manga: '#F1E9D8',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q44,30 70,-20', manos: [[-80, -136], [116, -272]],
+    detalle: `<path d="M-40,-262 v100 M40,-262 v100" stroke="#7A5A3A" stroke-width="7"/><path d="M0,-266 l-9,22 9,30 9,-30z" fill="#7A3B2E" stroke="${INK}" stroke-width="4"/><rect x="-60" y="-222" width="16" height="8" fill="#C0392B" stroke="${INK}" stroke-width="2"/><rect x="44" y="-222" width="16" height="8" fill="#C0392B" stroke="${INK}" stroke-width="2"/>`,
+    objeto: `<g transform="translate(116,-272)">${REGLA}</g>`, cabeza: PELO_ROJO + VISERA },
+  cartografo2: { expr: 'neutral', pantalon: '#3E3A35', torso: '#6F7F5F', manga: '#E9E4D6',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,40 24,90', manos: [[-80, -136], [70, -160]],
+    detalle: `<path d="M-50,-266 l26,110 M50,-266 l-26,110" stroke="#4F5D42" stroke-width="5"/><circle cx="0" cy="-200" r="5" fill="#F2C14E" stroke="${INK}" stroke-width="2"/><circle cx="0" cy="-176" r="5" fill="#F2C14E" stroke="${INK}" stroke-width="2"/>`,
+    objeto: `<g transform="translate(70,-160)">${ROLLO}</g>`, cabeza: CALVO + BIGOTE('#6B6B6B') + VISERA },
+  villano: { expr: 'eureka', pantalon: '#1E1E1E', torso: '#2B2B2B', manga: '#2B2B2B',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    detalle: `<path d="M-52,-240 h104 M-54,-212 h108 M-56,-184 h112" stroke="#EDEDED" stroke-width="9"/>`,
+    objeto: `<g transform="translate(106,-320)">${CALCO}</g>`, cabeza: GORRO_NEGRO + ANTIFAZ },
+  tendero: { expr: 'eureka', pantalon: '#4B3B2B', torso: '#C0392B', manga: '#C0392B',
+    brazoI: 'M-46,-250 q-40,30 -44,60', brazoD: 'M46,-250 q40,30 44,60', manos: [[-92, -188], [92, -188]],
+    detalle: `<path d="M-38,-250 h76 l8,106 h-92z" fill="#FAFAF5" stroke="${INK}" stroke-width="5"/><path d="M-38,-250 l-10,-14 M38,-250 l10,-14" stroke="#FAFAF5" stroke-width="5"/><rect x="-16" y="-200" width="32" height="20" rx="3" fill="none" stroke="#C9C2B0" stroke-width="3"/>`,
+    objeto: `<g transform="translate(0,-150)">${CARTEL_AGLOE.replace('x="-70"', 'x="-100"').replace('width="130"', 'width="200"').replace('x="-5"', 'x="0"')}</g>`, cabeza: GORRA_PLANA + BIGOTE() },
+});
