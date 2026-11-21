@@ -162,7 +162,27 @@ def subida(dur=1.6):
     n = int(dur * SR); tt = np.arange(n) / SR
     r = lowpass(rng.standard_normal(n), 200 + 7000 * (tt / dur) ** 2) * (tt / dur) ** 2
     return r / (np.abs(r).max() + 1e-9)
-SFX = {"grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
+def frenazo():
+    """Disco que se para de golpe (rayado de vinilo)."""
+    n = int(.7 * SR); tt = np.arange(n) / SR
+    f = 900 * np.exp(-tt * 5) + 60; fase = 2 * np.pi * np.cumsum(f) / SR
+    return (np.sign(np.sin(fase)) * .4 + lowpass(rng.standard_normal(n), 2000) * .6) * env(n, .002, .25)
+def martillo():
+    out = np.zeros(int(2.4 * SR))
+    for i in range(7):
+        g = sello() * .7; tt = np.arange(len(g)) / SR; g = g + np.sin(2 * np.pi * 2300 * tt) * env(len(g), .001, .03) * .3
+        p = int((i * .32 + rng.uniform(0, .06)) * SR); out[p:p + len(g)] += g[:len(out) - p]
+    return out
+def motor(dur=3.0):
+    n = int(dur * SR); tt = np.arange(n) / SR
+    m = lowpass(np.sign(np.sin(2 * np.pi * 38 * tt)) + rng.standard_normal(n) * .3, 400) * (1 + .3 * np.sin(2 * np.pi * 6 * tt))
+    return m * np.minimum(1, tt / .8) * np.minimum(1, (dur - tt) / .5)
+def confeti():
+    out = np.zeros(int(1.5 * SR)); out[:int(.12 * SR)] += lowpass(rng.standard_normal(int(.12 * SR)), 5000) * env(int(.12 * SR), .001, .03) * 2
+    for i in range(30):
+        c = pop() * .25; p = int(rng.uniform(.1, 1.3) * SR); out[p:p + len(c)] += c[:len(out) - p]
+    return out
+SFX = {"frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
 for c in ev["cortes"]:
     poner(fx, whoosh(), c - .2, .28)
 for t, nombre in ev["efectos"]:

@@ -1,0 +1,446 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>El pueblo que no existía</title>
+<!-- Short como función pura del tiempo: window.renderAt(t). Escenarios 3D + personajes 2D + capa de edición. -->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  #lienzo{position:absolute;inset:0;transform-origin:50% 50%}
+  canvas{display:block}
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.5) 100%)}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0}
+  .txt{position:absolute;left:0;right:0;text-align:center;font-family:"DejaVu Sans",sans-serif;font-weight:800;color:#fff;paint-order:stroke}
+  #arriba{top:150px;left:70px;right:70px;font-size:44px;line-height:1.2;-webkit-text-stroke:10px #000;text-shadow:0 5px 0 rgba(0,0,0,.35)}
+  #palabra{top:1220px;font-size:124px;line-height:1;letter-spacing:-2px;-webkit-text-stroke:22px #000;text-shadow:0 11px 0 rgba(0,0,0,.45)}
+  #sello{position:absolute;left:50%;top:640px;font:900 112px "DejaVu Sans",sans-serif;padding:10px 40px;border:16px solid;border-radius:22px;opacity:0;transform-origin:50% 50%;white-space:nowrap;background:rgba(255,255,255,.08)}
+  #letras{position:absolute;inset:0;opacity:0}
+  #letras span{position:absolute;width:160px;margin-left:-80px;text-align:center;font:900 190px "DejaVu Sans",sans-serif;color:#FFD93B;paint-order:stroke;-webkit-text-stroke:24px #000}
+  #letras .nombre{width:900px;margin-left:-450px;font-size:54px;color:#fff;-webkit-text-stroke:12px #000}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="lienzo"></div>
+<div id="vineta"></div>
+<div id="letras"></div>
+<div id="sello"></div>
+<div id="arriba" class="txt">Un pueblo falso para pillar a los copiones</div>
+<div id="palabra" class="txt"></div>
+<div id="flash"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1080, H = 1920;
+let semilla = 2024;
+const rnd = () => { semilla |= 0; semilla = semilla + 0x6D2B79F5 | 0; let t = Math.imul(semilla ^ semilla >>> 15, 1 | semilla); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const suave = k => { k = clamp(k); return k * k * (3 - 2 * k); };
+const salida = k => 1 - Math.pow(1 - clamp(k), 3);
+const rebote = k => { k = clamp(k); return 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); };   // sale con rebote
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const lerpV = (a, b, k) => a.clone().lerp(b, k);
+
+const PAL = await (await fetch('voz_ritmo.json')).json();
+const T = i => PAL[i].t0;
+const DURACION = PAL[PAL.length - 1].t1 + 1.6;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('lienzo').appendChild(renderer.domElement);
+const entorno = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+function canvasTex(w, h, dibujo, rx = 1, ry = 1) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; dibujo(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+const ruido = (g, w, h, base, v, n) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < n; i++) { const a = (rnd() - .5) * v; g.fillStyle = a > 0 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${-a})`; g.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2 + rnd() * 3); } };
+const texRadial = c => canvasTex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+const CARGAS = []; const cargador = new THREE.TextureLoader();
+const spriteTex = n => { let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+function personaje(escena, nombre, alto) {
+  const t = spriteTex(nombre);
+  const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: .2, side: THREE.DoubleSide, fog: false });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(alto * 400 / 640, alto), m); p.geometry.translate(0, alto / 2, 0); p.castShadow = true;
+  p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  escena.add(p); return p;
+}
+const mirar = (p, cam) => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(cam.position.x - w.x, cam.position.z - w.z); };
+const textoTex = (txt, { w = 1024, h = 256, fondo = null, color = '#222', fuente = 'bold 150px DejaVu Sans', borde = null } = {}) => canvasTex(w, h, g => {
+  if (fondo) { g.fillStyle = fondo; g.fillRect(0, 0, w, h); }
+  if (borde) { g.strokeStyle = borde; g.lineWidth = 14; g.strokeRect(10, 10, w - 20, h - 20); }
+  g.font = fuente; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = color; g.fillText(txt, w / 2, h / 2 + 6);
+});
+
+// =================== MAPA (canvas) ===================
+// Punto del cruce de Agloe en el lienzo del mapa (px de 2048) y tamaño del mapa en el mundo
+const MPX = 1180, MPY = 1010, MS = 20;
+const mapaAMundo = (px, py) => v3((px / 2048 - .5) * MS, 0, (py / 2048 - .5) * MS);
+function dibujarMapa(estilo) {
+  semilla = 99;   // misma geografía en los tres mapas
+  return canvasTex(2048, 2048, (g, w, h) => {
+    const P = {
+      antiguo: { papel: '#E9D9B4', tinta: '#4A3A28', carretera: '#B0412E', rio: '#5E8FB0', bosque: 'rgba(90,120,60,.35)', rejilla: 'rgba(74,58,40,.12)' },
+      competencia: { papel: '#DCE6E4', tinta: '#22303A', carretera: '#2F6BB3', rio: '#4FA3C7', bosque: 'rgba(60,140,90,.3)', rejilla: 'rgba(34,48,58,.12)' },
+      moderno: { papel: '#0E1A2B', tinta: '#9FB6D6', carretera: '#38D2FF', rio: '#1E5A8C', bosque: 'rgba(40,90,80,.35)', rejilla: 'rgba(120,170,230,.10)' },
+    }[estilo];
+    g.fillStyle = P.papel; g.fillRect(0, 0, w, h);
+    if (estilo !== 'moderno') for (let i = 0; i < 40; i++) { const x = rnd() * w, y = rnd() * h, r = 40 + rnd() * 180; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(120,80,30,.10)'); gr.addColorStop(1, 'rgba(120,80,30,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
+    g.strokeStyle = P.rejilla; g.lineWidth = 3; for (let i = 0; i <= w; i += 128) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(w, i); g.stroke(); }
+    for (let i = 0; i < 26; i++) { const x = rnd() * w, y = rnd() * h; g.fillStyle = P.bosque; for (let j = 0; j < 12; j++) { g.beginPath(); g.arc(x + (rnd() - .5) * 160, y + (rnd() - .5) * 120, 20 + rnd() * 30, 0, 7); g.fill(); } }
+    // ríos
+    g.strokeStyle = P.rio; g.lineCap = 'round';
+    for (const [x0, grosor] of [[300, 18], [1650, 12]]) { g.lineWidth = grosor; g.beginPath(); let x = x0; g.moveTo(x, 0); for (let y = 0; y <= h; y += 60) { x += (rnd() - .5) * 90; g.lineTo(x, y); } g.stroke(); }
+    // carreteras: dos que se cruzan en el punto de Agloe y varias más
+    const via = (pts, gr) => { g.strokeStyle = P.carretera; g.lineWidth = gr; g.lineJoin = 'round'; g.beginPath(); g.moveTo(...pts[0]); for (let i = 1; i < pts.length - 1; i++) { const [x1, y1] = pts[i], [x2, y2] = pts[i + 1]; g.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2); } g.lineTo(...pts[pts.length - 1]); g.stroke(); };
+    via([[0, 900], [500, 980], [900, 1060], [MPX, MPY], [1500, 940], [2048, 1000]], 14);
+    via([[1100, 0], [1180, 400], [1140, 760], [MPX, MPY], [1250, 1400], [1160, 2048]], 14);
+    via([[0, 300], [700, 420], [1180, 400], [2048, 200]], 9); via([[200, 2048], [520, 1500], [900, 1060]], 9); via([[1500, 940], [1700, 1500], [2048, 1700]], 9); via([[700, 420], [520, 0]], 7);
+    // pueblos (nombres de la zona)
+    g.font = 'bold 44px DejaVu Sans'; g.fillStyle = P.tinta;
+    for (const [x, y, n] of [[700, 420, 'Rockland'], [1180, 400, 'Roscoe'], [900, 1060, 'Lew Beach'], [1500, 940, 'Beaverkill'], [520, 1500, 'Turnwood'], [1700, 1500, 'Arena']]) { g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill(); g.fillText(n, x + 24, y - 18); }
+    if (estilo === 'competencia') { g.fillStyle = '#C0392B'; g.beginPath(); g.arc(MPX, MPY, 16, 0, 7); g.fill(); g.font = 'bold 46px DejaVu Sans'; g.fillText('Agloe', MPX + 26, MPY - 20); }
+    // cartela y rosa de los vientos
+    g.strokeStyle = P.tinta; g.lineWidth = 6; g.strokeRect(60, 60, 820, 190); g.font = 'bold 64px DejaVu Sans'; g.fillStyle = P.tinta;
+    g.fillText(estilo === 'moderno' ? 'MAPA DIGITAL · HOY' : estilo === 'competencia' ? 'MAPA DE LA COMPETENCIA' : 'NUEVA YORK · 1930', 90, 150); g.font = '38px DejaVu Sans'; g.fillText(estilo === 'moderno' ? 'Navegación GPS' : 'Mapa de carreteras', 90, 215);
+    g.save(); g.translate(1820, 1820); for (let i = 0; i < 8; i++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(0, 0); g.lineTo(i % 2 ? 50 : 110, 0); g.lineTo(0, 16); g.closePath(); g.fill(); } g.font = 'bold 50px DejaVu Sans'; g.textAlign = 'center'; g.fillText('N', 0, -130); g.restore();
+    g.strokeStyle = P.tinta; g.lineWidth = 10; g.strokeRect(20, 20, w - 40, h - 40);
+  });
+}
+
+// =================== ESCENARIO 1: EL MAPA SOBRE LA MESA ===================
+function crearMapa() {
+  const e = new THREE.Scene(); e.background = new THREE.Color('#1a120b'); e.environment = entorno; e.fog = new THREE.FogExp2('#1a120b', .012);
+  const madera = canvasTex(512, 512, (g, w, h) => { g.fillStyle = '#6B4426'; g.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++) { g.strokeStyle = `rgba(${rnd() < .5 ? '40,20,8' : '150,100,60'},${.1 + rnd() * .15})`; g.lineWidth = 1 + rnd() * 3; g.beginPath(); const y = rnd() * h; g.moveTo(0, y); g.bezierCurveTo(w * .3, y + (rnd() - .5) * 30, w * .6, y + (rnd() - .5) * 30, w, y + (rnd() - .5) * 20); g.stroke(); } }, 4, 4);
+  const mesa = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ map: madera, roughness: .6 })); mesa.rotation.x = -Math.PI / 2; mesa.position.y = -.02; mesa.receiveShadow = true; e.add(mesa);
+  const texturas = { antiguo: dibujarMapa('antiguo'), competencia: dibujarMapa('competencia'), moderno: dibujarMapa('moderno') };
+  const papel = new THREE.MeshStandardMaterial({ map: texturas.antiguo, roughness: .85 });
+  const mapa = new THREE.Mesh(new THREE.PlaneGeometry(MS, MS, 40, 40), papel); mapa.rotation.x = -Math.PI / 2; mapa.position.y = .14; mapa.receiveShadow = true; e.add(mapa);
+  // ondulación del papel
+  const pos = mapa.geometry.attributes.position; for (let i = 0; i < pos.count; i++) pos.setZ(i, Math.sin(pos.getX(i) * .4) * .06 + Math.cos(pos.getY(i) * .5) * .05); mapa.geometry.computeVertexNormals();
+  // objetos sobre la mesa
+  const lapiz = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 5, 6), new THREE.MeshStandardMaterial({ color: '#E8B732' })); lapiz.rotation.set(Math.PI / 2, 0, .6); lapiz.position.set(7, .15, 6); lapiz.castShadow = true; e.add(lapiz);
+  const taza = new THREE.Mesh(new THREE.CylinderGeometry(1, .85, 1.8, 24), new THREE.MeshStandardMaterial({ color: '#E7E2D6', roughness: .3 })); taza.position.set(-11.5, .9, -6); taza.castShadow = true; e.add(taza);
+  // punto rojo y etiqueta de Agloe
+  const pA = mapaAMundo(MPX, MPY);
+  const punto = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .06, 32), new THREE.MeshStandardMaterial({ color: '#C0392B', emissive: '#C0392B', emissiveIntensity: .5 })); punto.position.copy(pA).setY(.24); e.add(punto);
+  const etiqueta = new THREE.Mesh(new THREE.PlaneGeometry(2.4, .6), new THREE.MeshBasicMaterial({ map: textoTex('AGLOE', { color: '#C0392B', fuente: 'bold 170px DejaVu Sans' }), transparent: true })); etiqueta.rotation.x = -Math.PI / 2; etiqueta.position.copy(pA).add(v3(1.55, .26, -.5)); e.add(etiqueta);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,60,40,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); halo.position.copy(pA).setY(.3); e.add(halo);
+  // puntos trampa del mapa moderno
+  const trampas = [[400, 700], [1500, 600], [800, 1600], [1650, 1250], [300, 1250], [1300, 1750]].map(([x, y]) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,50,50,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); s.position.copy(mapaAMundo(x, y)).setY(.3); e.add(s); return s; });
+  // lupa
+  const lupa = new THREE.Group(); e.add(lupa);
+  const laton = new THREE.MeshStandardMaterial({ color: '#C9A24A', metalness: .9, roughness: .25 });
+  const aro = new THREE.Mesh(new THREE.TorusGeometry(1.6, .14, 16, 64), laton); aro.rotation.x = Math.PI / 2; aro.castShadow = true; lupa.add(aro);
+  const cristal = new THREE.Mesh(new THREE.CircleGeometry(1.55, 48), new THREE.MeshStandardMaterial({ color: '#d8f0ff', transparent: true, opacity: .18, roughness: 0, metalness: .2 })); cristal.rotation.x = -Math.PI / 2; lupa.add(cristal);
+  const mango = new THREE.Mesh(new THREE.CylinderGeometry(.18, .22, 3.2, 16), new THREE.MeshStandardMaterial({ color: '#3B2414', roughness: .5 })); mango.rotation.z = Math.PI / 2; mango.position.set(3.2, 0, 0); mango.castShadow = true; lupa.add(mango);
+  // villano gigante sobre el mapa (gancho)
+  const villano = personaje(e, 'villano', 4.2); villano.position.copy(pA).add(v3(-2.6, 0, 1.2));
+  // luz cálida de flexo
+  e.add(new THREE.HemisphereLight('#ffe9c7', '#2b1a0c', .5));
+  const foco = new THREE.SpotLight('#ffd9a0', 170, 120, 1.0, .8, 1.1); foco.position.set(-9, 30, 12); foco.target.position.set(1, 0, 0); foco.castShadow = true; foco.shadow.mapSize.set(2048, 2048); foco.shadow.bias = -.0004; e.add(foco, foco.target);
+  const cam = new THREE.PerspectiveCamera(50, W / H, .05, 300);
+  return {
+    escena: e, cam, pA,
+    preparar({ tiempo, estilo = 'antiguo', punto: kp = 0, lupa: lp = null, villano: kv = 0, trampas: kt = 0 }) {
+      papel.map = texturas[estilo]; papel.needsUpdate = true;
+      e.background.set(estilo === 'moderno' ? '#050a12' : '#1a120b');
+      punto.visible = etiqueta.visible = halo.visible = kp > 0 && estilo === 'antiguo';
+      const s = rebote(kp); punto.scale.set(s, 1, s); etiqueta.material.opacity = clamp(kp * 1.5); halo.scale.setScalar(1.2 + Math.sin(tiempo * 6) * .25); halo.material.opacity = .7 * clamp(kp);
+      trampas.forEach((tr, i) => { const b = (Math.sin(tiempo * 5 + i * 1.7) + 1) / 2; tr.visible = kt > 0; tr.scale.setScalar((.8 + b * .9) * salida(kt * 2 - i * .2)); });
+      lupa.visible = !!lp; if (lp) { lupa.position.copy(lp); }
+      villano.visible = kv > 0; villano.scale.setScalar(rebote(kv)); mirar(villano, cam);
+      foco.intensity = estilo === 'moderno' ? 70 : 170;
+    },
+  };
+}
+
+// =================== ESCENARIO 2: EL CRUCE DE CARRETERAS ===================
+function crearCruce() {
+  const e = new THREE.Scene(); e.environment = entorno;
+  const uni = { arriba: { value: new THREE.Color('#3f83d6') }, horizonte: { value: new THREE.Color('#cfe3f2') } };
+  e.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, uniforms: uni, fog: false,
+    vertexShader: 'varying vec3 p; void main(){ p = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+    fragmentShader: 'uniform vec3 arriba; uniform vec3 horizonte; varying vec3 p; void main(){ float k = clamp(normalize(p).y*2.5,0.,1.); gl_FragColor = vec4(mix(horizonte, arriba, k),1.); }' })));
+  e.fog = new THREE.Fog('#cfe3f2', 80, 420);
+  const hierba = canvasTex(512, 512, (g, w, h) => { ruido(g, w, h, '#6E8F3E', .16, 16000); for (let i = 0; i < 2500; i++) { g.strokeStyle = `rgba(${rnd() < .5 ? '150,180,80' : '60,90,30'},.5)`; g.beginPath(); const x = rnd() * w, y = rnd() * h; g.moveTo(x, y); g.lineTo(x + (rnd() - .5) * 4, y - 6 - rnd() * 6); g.stroke(); } }, 40, 40);
+  const suelo = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshStandardMaterial({ map: hierba, roughness: .95 })); suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; e.add(suelo);
+  const surcos = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#B79A57'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(90,70,30,.35)'; g.fillRect(x, 0, 6, h); g.fillStyle = 'rgba(230,210,140,.35)'; g.fillRect(x + 8, 0, 4, h); } }, 12, 6);
+  for (const [x, z, r] of [[-60, -60, 0], [60, 60, 0], [70, -70, Math.PI / 2], [-70, 70, Math.PI / 2]]) { const c = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ map: surcos, roughness: 1 })); c.rotation.set(-Math.PI / 2, 0, r); c.position.set(x, .02, z); c.receiveShadow = true; e.add(c); }
+  const tierra = canvasTex(256, 256, (g, w, h) => { ruido(g, w, h, '#9C8762', .2, 9000); g.fillStyle = 'rgba(70,55,35,.3)'; g.fillRect(w * .28, 0, 18, h); g.fillRect(w * .66, 0, 18, h); }, 1, 40);
+  for (const r of [0, Math.PI / 2]) { const c = new THREE.Mesh(new THREE.PlaneGeometry(7, 800), new THREE.MeshStandardMaterial({ map: tierra, roughness: 1 })); c.rotation.set(-Math.PI / 2, 0, r); c.position.y = .04 + (r ? .01 : 0); c.receiveShadow = true; e.add(c); }
+  // postes de teléfono a lo largo de una carretera
+  const madera = new THREE.MeshStandardMaterial({ color: '#5a4330', roughness: .9 });
+  for (let z = -300; z <= 300; z += 30) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.18, .22, 9, 8), madera); p.position.set(-6, 4.5, z); p.castShadow = true; e.add(p); const b = new THREE.Mesh(new THREE.BoxGeometry(2.6, .2, .2), madera); b.position.set(-6, 8.4, z); e.add(b); }
+  const cable = new THREE.Line(new THREE.BufferGeometry().setFromPoints([...Array(41)].map((_, i) => v3(-6.9, 8.5 - Math.abs(Math.sin(i * Math.PI / 2)) * .6, -300 + i * 15))), new THREE.LineBasicMaterial({ color: '#222' })); e.add(cable);
+  const cable2 = cable.clone(); cable2.position.x = 1.8; e.add(cable2);
+  // vallas
+  for (const [x, s] of [[4.5, 1], [-4.5, -1]]) for (let z = -150; z <= 150; z += 4) { if (Math.abs(z) < 6) continue; const p = new THREE.Mesh(new THREE.BoxGeometry(.15, 1.3, .15), madera); p.position.set(x, .65, z); p.castShadow = true; e.add(p); }
+  // colinas y árboles
+  const verde = new THREE.MeshStandardMaterial({ color: '#5F7F3A', roughness: 1, flatShading: true });
+  for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, r = 230 + rnd() * 80; const c = new THREE.Mesh(new THREE.SphereGeometry(60 + rnd() * 40, 10, 6), verde); c.scale.y = .35; c.position.set(Math.cos(a) * r, -5, Math.sin(a) * r); e.add(c); }
+  const copa = new THREE.MeshStandardMaterial({ color: '#4C7A2E', roughness: .9, flatShading: true });
+  for (let i = 0; i < 60; i++) { let x = (rnd() - .5) * 300, z = (rnd() - .5) * 300; if (Math.abs(x) < 14 || Math.abs(z) < 14) continue; const g = new THREE.Group(); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.3, .4, 3, 6), madera); tr.position.y = 1.5; const co = new THREE.Mesh(new THREE.IcosahedronGeometry(2.4 + rnd(), 0), copa); co.position.y = 4.4; tr.castShadow = co.castShadow = true; g.add(tr, co); g.position.set(x, 0, z); e.add(g); }
+  // nubes
+  const texNube = canvasTex(256, 256, g => { for (let i = 0; i < 18; i++) { const x = 60 + rnd() * 136, y = 90 + rnd() * 80, r = 30 + rnd() * 50; const gr = g.createRadialGradient(x, y - r * .2, 0, x, y, r); gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(1, 'rgba(230,236,245,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); } });
+  const nubes = []; for (let i = 0; i < 24; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texNube, transparent: true, depthWrite: false, fog: false })); const t = 60 + rnd() * 80; s.scale.set(t, t * .5, 1); s.userData = { a: rnd() * Math.PI * 2, r: 250 + rnd() * 150, y: 70 + rnd() * 60 }; e.add(s); nubes.push(s); }
+  // polvo en el aire
+  const pp = []; for (let i = 0; i < 400; i++) pp.push((rnd() - .5) * 60, rnd() * 8, (rnd() - .5) * 60);
+  const polvo = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pp, 3)), new THREE.PointsMaterial({ color: '#efe2c0', size: .08, transparent: true, opacity: .6 })); e.add(polvo);
+  // la tienda (aparece pieza a pieza)
+  const tienda = new THREE.Group(); tienda.position.set(10, 0, -10); tienda.rotation.y = -Math.PI / 4; e.add(tienda);
+  const tablas = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#E8DCC4'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 24) { g.fillStyle = 'rgba(80,60,40,.35)'; g.fillRect(0, y, w, 3); } ruido(g, 0, 0, '#000', 0, 0); }, 3, 2);
+  const mTabla = new THREE.MeshStandardMaterial({ map: tablas, roughness: .85 }), mTejado = new THREE.MeshStandardMaterial({ color: '#7B2E24', roughness: .8 }), mOscuro = new THREE.MeshStandardMaterial({ color: '#2A2420', roughness: .6 }), mRojo = new THREE.MeshStandardMaterial({ color: '#A8322A', roughness: .7 });
+  const piezas = [];
+  const pieza = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; const g = new THREE.Group(); g.position.set(x, 0, z); m.position.set(0, y, 0); g.add(m); tienda.add(g); piezas.push(g); return g; };
+  pieza(new THREE.BoxGeometry(11, .4, 9), mOscuro, 0, .2, 0);
+  pieza(new THREE.BoxGeometry(10, 5, 8), mTabla, 0, 2.9, 0);
+  const tej = new THREE.CylinderGeometry(6.6, 6.6, 9, 3, 1); tej.rotateZ(Math.PI / 2); tej.rotateX(Math.PI / 2); tej.scale(1, .45, 1);
+  pieza(tej, mTejado, 0, 6.8, 0);
+  pieza(new THREE.BoxGeometry(1.8, 3, .2), mOscuro, 0, 1.9, 4.05);
+  for (const x of [-3.2, 3.2]) pieza(new THREE.BoxGeometry(1.8, 1.6, .2), new THREE.MeshStandardMaterial({ color: '#203040', roughness: .1, metalness: .3 }), x, 3, 4.05);
+  pieza(new THREE.BoxGeometry(11, .3, 3), mOscuro, 0, .55, 5.5);
+  for (const x of [-5, 5]) pieza(new THREE.CylinderGeometry(.15, .15, 4.6, 8), mTabla, x, 2.7, 6.7);
+  pieza(new THREE.BoxGeometry(11.4, .3, 3.2), mRojo, 0, 5.1, 5.5);
+  const cartelTex = textoTex('AGLOE GENERAL STORE', { w: 2048, h: 256, fondo: '#A8322A', color: '#FFF3D6', fuente: 'bold 150px DejaVu Sans', borde: '#FFF3D6' });
+  const cartel = pieza(new THREE.PlaneGeometry(9, 1.15), new THREE.MeshStandardMaterial({ map: cartelTex, emissive: '#fff', emissiveMap: cartelTex, emissiveIntensity: .25 }), 0, 6.0, 4.3);
+  // camioneta del tendero
+  const camion = new THREE.Group(); e.add(camion);
+  const pintura = new THREE.MeshStandardMaterial({ color: '#2F5D3A', roughness: .5, metalness: .3 });
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.2, 2.4), pintura); cab.position.set(0, 1.9, 1.6); const capo = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.3, 2), pintura); capo.position.set(0, 1.45, 3.6);
+  const caja = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.2, 4), new THREE.MeshStandardMaterial({ color: '#7a5a3a' })); caja.position.set(0, 1.4, -1.6);
+  const cajas = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 2), new THREE.MeshStandardMaterial({ color: '#C9A877' })); cajas.position.set(0, 2.5, -1.8);
+  [cab, capo, caja, cajas].forEach(m => { m.castShadow = true; camion.add(m); });
+  for (const [x, z] of [[-1.3, 3.4], [1.3, 3.4], [-1.3, -2.4], [1.3, -2.4]]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, .4, 16), mOscuro); r.rotation.z = Math.PI / 2; r.position.set(x, .6, z); camion.add(r); }
+  // personajes
+  const ernesto = personaje(e, 'ernesto', 3.4), tendero = personaje(e, 'tendero', 3.4);
+  e.add(new THREE.HemisphereLight('#cfe3ff', '#5a5030', .9));
+  const sol = new THREE.DirectionalLight('#fff0d0', 3.6); sol.position.set(40, 60, 30); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -.0004; sol.shadow.normalBias = .03; Object.assign(sol.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 200 }); sol.shadow.camera.updateProjectionMatrix(); e.add(sol);
+  const cam = new THREE.PerspectiveCamera(50, W / H, .1, 1500);
+  return {
+    escena: e, cam, tienda,
+    preparar({ tiempo, construccion = 0, camion: kc = -1, quien = null, quienPos = v3(0, 0, 0) }) {
+      nubes.forEach(s => { const u = s.userData; const a = u.a + tiempo * .004; s.position.set(Math.cos(a) * u.r, u.y, Math.sin(a) * u.r); });
+      polvo.position.x = (tiempo * 1.5) % 20 - 10;
+      // construcción: cada pieza aparece con rebote, una tras otra
+      piezas.forEach((g, i) => { const k = clamp(construccion * (piezas.length + 2) - i); g.visible = k > 0; g.scale.set(1, rebote(k), 1); });
+      camion.visible = kc >= 0; if (kc >= 0) { const z = lerp(-90, 9, salida(kc)); camion.position.set(1.8, Math.abs(Math.sin(tiempo * 18)) * .05, z); }
+      ernesto.visible = quien === 'ernesto'; tendero.visible = quien === 'tendero';
+      const p = quien === 'ernesto' ? ernesto : quien === 'tendero' ? tendero : null; if (p) { p.position.copy(quienPos); mirar(p, cam); }
+    },
+  };
+}
+
+// =================== ESCENARIO 3: LA OFICINA DE NOCHE ===================
+function crearOficina() {
+  const e = new THREE.Scene(); e.background = new THREE.Color('#0c0f14'); e.environment = entorno;
+  const papelPintado = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#2F4A3A'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 32) { g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(x, 0, 10, h); } }, 6, 3);
+  const pared = new THREE.MeshStandardMaterial({ map: papelPintado, roughness: .9 });
+  const caja = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; e.add(o); return o; };
+  const suelo = canvasTex(512, 512, (g, w, h) => { g.fillStyle = '#5A3A22'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 40) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, y, w, 3); } for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * .1})`; g.fillRect(rnd() * w, rnd() * h, 60, 2); } }, 4, 4);
+  caja(40, .2, 40, new THREE.MeshStandardMaterial({ map: suelo, roughness: .7 }), 0, -.1, 0);
+  caja(40, 16, .4, pared, 0, 8, -8); caja(.4, 16, 40, pared, -12, 8, 0); caja(.4, 16, 40, pared, 12, 8, 0);
+  // ventana con luna
+  const ventana = new THREE.Mesh(new THREE.PlaneGeometry(5, 6), new THREE.MeshBasicMaterial({ map: canvasTex(256, 320, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0d1d3d'); gr.addColorStop(1, '#22406e'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = '#F4F1D8'; g.beginPath(); g.arc(170, 80, 34, 0, 7); g.fill(); for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(rnd() * w, rnd() * h * .6, 2, 2); } g.strokeStyle = '#1b1410'; g.lineWidth = 14; g.strokeRect(0, 0, w, h); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); }) }));
+  ventana.position.set(5, 8, -7.75); e.add(ventana);
+  const luna = new THREE.DirectionalLight('#8fb2ff', 1.4); luna.position.set(6, 12, -20); e.add(luna);
+  // estantería con rollos de mapas
+  const mad = new THREE.MeshStandardMaterial({ color: '#4a2f1c', roughness: .7 });
+  for (let y = 2; y <= 10; y += 2.6) caja(7, .25, 1.6, mad, -7, y, -7);
+  for (let y = 2; y <= 10; y += 2.6) for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.35, .35, 1.5, 12), new THREE.MeshStandardMaterial({ color: ['#EADBB8', '#DCCB9E', '#F1E6CC'][i % 3] })); r.rotation.x = Math.PI / 2; r.position.set(-9.5 + i * 1, y + .5, -7); e.add(r); }
+  // mesa de dibujo inclinada con el mapa
+  caja(9, .3, 5, mad, 0, 2.2, 0).rotation.x = -.35;
+  const mapaMesa = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 4.8), new THREE.MeshStandardMaterial({ map: dibujarMapa('antiguo'), roughness: .8 })); mapaMesa.rotation.x = -Math.PI / 2 - .35; mapaMesa.position.set(0, 2.4, .08); mapaMesa.receiveShadow = true; e.add(mapaMesa);
+  for (const [x, z] of [[-4, -2], [4, -2], [-4, 2], [4, 2]]) caja(.3, 2.2, .3, mad, x, 1.1, z);
+  // flexo
+  const metal = new THREE.MeshStandardMaterial({ color: '#2d3a2f', metalness: .6, roughness: .4 });
+  caja(.2, 3, .2, metal, 3.8, 4.3, -1.8).rotation.z = .3;
+  const pantalla = new THREE.Mesh(new THREE.ConeGeometry(1, 1.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#2d5a3a', side: THREE.DoubleSide, metalness: .5, roughness: .4 })); pantalla.position.set(2.8, 6, -1.4); pantalla.rotation.z = .6; e.add(pantalla);
+  const bombilla = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 12), new THREE.MeshBasicMaterial({ color: '#fff3c9' })); bombilla.position.set(2.4, 5.5, -1.3); e.add(bombilla);
+  const flexo = new THREE.SpotLight('#ffcf8a', 240, 40, 1.0, .7, 1.3); flexo.position.set(2.4, 5.4, -1.3); flexo.target.position.set(-.5, 2.2, 0); flexo.castShadow = true; flexo.shadow.mapSize.set(2048, 2048); e.add(flexo, flexo.target);
+  e.add(new THREE.HemisphereLight('#6d7fa0', '#1a120b', .55));
+  const relleno = new THREE.PointLight('#ffb870', 30, 18, 1.5); relleno.position.set(-3, 6, 4); e.add(relleno);
+  // personajes
+  const P = { villano: personaje(e, 'villano', 3.6), ernesto: personaje(e, 'ernesto_eureka', 3.6), otto: personaje(e, 'otto_eureka', 3.6), ernestoS: personaje(e, 'ernesto_sorprendido', 3.6), ottoS: personaje(e, 'otto_sorprendido', 3.6) };
+  // confeti
+  const colores = ['#FFD93B', '#FF5A5F', '#3EC1D3', '#7ED957', '#B57EDC'];
+  const confeti = [...Array(160)].map(() => { const m = new THREE.Mesh(new THREE.PlaneGeometry(.18, .3), new THREE.MeshBasicMaterial({ color: colores[Math.floor(rnd() * 5)], side: THREE.DoubleSide })); m.userData = { x: (rnd() - .5) * 12, z: (rnd() - .5) * 6 + 2, v: 2 + rnd() * 3, w: rnd() * 10, f: rnd() * 6 }; e.add(m); return m; });
+  // líneas de velocidad (calco rápido)
+  const cam = new THREE.PerspectiveCamera(50, W / H, .1, 200);
+  return {
+    escena: e, cam,
+    preparar({ tiempo, quienes = [], confeti: kc = -1 }) {
+      for (const k in P) P[k].visible = false;
+      quienes.forEach(([k, pos, sacudir]) => { const p = P[k]; p.visible = true; p.position.copy(pos); if (sacudir) p.position.x += Math.sin(tiempo * 60) * .06; mirar(p, cam); });
+      confeti.forEach(m => { m.visible = kc >= 0; if (kc >= 0) { const u = m.userData; m.position.set(u.x * .6 + Math.sin(tiempo * 3 + u.f) * .3, 9 - kc * u.v * 2.4, u.z - 2); m.rotation.set(tiempo * u.w, tiempo * u.w * .7, 0); } });
+    },
+  };
+}
+
+const mapa = crearMapa(), cruce = crearCruce(), oficina = crearOficina();
+const comp = new EffectComposer(renderer);
+const rp = new RenderPass(mapa.escena, mapa.cam); comp.addPass(rp);
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .3, .5, .9); comp.addPass(bloom); comp.addPass(new OutputPass());
+
+// =================== PLANOS ===================
+const pA = mapa.pA;
+const TP = v3(10, 0, -10);              // tienda en el cruce
+const PLANOS = [
+  { desde: 0, nombre: 'gancho: picado sobre el mapa hasta Agloe', esc: 'mapa', f(k, t) {
+      mapa.preparar({ tiempo: t, punto: 1 });
+      const c = mapa.cam; c.fov = 50; const q = salida(k);
+      c.position.copy(lerpV(pA.clone().add(v3(-2, 26, 9)), pA.clone().add(v3(-.6, 4.2, 3.4)), q)); c.lookAt(pA.clone().add(v3(.4, 0, 0)));
+    } },
+  { desde: 4, nombre: 'para pillar a unos ladrones: aparece el copión', esc: 'mapa', f(k, t) {
+      mapa.preparar({ tiempo: t, punto: 1, villano: clamp(k * 4) });
+      const c = mapa.cam; c.fov = 45;
+      c.position.copy(pA.clone().add(v3(lerp(1.5, 2.5, k), lerp(2.6, 3.2, k), lerp(8.5, 7.5, k)))); c.lookAt(pA.clone().add(v3(-1.6, 1.9, 1)));
+    } },
+  { desde: 11, nombre: 'y acabó existiendo: adelanto de la tienda', esc: 'cruce', f(k, t) {
+      cruce.preparar({ tiempo: t, construccion: 1, quien: 'tendero', quienPos: TP.clone().add(v3(1.5, .55, 6.5)) });
+      const c = cruce.cam; c.fov = 45;
+      c.position.set(lerp(30, 24, k), lerp(3, 4.2, k), lerp(14, 12, k)); c.lookAt(TP.clone().add(v3(0, 4, 0)));
+    } },
+  { desde: 16, nombre: 'años treinta: el cruce vacío y Ernesto midiendo', esc: 'cruce', f(k, t) {
+      cruce.preparar({ tiempo: t, construccion: 0, quien: 'ernesto', quienPos: v3(5, 0, 4) });
+      const c = cruce.cam; c.fov = 50;
+      c.position.set(lerp(18, 14, k), lerp(14, 6, suave(k)), lerp(30, 22, k)); c.lookAt(lerp(0, 3, k), lerp(0, 2.2, k), lerp(0, 2, k));
+    } },
+  { desde: 29, nombre: 'copiarlo, una tarde: el copión calca', esc: 'oficina', f(k, t) {
+      oficina.preparar({ tiempo: t, quienes: [['villano', v3(.3, 0, -3.3), true]] });
+      const c = oficina.cam; c.fov = 50;
+      c.position.set(lerp(1.5, .8, k), lerp(5.4, 5, k), lerp(8, 6.5, k)); c.lookAt(0, 3.2, -2.5);
+    } },
+  { desde: 32, nombre: 'dos cartógrafos esconden una trampa', esc: 'oficina', f(k, t) {
+      oficina.preparar({ tiempo: t, quienes: [['ernesto', v3(-1.45, 0, -3.2)], ['otto', v3(1.45, 0, -3.2)]] });
+      const c = oficina.cam; c.fov = 52;
+      c.position.set(lerp(-1.2, 1.2, k), lerp(4.6, 4.9, k), lerp(7, 6.2, k)); c.lookAt(0, 3.2, -3);
+    } },
+  { desde: 42, nombre: 'un pueblo falso en un cruce vacío: aparece el punto', esc: 'mapa', f(k, t) {
+      mapa.preparar({ tiempo: t, punto: clamp((t - T(43)) / .5) });
+      const c = mapa.cam; c.fov = 42; const a = lerp(-.4, .3, k);
+      c.position.copy(pA.clone().add(v3(Math.sin(a) * 6, lerp(7, 5, k), Math.cos(a) * 6))); c.lookAt(pA.clone().add(v3(.6, 0, -.2)));
+    } },
+  { desde: 51, nombre: 'Agloe con las iniciales (letras)', esc: 'mapa', f(k, t) {
+      mapa.preparar({ tiempo: t, punto: 1 });
+      const c = mapa.cam; c.fov = 50; c.position.copy(pA.clone().add(v3(0, lerp(14, 11, k), 2))); c.lookAt(pA);
+    } },
+  { desde: 60, nombre: 'la lupa recorre el mapa de la competencia', esc: 'mapa', f(k, t) {
+      const lp = v3(lerp(-7, pA.x - 3.5, k), 1.2, lerp(-5, pA.z + 2.5, k) + Math.sin(t * 2.2) * 1.2);
+      mapa.preparar({ tiempo: t, estilo: 'competencia', lupa: lp });
+      const c = mapa.cam; c.fov = 50; c.position.copy(lp.clone().add(v3(1, 9, 7))); c.lookAt(lp.clone().add(v3(0, 0, -1)));
+    } },
+  { desde: 75, nombre: 'años después… ¡la lupa encuentra Agloe!', esc: 'mapa', f(k, t) {
+      const ke = suave(clamp((t - T(78)) / 1.0));
+      const lp = lerpV(v3(pA.x - 3.5, 1.2, pA.z + 2.5), pA.clone().add(v3(.9, 1.0, -.3)), ke);
+      mapa.preparar({ tiempo: t, estilo: 'competencia', lupa: lp });
+      const c = mapa.cam; c.fov = lerp(50, 30, suave(clamp((t - T(79)) / 1.2)));
+      c.position.copy(lp.clone().add(v3(.6, lerp(9, 6, ke), lerp(7, 4, ke)))); c.lookAt(lp.clone().add(v3(-.2, 0, -.4)));
+    } },
+  { desde: 87, nombre: '¡los habían pillado! (celebración)', esc: 'oficina', f(k, t) {
+      oficina.preparar({ tiempo: t, quienes: [['ernesto', v3(-1.45, 0, -3.2)], ['otto', v3(1.45, 0, -3.2)]], confeti: (t - T(87)) / 3 });
+      const c = oficina.cam; c.fov = 50; c.position.set(0, lerp(4.8, 4.6, k), lerp(7, 6.3, k)); c.lookAt(0, 3.3, -3);
+    } },
+  { desde: 90, nombre: 'o eso creían… (frenazo)', esc: 'oficina', f(k, t) {
+      oficina.preparar({ tiempo: t, quienes: [['ernestoS', v3(-1.45, 0, -3.2)], ['ottoS', v3(1.45, 0, -3.2)]] });
+      const c = oficina.cam; c.fov = lerp(50, 36, suave(k)); c.position.set(0, lerp(5.1, 5.0, k), lerp(8, 7, k)); c.lookAt(0, 3.6, -3);
+    } },
+  { desde: 102, nombre: 'Agloe era real (la tienda)', esc: 'cruce', f(k, t) {
+      cruce.preparar({ tiempo: t, construccion: 1 });
+      const c = cruce.cam; c.fov = 42; c.position.copy(TP.clone().add(v3(lerp(-6, 4, k), lerp(1.5, 2.5, k), 22))); c.lookAt(TP.clone().add(v3(0, 5, 0)));
+    } },
+  { desde: 105, nombre: 'alguien fue al cruce (llega la camioneta)', esc: 'cruce', f(k, t) {
+      cruce.preparar({ tiempo: t, construccion: 0, camion: k });
+      const c = cruce.cam; c.fov = 48; c.position.set(lerp(12, 10, k), lerp(5, 4, k), lerp(26, 24, k)); c.lookAt(lerp(-2, 1, k), 2, lerp(-10, 4, k));
+    } },
+  { desde: 117, nombre: 'y abrió una tienda (construcción)', esc: 'cruce', f(k, t) {
+      cruce.preparar({ tiempo: t, construccion: clamp(k * 1.25), camion: 1, quien: k > .75 ? 'tendero' : null, quienPos: TP.clone().add(v3(1.5, .55, 6.5)) });
+      const c = cruce.cam; c.fov = 50; const a = lerp(.2, -.3, k);
+      c.position.copy(TP.clone().add(v3(Math.sin(a) * 24, lerp(9, 6, k), Math.cos(a) * 24 + 4))); c.lookAt(TP.clone().add(v3(0, 3.5, 2)));
+    } },
+  { desde: 128, nombre: 'se volvió real (grúa hacia arriba)', esc: 'cruce', f(k, t) {
+      cruce.preparar({ tiempo: t, construccion: 1, camion: 1, quien: 'tendero', quienPos: TP.clone().add(v3(1.5, .55, 6.5)) });
+      const c = cruce.cam; c.fov = 50; const q = suave(k);
+      c.position.copy(lerpV(TP.clone().add(v3(4, 4, 18)), v3(6, 90, 8), q)); c.lookAt(lerpV(TP.clone().add(v3(0, 4, 2)), v3(0, 0, 0), q));
+    } },
+  { desde: 139, nombre: 'por culpa del mapa (el cruce vuelve a ser un punto)', esc: 'mapa', f(k, t) {
+      mapa.preparar({ tiempo: t, punto: 1 });
+      const c = mapa.cam; c.fov = 50; c.position.copy(pA.clone().add(v3(0, lerp(1.2, 16, salida(k)), lerp(.1, 4, k)))); c.lookAt(pA);
+    } },
+  { desde: 146, nombre: 'hoy: los mapas siguen escondiendo trampas', esc: 'mapa', f(k, t) {
+      mapa.preparar({ tiempo: t, estilo: 'moderno', trampas: k * 1.6 });
+      const c = mapa.cam; c.fov = 55; const a = lerp(-.3, .3, k);
+      c.position.set(Math.sin(a) * 14, lerp(20, 17, k), Math.cos(a) * 14); c.lookAt(0, 0, 0);
+    } },
+];
+PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
+PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
+const ESC = { mapa, cruce, oficina };
+
+// =================== CAPA DE EDICIÓN ===================
+const CLAVE = new Set(['pueblo', 'existía', 'ladrones', 'verdad', 'tarde', 'trampa', 'falso', 'Agloe', 'copiado', 'pillado', 'creían', 'real', 'tienda', 'Tienda', 'inventó', 'trampas', 'alguna']);
+const golpes = [T(4), T(29), T(41), T(87), T(90), T(102), T(127)];
+const $ = id => document.getElementById(id);
+// letras de AGLOE: salen de las iniciales de Otto G. Lindberg y Ernest Alpers
+const letrasDiv = $('letras');
+const LETRAS = [['A', 1, 1], ['G', 0, 1], ['L', 0, 2], ['O', 0, 0], ['E', 1, 0]];   // letra, grupo, posición en su grupo
+letrasDiv.innerHTML = LETRAS.map(([l]) => `<span>${l}</span>`).join('') + '<span class="nombre" id="n0">Otto G. Lindberg</span><span class="nombre" id="n1">Ernest Alpers</span>';
+const spans = [...letrasDiv.querySelectorAll('span')];
+function edicion(t) {
+  let i = -1; for (let j = 0; j < PAL.length; j++) if (PAL[j].t0 <= t + .02) i = j;
+  const el = $('palabra');
+  if (i >= 0 && t < PAL[i].t1 + .6) {
+    const w = PAL[i].w, limpio = w.replace(/[^\wáéíóúñü]/gi, '');
+    el.textContent = w.replace('…', '...'); el.style.color = CLAVE.has(limpio) ? '#FFD93B' : '#fff';
+    const k = clamp((t - PAL[i].t0) / .09); el.style.transform = `scale(${lerp(1.28, 1, salida(k))})`; el.style.opacity = 1;
+  } else el.style.opacity = 0;
+  // sellos
+  const s = $('sello'); s.style.opacity = 0;
+  for (const [idx, txt, col, dur] of [[18, 'AÑOS 30', '#fff', 1.6], [41, 'TRAMPA', '#FF4D4D', 1.4], [87, '¡PILLADOS!', '#FFD93B', 1.2]]) {
+    const d = t - T(idx);
+    if (d > -.05 && d < dur) { s.textContent = txt; s.style.color = col; s.style.borderColor = col; s.style.opacity = clamp((dur - d) / .25); s.style.transform = `translateX(-50%) scale(${lerp(2.4, 1, salida(d / .16))}) rotate(-7deg)`; }
+  }
+  // animación de las letras (plano 51 a 60)
+  const d0 = t - T(51), dTot = T(60) - .06 - T(51);
+  letrasDiv.style.opacity = d0 > 0 && d0 < dTot ? 1 : 0;
+  if (d0 > 0 && d0 < dTot) {
+    const junta = suave(clamp((t - T(54)) / .7));   // en "mezclando" se juntan
+    spans.slice(0, 5).forEach((sp, j) => {
+      const [, gr, pos] = LETRAS[j];
+      const x0 = 540 + (gr === 0 ? (pos - 1) * 190 : (pos - .5) * 190), y0 = gr === 0 ? 560 : 900;
+      const x1 = 540 + (j - 2) * 175, y1 = 760;
+      const ap = salida(clamp((d0 - j * .08) / .25));
+      sp.style.left = lerp(x0, x1, junta) + 'px'; sp.style.top = lerp(y0, y1, junta) + 'px';
+      sp.style.transform = `scale(${ap * (1 + Math.sin(junta * Math.PI) * .25)}) rotate(${(1 - junta) * (j % 2 ? 8 : -8)}deg)`;
+    });
+    $('n0').style.left = '540px'; $('n0').style.top = '760px'; $('n1').style.left = '540px'; $('n1').style.top = '1100px';
+    $('n0').style.opacity = $('n1').style.opacity = 1 - junta;
+  }
+  $('flash').style.opacity = [[T(11) - .06, .5], [T(102) - .06, .45], [T(87), .3]].reduce((a, [ti, f]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / .25) : 0), 0);
+  // "O eso creían": blanco y negro de golpe (interrupción de patrón)
+  const bn = t >= T(90) - .06 && t < T(93) - .06;
+  let escala = 1; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .3) escala = Math.max(escala, lerp(1.07, 1, salida(d / .3))); }
+  let sx = 0, sy = 0; for (const g of golpes) { const d = t - g; if (d >= 0 && d < .4) { const a = (1 - d / .4) * 18; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
+  const lz = $('lienzo'); lz.style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.03})`; lz.style.filter = bn ? 'grayscale(1) contrast(1.15)' : 'none';
+}
+
+window.DURACION = DURACION;
+window.PLANOS = PLANOS.map(p => ({ nombre: p.nombre, t0: p.t0, t1: p.t1, esc: p.esc }));
+window.renderAt = (t) => {
+  const p = PLANOS.find(p => t >= p.t0 && t < p.t1) || PLANOS[PLANOS.length - 1];
+  const k = clamp((t - p.t0) / (p.t1 - p.t0));
+  p.f(k, t);
+  const s = ESC[p.esc]; s.cam.aspect = W / H; s.cam.updateProjectionMatrix();
+  rp.scene = s.escena; rp.camera = s.cam;
+  renderer.toneMappingExposure = p.esc === 'cruce' ? .85 : p.esc === 'oficina' ? .95 : .9;
+  bloom.strength = p.esc === 'cruce' ? .25 : .1;
+  comp.render(); edicion(t);
+};
+await Promise.all(CARGAS);
+window.LISTO = true;
+</script>
+</body></html>
