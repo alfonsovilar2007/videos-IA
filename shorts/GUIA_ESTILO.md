@@ -47,7 +47,7 @@ Las **instrucciones obligatorias** (v2) mandan sobre cualquier costumbre anterio
 ## Antes de entregar
 - Capturas de los segundos **0, 1, 2 y del final**; comprobar cada punto de esta guía y corregir lo que falle.
 - Enviar el MP4 en máxima calidad (CRF 18) como archivo descargable.
-- **Subir a la carpeta "videos IA" de Drive** (id `1A4aA9L1MdYE9bFSJOSG1mQla2KeTns15`). Ojo: el conector solo admite ~3 MB por envío desde las sesiones en la nube; si el vídeo no cabe, avisar y proponer opciones.
+- **Subir a la carpeta "videos IA" de Drive** (id `1A4aA9L1MdYE9bFSJOSG1mQla2KeTns15`). El conector solo admite ~3 MB por envío desde las sesiones en la nube: para 30-40 s funciona bien una versión 1080p a dos pasadas, `-preset veryslow -tune animation -b:v 540k` + AAC 64k (≈2,8 MB; probado en el short 03). Avisar de que la de Drive va comprimida y enviar aparte la de máxima calidad.
 
 ## Sonido y voz
 - Voz: edge-tts `es-ES-AlvaroNeural`, `--rate=+10%`, `--pitch=-2Hz`; pausas recortadas a 0,28 s (`tools/apretar_pausas.py`).
