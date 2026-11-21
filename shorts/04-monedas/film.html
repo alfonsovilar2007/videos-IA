@@ -1,0 +1,414 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Por qué las monedas tienen rayas</title>
+<!-- Short v2 (30-40 s): función pura del tiempo window.renderAt(t). Ver shorts/GUIA_ESTILO.md -->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  #lienzo{position:absolute;inset:0;transform-origin:50% 50%}
+  canvas{display:block}
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 60%,rgba(0,0,0,.42) 100%)}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0}
+  #rojo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(230,20,20,.5) 100%);opacity:0}
+  .txt{position:absolute;left:90px;right:90px;text-align:center;font-family:"DejaVu Sans",sans-serif;font-weight:800;color:#fff;paint-order:stroke}
+  #gancho{top:330px;left:50px;right:50px;font-size:100px;line-height:1.04;letter-spacing:-1px;-webkit-text-stroke:22px #000;text-shadow:0 12px 0 rgba(0,0,0,.45);opacity:0}
+  #sub{top:1300px;font-size:96px;line-height:1.08;-webkit-text-stroke:19px #000;text-shadow:0 9px 0 rgba(0,0,0,.45)}
+  #sub b{color:#FFD93B}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="lienzo"></div>
+<div id="vineta"></div>
+<div id="rojo"></div>
+<div id="gancho" class="txt">ESTAS RAYITAS EXISTEN<br><span style="color:#FFD93B">POR CULPA DE UNOS LADRONES</span></div>
+<div id="sub" class="txt"></div>
+<div id="flash"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1080, H = 1920;
+let semilla = 404;
+const rnd = () => { semilla |= 0; semilla = semilla + 0x6D2B79F5 | 0; let t = Math.imul(semilla ^ semilla >>> 15, 1 | semilla); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const suave = k => { k = clamp(k); return k * k * (3 - 2 * k); };
+const salida = k => 1 - Math.pow(1 - clamp(k), 3);
+const rebote = k => { k = clamp(k); return 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); };
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+
+const PAL = await (await fetch('voz_ritmo.json')).json();
+const T = i => PAL[i].t0;
+const DURACION = PAL[PAL.length - 1].t1 + .35;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('lienzo').appendChild(renderer.domElement);
+const entorno = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+function canvasTex(w, h, dibujo, rx = 1, ry = 1, srgb = true) { const c = document.createElement('canvas'); c.width = w; c.height = h; dibujo(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData.canvas = c; return t; }
+const ruido = (g, w, h, base, v, n) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < n; i++) { const a = (rnd() - .5) * v; g.fillStyle = a > 0 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${-a})`; g.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2 + rnd() * 3); } };
+const texRadial = c => canvasTex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+const fondoDegradado = (a, b) => { const t = canvasTex(16, 512, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
+const CARGAS = []; const cargador = new THREE.TextureLoader();
+const spriteTex = n => { let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+function personaje(escena, nombre, alto) {
+  const t = spriteTex(nombre);
+  const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: .25, side: THREE.DoubleSide, fog: false });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(alto * 400 / 640, alto), m); p.geometry.translate(0, alto / 2, 0); p.castShadow = true;
+  p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  escena.add(p); return p;
+}
+const mirar = (p, cam) => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(cam.position.x - w.x, cam.position.z - w.z); };
+
+// ---------- monedas ----------
+// canto: rayas (estrías) que se pueden "grabar" hasta un ángulo y un tramo limado
+function texCanto(base, oscuro) {
+  const t = canvasTex(2048, 64, () => {}, 1, 1); const b = canvasTex(2048, 64, () => {}, 1, 1, false);
+  const dibujar = (grabado = 1, limado = null) => {
+    for (const [tx, col] of [[t, true], [b, false]]) {
+      const g = tx.userData.canvas.getContext('2d'); g.fillStyle = col ? base : '#808080'; g.fillRect(0, 0, 2048, 64);
+      for (let x = 0; x < 2048 * grabado; x += 16) { g.fillStyle = col ? oscuro : '#1a1a1a'; g.fillRect(x, 0, 7, 64); if (col) { g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + 9, 0, 3, 64); } }
+      if (limado) { const [a, l] = limado; g.fillStyle = col ? '#F4F7FA' : '#a0a0a0'; g.fillRect(a * 2048, 0, l * 2048, 64); if (col) for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(120,130,140,.5)'; g.fillRect(a * 2048 + Math.random() * l * 2048, Math.random() * 64, 30, 1.5); } }
+      tx.needsUpdate = true;
+    }
+  };
+  dibujar(); return { t, b, dibujar };
+}
+function texCara(fondo, tinta, motivo) {
+  return canvasTex(512, 512, (g, w, h) => {
+    const gr = g.createRadialGradient(200, 180, 20, 256, 256, 256); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.25, fondo); gr.addColorStop(1, tinta); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = tinta; g.lineWidth = 14; g.beginPath(); g.arc(256, 256, 232, 0, 7); g.stroke();
+    g.fillStyle = tinta; for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2; g.beginPath(); g.arc(256 + Math.cos(a) * 205, 256 + Math.sin(a) * 205, 5, 0, 7); g.fill(); }
+    g.lineWidth = 10; g.lineJoin = 'round';
+    if (motivo === 'corona') { g.beginPath(); g.moveTo(150, 320); g.lineTo(130, 190); g.lineTo(195, 250); g.lineTo(256, 160); g.lineTo(317, 250); g.lineTo(382, 190); g.lineTo(362, 320); g.closePath(); g.stroke(); g.fillRect(150, 330, 212, 26); for (const x of [130, 256, 382]) { g.beginPath(); g.arc(x, x === 256 ? 150 : 180, 14, 0, 7); g.fill(); } }
+    else { g.font = 'bold 260px DejaVu Sans'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('1', 256, 270); for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.arc(256 + Math.cos(a) * 160, 256 + Math.sin(a) * 160, 9, 0, 7); g.fill(); } }
+  });
+}
+function crearMoneda(tipo) {
+  const plata = tipo !== 'oro';
+  const canto = texCanto(plata ? '#C9D1DA' : '#E3B84A', plata ? '#6E7A86' : '#8A6A1E');
+  const metal = c => new THREE.MeshStandardMaterial({ color: c, metalness: 1, roughness: .28, envMap: entorno, envMapIntensity: 1.3 });
+  const lado = metal('#ffffff'); lado.map = canto.t; lado.bumpMap = canto.b; lado.bumpScale = 3;
+  const cara = metal('#ffffff'); cara.map = texCara(plata ? '#D7DDE4' : '#F0C95A', plata ? '#59636E' : '#7A5A12', plata ? 'corona' : 'uno'); cara.bumpMap = cara.map; cara.bumpScale = 1.5;
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .16, 160, 1), [lado, cara, cara]);
+  m.rotation.x = Math.PI / 2; m.castShadow = true;
+  const g = new THREE.Group(); g.add(m); g.userData = { canto, malla: m }; return g;
+}
+
+// =================== ESCENARIO 1: MACRO (fondo vivo) ===================
+function crearMacro() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = fondoDegradado('#2a0f5e', '#0b5fb8');
+  e.add(new THREE.HemisphereLight('#bcd0ff', '#2a0a40', .9));
+  const key = new THREE.DirectionalLight('#ffffff', 2.2); key.position.set(3, 5, 6); e.add(key);
+  const rim1 = new THREE.PointLight('#ff4fd8', 40, 20, 1.4); rim1.position.set(-4, 2, -2); e.add(rim1);
+  const rim2 = new THREE.PointLight('#4fe3ff', 40, 20, 1.4); rim2.position.set(4, -2, 2); e.add(rim2);
+  const oro = crearMoneda('oro'), lisa = crearMoneda('plata'), rayada = crearMoneda('plata'), limada = crearMoneda('plata');
+  for (const m of [oro, lisa, rayada, limada]) e.add(m);
+  lisa.userData.canto.dibujar(0); rayada.userData.canto.dibujar(1); limada.userData.canto.dibujar(1, [.18, .14]);
+  // lima
+  const lima = new THREE.Group(); e.add(lima);
+  const texLima = canvasTex(256, 64, (g, w, h) => { g.fillStyle = '#8E98A3'; g.fillRect(0, 0, w, h); g.strokeStyle = '#4c5560'; g.lineWidth = 3; for (let x = -64; x < w; x += 8) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 32, h); g.stroke(); } });
+  const hoja = new THREE.Mesh(new THREE.BoxGeometry(3.4, .08, .4), new THREE.MeshStandardMaterial({ map: texLima, metalness: .8, roughness: .4, envMap: entorno })); hoja.position.x = 1.7; lima.add(hoja);
+  const mango = new THREE.Mesh(new THREE.CylinderGeometry(.18, .22, 1.4, 16), new THREE.MeshStandardMaterial({ color: '#8A5A34', roughness: .6 })); mango.rotation.z = Math.PI / 2; mango.position.x = 4.1; lima.add(mango);
+  // rodillo de grabar
+  const rodillo = new THREE.Group(); e.add(rodillo);
+  const texRod = canvasTex(512, 64, (g, w, h) => { g.fillStyle = '#9aa3ad'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 16) { g.fillStyle = '#e8edf2'; g.fillRect(x, 0, 7, h); } });
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .6, 64), new THREE.MeshStandardMaterial({ map: texRod, metalness: .9, roughness: .25, envMap: entorno })); rod.rotation.x = Math.PI / 2; rodillo.add(rod);
+  const brazo = new THREE.Mesh(new THREE.BoxGeometry(.3, 3, .3), new THREE.MeshStandardMaterial({ color: '#C0392B', roughness: .5 })); brazo.position.y = 1.7; rodillo.add(brazo);
+  // chispas / virutas
+  const nP = 260, pPos = new Float32Array(nP * 3), pG = new THREE.BufferGeometry(); pG.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const chispas = new THREE.Points(pG, new THREE.PointsMaterial({ color: '#fff3c0', size: .07, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, map: texRadial('rgba(255,255,255,1)') })); e.add(chispas);
+  const pV = [...Array(nP)].map(() => ({ v: v3(.5 + rnd() * 3, rnd() * 3, (rnd() - .5) * 2), f: rnd() }));
+  const alarma = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,30,30,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); e.add(alarma);
+  const toni = personaje(e, 'toni_moneda', 6); toni.material.emissiveIntensity = .04;
+  const cam = new THREE.PerspectiveCamera(40, W / H, .02, 200);
+  return {
+    escena: e, cam, monedas: { oro, lisa, rayada, limada },
+    // visibles: { nombre: [x, y, z, giro] }; lima: [x,y,z,ang] o null; chispasK: tiempo de chispas; grabado: 0..1 en la moneda lisa
+    preparar({ tiempo, visibles = {}, lima: lp = null, chispasK = -1, rodilloK = null, alarmaK = 0, grabado = null, toniK = false }) {
+      for (const [n, m] of Object.entries(this.monedas)) { const v = visibles[n]; m.visible = !!v; if (v) { m.position.set(v[0], v[1], v[2]); m.rotation.set(v[4] || 0, v[3], v[5] || 0); } }
+      if (grabado !== null) lisa.userData.canto.dibujar(grabado);
+      lima.visible = !!lp; if (lp) { lima.position.set(lp[0], lp[1], lp[2]); lima.rotation.set(0, lp[4] || 0, lp[3]); }
+      chispas.visible = chispasK >= 0;
+      if (chispasK >= 0 && lp) pV.forEach((p, i) => { const d = (chispasK * 1.6 + p.f) % 1; pPos[i * 3] = lp[0] + .1 + p.v.x * d * .8; pPos[i * 3 + 1] = lp[1] + p.v.y * d * .8 - 2.5 * d * d; pPos[i * 3 + 2] = lp[2] + p.v.z * d * .6; });
+      pG.attributes.position.needsUpdate = true;
+      rodillo.visible = rodilloK !== null; if (rodilloK !== null) { rodillo.position.set(1.55, 0, 0); rod.rotation.y = -rodilloK * 12; }
+      alarma.visible = alarmaK > 0; alarma.material.opacity = alarmaK * (.6 + .4 * Math.sin(tiempo * 14)); alarma.scale.setScalar(1.4 + alarmaK);
+      if (alarmaK > 0) { const m = this.monedas.limada; alarma.position.set(m.position.x + Math.cos(-.18 * Math.PI * 2 - .4) * 1.0, m.position.y + .9, m.position.z + .3); }
+      toni.visible = toniK; if (toniK) { toni.position.set(-1.4, -5.6, -1.2); mirar(toni, cam); }
+    },
+  };
+}
+
+// =================== ESCENARIO 2: CUARTO DEL LIMADOR (noche) ===================
+function crearNoche() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = new THREE.Color('#0d1030');
+  const caja = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; e.add(o); return o; };
+  const pared = canvasTex(256, 256, (g, w, h) => { ruido(g, w, h, '#2B3A7A', .1, 3000); for (let y = 0; y < h; y += 32) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, y, w, 3); } }, 4, 3);
+  caja(30, .2, 20, new THREE.MeshStandardMaterial({ color: '#5a3a22', roughness: .7 }), 0, -.1, 0);
+  caja(30, 12, .3, new THREE.MeshStandardMaterial({ map: pared, roughness: .9 }), 0, 6, -4);
+  const vent = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3), new THREE.MeshBasicMaterial({ map: canvasTex(128, 160, (g, w, h) => { g.fillStyle = '#16306e'; g.fillRect(0, 0, w, h); g.fillStyle = '#FFF4C8'; g.beginPath(); g.arc(85, 50, 20, 0, 7); g.fill(); g.strokeStyle = '#1b1410'; g.lineWidth = 10; g.strokeRect(0, 0, w, h); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke(); }) })); vent.position.set(-4, 6, -3.8); e.add(vent);
+  const mesa = caja(6, .3, 3, new THREE.MeshStandardMaterial({ color: '#7a4f2a', roughness: .6 }), 0, 2.2, 0);
+  for (const [x, z] of [[-2.7, -1.2], [2.7, -1.2], [-2.7, 1.2], [2.7, 1.2]]) caja(.25, 2.2, .25, new THREE.MeshStandardMaterial({ color: '#5a3a22' }), x, 1.1, z);
+  // vela
+  caja(.3, .8, .3, new THREE.MeshStandardMaterial({ color: '#F4EAD0', roughness: .8 }), 1.8, 2.75, -.6);
+  const llama = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,170,60,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); llama.position.set(1.8, 3.3, -.6); e.add(llama);
+  const luzVela = new THREE.PointLight('#ffa24a', 40, 14, 1.4); luzVela.position.set(1.8, 3.4, -.4); luzVela.castShadow = true; e.add(luzVela);
+  // moneda en la mesa, tarro de virutas, lingote
+  const moneda = crearMoneda('plata'); moneda.userData.canto.dibujar(0); moneda.scale.setScalar(.35); moneda.rotation.x = -Math.PI / 2 + .2; moneda.position.set(-.3, 2.42, .5); e.add(moneda);
+  const tarro = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, 1.4, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#bfe6ff', transparent: true, opacity: .35, roughness: .05, side: THREE.DoubleSide })); tarro.position.set(-1.6, 3.05, -.3); e.add(tarro);
+  const nV = 500, vPos = new Float32Array(nV * 3), vG = new THREE.BufferGeometry(); vG.setAttribute('position', new THREE.BufferAttribute(vPos, 3));
+  const virutas = new THREE.Points(vG, new THREE.PointsMaterial({ color: '#E8EEF5', size: .06, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, map: texRadial('rgba(255,255,255,1)') })); e.add(virutas);
+  const vD = [...Array(nV)].map((_, i) => { const a = rnd() * Math.PI * 2, r = rnd() * .55; return v3(-1.6 + Math.cos(a) * r, 2.4 + (i / nV) * 1.2, -.3 + Math.sin(a) * r); });
+  const lingote = new THREE.Mesh(new THREE.BoxGeometry(1.4, .45, .7), new THREE.MeshStandardMaterial({ color: '#AEB8C2', metalness: 1, roughness: .2, envMap: entorno, envMapIntensity: .8 })); e.add(lingote);
+  const brillo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,255,255,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); e.add(brillo);
+  const ladron = personaje(e, 'ladron', 4.0);
+  e.add(new THREE.HemisphereLight('#7c8cff', '#1a0f08', .6));
+  const luna = new THREE.DirectionalLight('#8fb2ff', .8); luna.position.set(-6, 8, 4); e.add(luna);
+  const cam = new THREE.PerspectiveCamera(46, W / H, .05, 100);
+  return {
+    escena: e, cam,
+    preparar({ tiempo, llenado = 0, lingoteK = 0 }) {
+      llama.scale.set(.5 + Math.sin(tiempo * 23) * .05, .8 + Math.sin(tiempo * 17) * .08, 1); luzVela.intensity = 40 + Math.sin(tiempo * 19) * 6;
+      ladron.position.set(.8, 0, -1.9); mirar(ladron, cam);
+      const n = Math.floor(nV * clamp(llenado)); vD.forEach((p, i) => { if (i < n) { vPos[i * 3] = p.x; vPos[i * 3 + 1] = p.y; vPos[i * 3 + 2] = p.z; } else vPos[i * 3] = 999; }); vG.attributes.position.needsUpdate = true; virutas.visible = llenado > 0;
+      lingote.visible = brillo.visible = lingoteK > 0; const s = rebote(lingoteK); lingote.scale.setScalar(s); lingote.position.set(-.2, 2.6 + .1 * s, .7); lingote.rotation.y = .4 + lingoteK * .6;
+      brillo.position.set(.1, 2.95, .9); brillo.scale.setScalar(lingoteK > 0 ? 1.2 + Math.sin(tiempo * 9) * .3 : 0);
+    },
+  };
+}
+
+// =================== ESCENARIO 3: MERCADO ===================
+function crearMercado() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = fondoDegradado('#3f8fe0', '#bfe3ff');
+  const caja = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; e.add(o); return o; };
+  const adoquin = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#8a7f72'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 32) for (let x = (y / 32) % 2 * 16; x < w; x += 32) { g.fillStyle = `rgb(${150 + rnd() * 30},${140 + rnd() * 25},${125 + rnd() * 20})`; g.fillRect(x + 2, y + 2, 28, 28); } }, 8, 8);
+  caja(60, .2, 40, new THREE.MeshStandardMaterial({ map: adoquin, roughness: .9 }), 0, -.1, 0);
+  // casas al fondo
+  const colores = ['#E8B84A', '#D9644A', '#6FB36F', '#5D9BD6', '#E88AA8'];
+  for (let i = 0; i < 7; i++) { const h = 6 + rnd() * 4; caja(4.2, h, 3, new THREE.MeshStandardMaterial({ color: colores[i % 5], roughness: .8 }), -13 + i * 4.4, h / 2, -9); const tj = new THREE.Mesh(new THREE.ConeGeometry(3.2, 2, 4), new THREE.MeshStandardMaterial({ color: '#7B2E24' })); tj.rotation.y = Math.PI / 4; tj.position.set(-13 + i * 4.4, h + 1, -9); e.add(tj); }
+  // puesto con toldo de rayas
+  const toldo = canvasTex(256, 64, (g, w, h) => { for (let x = 0; x < w; x += 32) { g.fillStyle = (x / 32) % 2 ? '#fff' : '#D63A2F'; g.fillRect(x, 0, 32, h); } });
+  const t = caja(7, .15, 3.4, new THREE.MeshStandardMaterial({ map: toldo, roughness: .8 }), 0, 5, -1.6); t.rotation.x = .25;
+  for (const x of [-3.3, 3.3]) caja(.2, 5, .2, new THREE.MeshStandardMaterial({ color: '#6b4a2a' }), x, 2.5, -2.8);
+  caja(7, 2, 1.8, new THREE.MeshStandardMaterial({ color: '#8a5a34', roughness: .7 }), 0, 1, 0);
+  for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.22, 12, 8), new THREE.MeshStandardMaterial({ color: ['#E0442F', '#F2A33A', '#7ED957'][i % 3] })); f.position.set(-3 + (i % 7) * .35, 2.2, -.4 + Math.floor(i / 7) * .35); e.add(f); }
+  // balanza
+  const oro = new THREE.MeshStandardMaterial({ color: '#D9A93A', metalness: .9, roughness: .3, envMap: entorno });
+  const bal = new THREE.Group(); bal.position.set(1.4, 2, .2); e.add(bal);
+  const poste = new THREE.Mesh(new THREE.CylinderGeometry(.06, .1, 1.8, 12), oro); poste.position.y = .9; bal.add(poste);
+  const viga = new THREE.Group(); viga.position.y = 1.8; bal.add(viga);
+  const barra = new THREE.Mesh(new THREE.BoxGeometry(2.2, .06, .06), oro); viga.add(barra);
+  const platos = [-1, 1].map(s => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.42, .3, .1, 24), oro); e.add(p); p.userData.s = s; return p; });
+  const moneda = crearMoneda('plata'); moneda.userData.canto.dibujar(0); moneda.scale.setScalar(.25); e.add(moneda);
+  const mer = { normal: personaje(e, 'mercader', 4.0), feliz: personaje(e, 'mercader_feliz', 4.0) };
+  e.add(new THREE.HemisphereLight('#dff0ff', '#8a6a4a', 1.0));
+  const sol = new THREE.DirectionalLight('#fff3d8', 3); sol.position.set(8, 14, 8); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); Object.assign(sol.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15 }); sol.shadow.camera.updateProjectionMatrix(); e.add(sol);
+  const cam = new THREE.PerspectiveCamera(46, W / H, .05, 200);
+  return {
+    escena: e, cam, bal,
+    preparar({ tiempo, inclina = 0, feliz = false }) {
+      viga.rotation.z = -inclina * .25;
+      platos.forEach(p => { const x = p.userData.s * 1.05, y = 1.8 - p.userData.s * Math.sin(-inclina * .25) * 1.05; p.position.set(bal.position.x + x, bal.position.y + y - .55, bal.position.z); });
+      moneda.position.copy(platos[0].position).add(v3(0, .1, 0)); moneda.rotation.set(-Math.PI / 2 + .15, 0, 0);
+      mer.normal.visible = !feliz; mer.feliz.visible = feliz;
+      for (const m of Object.values(mer)) { m.position.set(-1.2, 0, -1.3); mirar(m, cam); }
+    },
+  };
+}
+
+// =================== ESCENARIO 4: CASA DE LA MONEDA ===================
+function crearCeca() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = fondoDegradado('#3b1b6e', '#ff8a4a');
+  const caja = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; e.add(o); return o; };
+  const piedra = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#5e5a66'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 32) for (let x = (y / 32) % 2 * 32; x < w; x += 64) { g.fillStyle = `rgb(${165 + rnd() * 30},${155 + rnd() * 25},${150 + rnd() * 25})`; g.fillRect(x + 3, y + 3, 58, 26); } }, 6, 4);
+  caja(60, .2, 40, new THREE.MeshStandardMaterial({ color: '#6a6470', roughness: .9 }), 0, -.1, 0);
+  caja(24, 14, 1, new THREE.MeshStandardMaterial({ map: piedra, roughness: .85 }), 0, 7, -5);
+  caja(26, 1, 2, new THREE.MeshStandardMaterial({ color: '#cfc8d4' }), 0, 14, -4.6);
+  const columnas = new THREE.MeshStandardMaterial({ color: '#e6e0ea', roughness: .6 });
+  for (const x of [-6, -3.4, 3.4, 6]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.45, .5, 10, 20), columnas); c.position.set(x, 5, -4); c.castShadow = true; e.add(c); }
+  const cartel = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.3), new THREE.MeshStandardMaterial({ map: canvasTex(1024, 150, (g, w, h) => { g.fillStyle = '#1F2A44'; g.fillRect(0, 0, w, h); g.fillStyle = '#F2C14E'; g.font = 'bold 96px DejaVu Sans'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('ROYAL MINT', w / 2, h / 2 + 4); }), emissive: '#fff', emissiveIntensity: .15 })); cartel.position.set(0, 11, -4.45); e.add(cartel);
+  // puertas
+  const madera = new THREE.MeshStandardMaterial({ color: '#6B3A1E', roughness: .6 });
+  const pI = new THREE.Group(), pD = new THREE.Group(); pI.position.set(-1.8, 0, -4.4); pD.position.set(1.8, 0, -4.4); e.add(pI, pD);
+  const hojaI = new THREE.Mesh(new THREE.BoxGeometry(1.8, 6, .25), madera); hojaI.position.set(.9, 3, 0); pI.add(hojaI);
+  const hojaD = new THREE.Mesh(new THREE.BoxGeometry(1.8, 6, .25), madera); hojaD.position.set(-.9, 3, 0); pD.add(hojaD);
+  const hueco = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 6), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); hueco.position.set(0, 3, -4.55); e.add(hueco);
+  const luzPuerta = new THREE.PointLight('#ffc060', 0, 14, 1.4); luzPuerta.position.set(0, 3, -3); e.add(luzPuerta);
+  for (const x of [-4.6, 4.6]) { const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,190,80,1)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); f.position.set(x, 4.2, -3.8); f.scale.setScalar(1.6); e.add(f); const l = new THREE.PointLight('#ffb050', 20, 10, 1.5); l.position.set(x, 4.2, -3.4); e.add(l); }
+  // reja que cae
+  const reja = new THREE.Group(); e.add(reja);
+  const hierro = new THREE.MeshStandardMaterial({ color: '#2c2f36', metalness: .8, roughness: .4 });
+  for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 5, 8), hierro); b.position.set(-1.6 + i * .4, 2.5, 0); b.castShadow = true; reja.add(b); }
+  for (const y of [.3, 4.7]) { const b = new THREE.Mesh(new THREE.BoxGeometry(3.6, .18, .18), hierro); b.position.y = y; reja.add(b); }
+  const P = { newton: personaje(e, 'newton', 4), newtonE: personaje(e, 'newton_eureka', 4), fals: personaje(e, 'falsificador', 4), falsP: personaje(e, 'falsificador_pillado', 4) };
+  e.add(new THREE.HemisphereLight('#ffd0b0', '#2a1a40', .9));
+  const sol = new THREE.DirectionalLight('#ffb070', 2.4); sol.position.set(10, 8, 12); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); Object.assign(sol.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15 }); sol.shadow.camera.updateProjectionMatrix(); e.add(sol);
+  const cam = new THREE.PerspectiveCamera(46, W / H, .05, 200);
+  return {
+    escena: e, cam,
+    preparar({ tiempo, puerta = 0, quienes = [], reja: kr = null }) {
+      pI.rotation.y = -puerta * 1.6; pD.rotation.y = puerta * 1.6; luzPuerta.intensity = puerta * 60;
+      for (const k in P) P[k].visible = false;
+      quienes.forEach(([k, pos]) => { P[k].visible = true; P[k].position.copy(pos); mirar(P[k], cam); });
+      reja.visible = kr !== null; if (kr !== null) { reja.position.set(3.2, lerp(7, 0, Math.pow(clamp(kr), 2)), 1.2); }
+    },
+  };
+}
+
+const macro = crearMacro(), noche = crearNoche(), mercado = crearMercado(), ceca = crearCeca();
+const comp = new EffectComposer(renderer);
+const rp = new RenderPass(macro.escena, macro.cam); comp.addPass(rp);
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .3, .5, .9); comp.addPass(bloom); comp.addPass(new OutputPass());
+
+// =================== PLANOS ===================
+const cam = (c, pos, mira, fov) => { c.fov = fov; c.position.copy(pos); c.lookAt(mira); };
+// moneda de canto girando (para gancho y final, el mismo encuadre = bucle)
+// giro de la moneda: el canto mira a cámara. tl = tiempo desde el inicio del bucle (negativo al final del vídeo)
+// la moneda rueda sobre su propio eje y la cámara mira el canto: las rayas pasan por delante
+const giroCanto = tl => tl * 1.1;
+const MACRO_CANTO = (t, tl, conLima, k, lejos = 0) => {
+  macro.preparar({ tiempo: t, visibles: { oro: [0, 0, 0, 0, 0, giroCanto(tl)] }, lima: conLima ? [1.02, .05 + Math.sin(t * 22) * .04, 0, -.1] : null, chispasK: conLima ? t : -1 });
+  cam(macro.cam, v3(lerp(2.0, 1.8, k) + lejos, .45, lerp(1.15, 1.0, k) + lejos * .5), v3(.85, .05, 0), 40);
+};
+const PLANOS = [
+  { desde: 0, nombre: 'GANCHO: lima rascando el canto con rayas, chispas', esc: 'macro', f(k, t) { MACRO_CANTO(t, t, true, k); } },
+  { desde: 3, nombre: 'por culpa de unos ladrones: otro ángulo de la lima', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { oro: [0, 0, 0, 0, 0, giroCanto(t)] }, lima: [1.02, .05 + Math.sin(t * 22) * .04, 0, -.1], chispasK: t });
+      cam(macro.cam, v3(lerp(1.5, 1.4, k), lerp(1.5, 1.3, k), lerp(.9, .7, k)), v3(.9, 0, 0), 40);
+    } },
+  { desde: 8, nombre: 'antes, una moneda de plata: la balanza', esc: 'mercado', f(k, t) {
+      mercado.preparar({ tiempo: t, inclina: salida(k * 1.5) });
+      cam(mercado.cam, v3(lerp(3.2, 2.6, k), lerp(3.6, 3.4, k), lerp(5.5, 4.6, k)), v3(1.4, 3.2, .2), 44);
+    } },
+  { desde: 13, nombre: 'valía la plata que llevaba dentro: moneda brillante girando', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { lisa: [0, 0, 0, t * 1.4, .2] } });
+      cam(macro.cam, v3(lerp(-.5, .5, k), lerp(.3, .6, k), lerp(4.6, 4.0, k)), v3(0, 0, 0), 40);
+    } },
+  { desde: 19, nombre: 'había quien limaba: el limador a la luz de la vela', esc: 'noche', f(k, t) {
+      noche.preparar({ tiempo: t });
+      cam(noche.cam, v3(lerp(-1.2, -.6, k), lerp(3.6, 3.4, k), lerp(5.6, 4.8, k)), v3(.3, 3.0, -.8), 46);
+    } },
+  { desde: 26, nombre: 'el borde antes de gastarla: lima sobre moneda lisa', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { lisa: [0, 0, 0, t * .7, .35] }, lima: [1.02, .05, 0, -.12 + Math.sin(t * 22) * .05], chispasK: t });
+      cam(macro.cam, v3(lerp(2.0, 1.6, k), lerp(-.3, .2, k), lerp(2.4, 2.1, k)), v3(.8, 0, 0), 40);
+    } },
+  { desde: 31, nombre: 'nadie lo notaba: el mercader feliz', esc: 'mercado', f(k, t) {
+      mercado.preparar({ tiempo: t, inclina: 1, feliz: true });
+      cam(mercado.cam, v3(lerp(.6, .2, k), lerp(3.4, 3.3, k), lerp(5.4, 4.8, k)), v3(-.4, 3.0, -.6), 46);
+    } },
+  { desde: 34, nombre: 'miles de virutas: el tarro se llena', esc: 'noche', f(k, t) {
+      noche.preparar({ tiempo: t, llenado: salida(k) });
+      cam(noche.cam, v3(lerp(-2.4, -2.2, k), lerp(4.2, 4.0, k), lerp(4.6, 4.0, k)), v3(-1.4, 3.0, -.3), 40);
+    } },
+  { desde: 39, nombre: 'sacaban plata gratis: aparece el lingote', esc: 'noche', f(k, t) {
+      noche.preparar({ tiempo: t, llenado: 1, lingoteK: clamp(k * 2.2) });
+      cam(noche.cam, v3(lerp(.2, -.2, k), lerp(3.8, 3.6, k), lerp(4.4, 3.8, k)), v3(-.2, 2.9, .2), 44);
+    } },
+  { desde: 42, nombre: 'la solución: llega el rodillo', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { lisa: [0, 0, 0, 0, .35] }, rodilloK: 0, grabado: 0 });
+      cam(macro.cam, v3(lerp(3.4, 2.8, k), lerp(1.4, 1.0, k), lerp(4, 3.4, k)), v3(.8, .3, 0), 40);
+    } },
+  { desde: 44, nombre: 'grabar rayas en el borde: las estrías aparecen', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { lisa: [0, 0, 0, k * Math.PI * 2, .35] }, rodilloK: k, grabado: k });
+      cam(macro.cam, v3(lerp(2.2, 1.9, k), lerp(.6, .5, k), lerp(2.6, 2.3, k)), v3(.9, 0, 0), 38);
+    } },
+  { desde: 49, nombre: 'si alguien limaba la moneda: dos monedas', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { rayada: [-1.15, 0, 0, .3, .6], limada: [1.15, 0, 0, .3, .6] }, lima: [2.2, .2, 0, -.1 + Math.sin(t * 22) * .05], chispasK: t });
+      cam(macro.cam, v3(0, lerp(2.4, 2.0, k), lerp(6.2, 5.6, k)), v3(0, 0, 0), 44);
+    } },
+  { desde: 54, nombre: 'las rayas desaparecían y la delataban: alarma roja', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { limada: [0, 0, 0, lerp(.3, .55, k), .6] }, alarmaK: suave(k * 2) });
+      cam(macro.cam, v3(lerp(2.0, 1.6, k), lerp(1.6, 1.3, k), lerp(2.6, 2.2, k)), v3(.6, .5, 0), 40);
+    } },
+  { desde: 60, nombre: 'la Casa de la Moneda de Inglaterra (grúa)', esc: 'ceca', f(k, t) {
+      ceca.preparar({ tiempo: t });
+      cam(ceca.cam, v3(lerp(-3, 2, k), lerp(14, 6, suave(k)), lerp(18, 15, k)), v3(0, lerp(10, 6, k), -4), 50);
+    } },
+  { desde: 69, nombre: 'perseguía a los falsificadores: el falsificador se escabulle', esc: 'ceca', f(k, t) {
+      ceca.preparar({ tiempo: t, quienes: [['fals', v3(lerp(-5, -1, k), 0, 1.2)]] });
+      cam(ceca.cam, v3(lerp(-6, -3, k), 3.4, 9), v3(lerp(-3.5, -1, k), 2.6, 0), 46);
+    } },
+  { desde: 76, nombre: '¡Isaac Newton! se abre la puerta', esc: 'ceca', f(k, t) {
+      ceca.preparar({ tiempo: t, puerta: salida(k * 2), quienes: [['newton', v3(0, 0, lerp(-4.4, -2.6, salida(k * 1.5)))]] });
+      cam(ceca.cam, v3(0, lerp(3, 3.2, k), lerp(8, 6.2, k)), v3(0, 2.6, -3), 44);
+    } },
+  { desde: 78, nombre: 'tardó años: Newton señala, el falsificador corre', esc: 'ceca', f(k, t) {
+      ceca.preparar({ tiempo: t, puerta: 1, quienes: [['newtonE', v3(-1.5, 0, -1.2)], ['fals', v3(lerp(1.4, 3.2, k), 0, 1.2)]] });
+      cam(ceca.cam, v3(lerp(-1, 0, k), 3.2, lerp(10, 9, k)), v3(.8, 2.4, 0), 48);
+    } },
+  { desde: 81, nombre: 'atrapó al más famoso: ¡cae la reja!', esc: 'ceca', f(k, t) {
+      ceca.preparar({ tiempo: t, puerta: 1, quienes: [['newtonE', v3(-1.5, 0, -1.2)], ['falsP', v3(3.2, 0, 1.2)]], reja: clamp((t - T(81)) / .35) });
+      cam(ceca.cam, v3(lerp(5.2, 4.8, k), lerp(3.4, 3.2, k), lerp(8.4, 7.6, k)), v3(2.6, 2.4, 0), 46);
+    } },
+  { desde: 85, nombre: 'hoy las monedas ya no son de plata: Toni', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, toniK: true });
+      cam(macro.cam, v3(lerp(.5, .2, k), lerp(-1.6, -1.8, k), lerp(9, 8, k)), v3(-.6, -2.0, -1.2), 44);
+    } },
+  { desde: 93, nombre: 'pero las rayas siguen ahí: moneda de oro acercándose', esc: 'macro', f(k, t) {
+      macro.preparar({ tiempo: t, visibles: { oro: [0, 0, 0, t * .9, lerp(.1, .35, k)] } });
+      cam(macro.cam, v3(lerp(3.0, 2.1, suave(k)), lerp(1.2, .55, k), lerp(5, 2.9, suave(k))), v3(lerp(0, .6, k), 0, 0), 40);
+    } },
+  { desde: 98, nombre: 'BUCLE: por culpa de unos ladrones (mismo plano que el inicio)', esc: 'macro', f(k, t) {
+      // la lima entra al final: el siguiente fotograma es el primero del vídeo
+      const entra = suave(clamp((k - .55) / .45)), tl = t - DURACION;
+      macro.preparar({ tiempo: t, visibles: { oro: [0, 0, 0, 0, 0, giroCanto(tl)] }, lima: entra > 0 ? [1.02 + (1 - entra) * 1.6, .05 + (1 - entra) * .7, 0, -.1] : null });
+      cam(macro.cam, v3(lerp(2.4, 2.0, k), .45, lerp(1.4, 1.15, k)), v3(.85, .05, 0), 40);
+    } },
+];
+PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
+PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
+const ESC = { macro, noche, mercado, ceca };
+
+// =================== SUBTÍTULOS EN BLOQUES DE 2-4 PALABRAS ===================
+const INICIO_SUB = 8;            // las palabras 0-7 son el gancho (texto grande)
+const unidades = PAL.map((p, i) => ({ w: p.w, t0: p.t0, t1: p.t1, i })).filter(u => u.i >= INICIO_SUB);
+const finFrase = w => /[.,:;…!?]$/.test(w);
+const frases = []; let f0 = [];
+unidades.forEach((u, j) => { f0.push(u); if (finFrase(u.w) || j === unidades.length - 1) { frases.push(f0); f0 = []; } });
+for (let i = 0; i < frases.length; i++) if (frases[i].length === 1) {
+  const prev = frases[i - 1], ant = prev && !/[.:…!?]$/.test(prev[prev.length - 1].w);
+  if (ant) { prev.push(...frases[i]); frases.splice(i, 1); i--; } else if (frases[i + 1]) { frases[i + 1].unshift(...frases[i]); frases.splice(i, 1); i--; } else if (prev) { prev.push(...frases[i]); frases.splice(i, 1); i--; }
+}
+const bloques = [];
+frases.forEach(fr => { const n = fr.length, k = Math.ceil(n / 4); let i = 0; for (let b = 0; b < k; b++) { const tam = Math.floor(n / k) + (b < n % k ? 1 : 0); bloques.push(fr.slice(i, i + tam)); i += tam; } });
+const CLAVE = new Set(['plata', 'limaba', 'borde', 'virutas', 'gratis', 'solución', 'rayas', 'delataban', 'Moneda', 'falsificadores', 'Isaac', 'Newton', 'famoso', 'ladrones', 'Nadie']);
+const marcar = w => w.split(' ').map(p => CLAVE.has(p.replace(/[^\wáéíóúñü]/gi, '')) ? `<b>${p}</b>` : p).join(' ');
+const FIN_GANCHO = T(INICIO_SUB) - .06;
+
+// =================== EDICIÓN ===================
+const golpes = [T(81) + .32, T(76)];
+const $ = id => document.getElementById(id);
+function edicion(t) {
+  const g = $('gancho'); g.style.opacity = t < FIN_GANCHO ? 1 : 0; g.style.transform = `scale(${lerp(1.1, 1, salida(t / .25))})`;
+  const sub = $('sub');
+  const b = t >= FIN_GANCHO ? bloques.find((bl, i) => bl[0].t0 - .05 <= t && t < (bloques[i + 1]?.[0].t0 ?? DURACION) - .05) : null;
+  if (b) { sub.innerHTML = marcar(b.map(u => u.w.replace('…', '...')).join(' ')); const k = clamp((t - b[0].t0) / .1); sub.style.transform = `scale(${lerp(1.18, 1, salida(k))})`; sub.style.opacity = 1; } else sub.style.opacity = 0;
+  $('flash').style.opacity = [[T(39) + .15, .4], [T(76), .35]].reduce((a, [ti, f]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / .22) : 0), 0);
+  $('rojo').style.opacity = t >= T(54) - .06 && t < T(60) - .06 ? clamp((t - T(54)) / .3) * (.5 + .3 * Math.sin(t * 10)) : 0;
+  let escala = 1; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .25) escala = Math.max(escala, lerp(1.06, 1, salida(d / .25))); }
+  let sx = 0, sy = 0; for (const gp of golpes) { const d = t - gp; if (d >= 0 && d < .35) { const a = (1 - d / .35) * 20; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
+  $('lienzo').style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.03})`;
+}
+
+window.DURACION = DURACION;
+window.PLANOS = PLANOS.map(p => ({ nombre: p.nombre, t0: p.t0, t1: p.t1, esc: p.esc }));
+window.BLOQUES = bloques.map(b => b.map(u => u.w).join(' '));
+window.renderAt = (t) => {
+  const p = PLANOS.find(p => t >= p.t0 && t < p.t1) || PLANOS[PLANOS.length - 1];
+  const k = clamp((t - p.t0) / (p.t1 - p.t0));
+  p.f(k, t);
+  const s = ESC[p.esc]; s.cam.aspect = W / H; s.cam.updateProjectionMatrix();
+  rp.scene = s.escena; rp.camera = s.cam;
+  renderer.toneMappingExposure = p.esc === 'noche' ? .95 : .9;
+  bloom.strength = p.desde === 85 ? 0 : p.esc === 'macro' ? .25 : .18;
+  comp.render(); edicion(t);
+};
+await Promise.all(CARGAS);
+window.LISTO = true;
+</script>
+</body></html>
