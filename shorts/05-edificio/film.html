@@ -1,0 +1,356 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>El edificio que giró</title>
+<!-- Short v2 (30-40 s): función pura del tiempo window.renderAt(t). Ver shorts/GUIA_ESTILO.md -->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  #lienzo{position:absolute;inset:0;transform-origin:50% 50%}
+  canvas{display:block}
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 60%,rgba(0,0,0,.4) 100%)}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0}
+  .txt{position:absolute;left:90px;right:90px;text-align:center;font-family:"DejaVu Sans",sans-serif;font-weight:800;color:#fff;paint-order:stroke}
+  #gancho{top:340px;left:24px;right:24px;font-size:84px;line-height:1.04;letter-spacing:-1px;-webkit-text-stroke:22px #000;text-shadow:0 12px 0 rgba(0,0,0,.45);opacity:0}
+  #sub{top:1300px;font-size:96px;line-height:1.08;-webkit-text-stroke:19px #000;text-shadow:0 9px 0 rgba(0,0,0,.45)}
+  #sub b{color:#FFD93B}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="lienzo"></div>
+<div id="vineta"></div>
+<div id="gancho" class="txt">ESTE EDIFICIO GIRÓ<br><span style="color:#FFD93B">CON 600 PERSONAS DENTRO</span></div>
+<div id="sub" class="txt"></div>
+<div id="flash"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1080, H = 1920;
+let semilla = 1930;
+const rnd = () => { semilla |= 0; semilla = semilla + 0x6D2B79F5 | 0; let t = Math.imul(semilla ^ semilla >>> 15, 1 | semilla); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const suave = k => { k = clamp(k); return k * k * (3 - 2 * k); };
+const salida = k => 1 - Math.pow(1 - clamp(k), 3);
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+
+const PAL = await (await fetch('voz_ritmo.json')).json();
+const T = i => PAL[i].t0;
+const DURACION = PAL[PAL.length - 1].t1 + .35;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('lienzo').appendChild(renderer.domElement);
+const entorno = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+function canvasTex(w, h, dibujo, rx = 1, ry = 1) { const c = document.createElement('canvas'); c.width = w; c.height = h; dibujo(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData.canvas = c; return t; }
+const ruido = (g, w, h, base, v, n) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < n; i++) { const a = (rnd() - .5) * v; g.fillStyle = a > 0 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${-a})`; g.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2 + rnd() * 3); } };
+const texRadial = c => canvasTex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+const fondoDegradado = (a, b) => { const t = canvasTex(16, 512, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
+const CARGAS = []; const cargador = new THREE.TextureLoader();
+const spriteTex = n => { let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+function personaje(escena, nombre, alto) {
+  const t = spriteTex(nombre);
+  const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: .2, side: THREE.DoubleSide, fog: false });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(alto * 400 / 640, alto), m); p.geometry.translate(0, alto / 2, 0); p.castShadow = true;
+  p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  escena.add(p); return p;
+}
+const mirar = (p, cam) => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(cam.position.x - w.x, cam.position.z - w.z) - (p.parent?.rotation?.y || 0); };
+
+// fachada de ladrillo con ventanas y caritas de los empleados
+const texFachada = (cols, filas, conGente, base = '#B5482E') => canvasTex(1024, 1024, (g, w, h) => {
+  ruido(g, w, h, base, .12, 9000);
+  for (let y = 0; y < h; y += 16) { g.fillStyle = 'rgba(60,20,10,.25)'; g.fillRect(0, y, w, 2); }
+  const cw = w / cols, ch = h / filas;
+  for (let f = 0; f < filas; f++) for (let c = 0; c < cols; c++) {
+    const x = c * cw + cw * .2, y = f * ch + ch * .18, ww = cw * .6, hh = ch * .6;
+    g.fillStyle = '#E9DCC0'; g.fillRect(x - 6, y - 6, ww + 12, hh + 14);
+    g.fillStyle = '#FFE3A0'; g.fillRect(x, y, ww, hh);
+    if (conGente && rnd() < .75) { const px = x + ww * (.3 + rnd() * .4), py = y + hh * .55; g.fillStyle = '#FFF1DC'; g.strokeStyle = '#1F2A44'; g.lineWidth = 4; g.beginPath(); g.ellipse(px, py, 14, 16, 0, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#1F2A44'; g.fillRect(px - 6, py - 3, 3, 5); g.fillRect(px + 3, py - 3, 3, 5); g.fillStyle = ['#C0392B', '#2F5D8A', '#3E7B4F', '#6E2A7A'][Math.floor(rnd() * 4)]; g.fillRect(px - 16, py + 16, 32, hh * .45 - 16); }
+    g.strokeStyle = '#5a3a22'; g.lineWidth = 5; g.strokeRect(x, y, ww, hh); g.beginPath(); g.moveTo(x + ww / 2, y); g.lineTo(x + ww / 2, y + hh); g.stroke();
+  }
+});
+
+// =================== ESCENARIO 1: LA CALLE (1930) ===================
+function crearCalle() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = fondoDegradado('#2f7ae0', '#cfe8ff'); e.fog = new THREE.Fog('#cfe8ff', 90, 260);
+  const caja = (w, h, d, m, x, y, z, padre = e) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; padre.add(o); return o; };
+  const asfalto = canvasTex(256, 256, (g, w, h) => ruido(g, w, h, '#4a4a50', .12, 5000), 20, 20);
+  caja(300, .2, 300, new THREE.MeshStandardMaterial({ map: asfalto, roughness: .9 }), 0, -.1, 0);
+  const tierra = canvasTex(256, 256, (g, w, h) => ruido(g, w, h, '#9C7A52', .2, 8000), 4, 4);
+  caja(34, .06, 30, new THREE.MeshStandardMaterial({ map: tierra, roughness: 1 }), 0, .03, 0);
+  const acera = new THREE.MeshStandardMaterial({ color: '#c9c3b8', roughness: .9 });
+  caja(40, .25, 3, acera, 0, .12, 17); caja(3, .25, 36, acera, -19, .12, 0); caja(3, .25, 36, acera, 19, .12, 0);
+  // edificios vecinos
+  const colores = ['#E8D9B0', '#9FC1D9', '#F2E6C9', '#C7D9B8'];
+  for (const [x, z, w, h, d] of [[-34, -6, 18, 26, 22], [34, -4, 16, 20, 22], [-30, 34, 16, 14, 12], [30, 36, 18, 22, 14], [0, -38, 50, 30, 10]]) {
+    const m = new THREE.MeshStandardMaterial({ map: texFachada(6, 8, false, colores[Math.floor(rnd() * 4)]), roughness: .85 }); caja(w, h, d, m, x, h / 2, z);
+  }
+  // coches de época
+  const coches = [];
+  for (const [x, z, col, r] of [[-8, 21, '#1E3A5F', 0], [10, 22.5, '#7A1E2B', Math.PI], [-23, 6, '#2E5E3A', Math.PI / 2]]) {
+    const c = new THREE.Group(); c.position.set(x, 0, z); c.rotation.y = r; e.add(c);
+    const pin = new THREE.MeshStandardMaterial({ color: col, metalness: .5, roughness: .35, envMap: entorno });
+    caja(4.2, 1, 1.8, pin, 0, 1.0, 0, c); caja(2, 1, 1.6, pin, -.4, 1.9, 0, c);
+    for (const [wx, wz] of [[-1.4, .95], [1.4, .95], [-1.4, -.95], [1.4, -.95]]) { const r2 = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, .3, 16), new THREE.MeshStandardMaterial({ color: '#151515' })); r2.rotation.x = Math.PI / 2; r2.position.set(wx, .5, wz); c.add(r2); }
+    coches.push(c);
+  }
+  // árboles
+  const copa = new THREE.MeshStandardMaterial({ color: '#D9822B', roughness: .9, flatShading: true });   // otoño
+  for (const [x, z] of [[-21, -12], [21, 12]]) { const tr = new THREE.Mesh(new THREE.CylinderGeometry(.25, .35, 4, 8), new THREE.MeshStandardMaterial({ color: '#5a3a22' })); tr.position.set(x, 2, z); const co = new THREE.Mesh(new THREE.IcosahedronGeometry(2.6, 0), copa); co.position.set(x, 5, z); tr.castShadow = co.castShadow = true; e.add(tr, co); }
+  // EL EDIFICIO: gira alrededor de un pivote en una esquina
+  const pivote = new THREE.Group(); pivote.position.set(-7, 0, 6); e.add(pivote);
+  const edif = new THREE.Group(); edif.position.set(7, 0, -6); pivote.add(edif);
+  const AN = 14, FO = 10, AL = 19, BASE = 1.2;
+  const fach = new THREE.MeshStandardMaterial({ map: texFachada(5, 7, true), roughness: .85, emissive: '#331a08', emissiveIntensity: .15 });
+  const lat = new THREE.MeshStandardMaterial({ map: texFachada(4, 7, true), roughness: .85, emissive: '#331a08', emissiveIntensity: .15 });
+  const techo = new THREE.MeshStandardMaterial({ color: '#6a5f55' });
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(AN, AL, FO), [lat, lat, techo, techo, fach, fach]); cuerpo.position.y = BASE + AL / 2; cuerpo.castShadow = cuerpo.receiveShadow = true; edif.add(cuerpo);
+  caja(AN + .8, .8, FO + .8, new THREE.MeshStandardMaterial({ color: '#7d6a58' }), 0, BASE + AL + .4, 0, edif);
+  caja(AN + .4, 1.4, FO + .4, new THREE.MeshStandardMaterial({ color: '#E3D6BC' }), 0, BASE + .7, 0, edif);
+  // vigas y rodillos debajo
+  const madera = new THREE.MeshStandardMaterial({ color: '#7a5634', roughness: .8 }), acero = new THREE.MeshStandardMaterial({ color: '#8f99a3', metalness: .9, roughness: .3, envMap: entorno });
+  for (let x = -6; x <= 6; x += 2) caja(.5, .45, FO + 1.5, madera, x, .25, 0, edif);
+  const rodillos = []; for (let x = -6; x <= 6; x += 1) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, FO + 1, 16), acero); r.rotation.x = Math.PI / 2; r.position.set(x + .5, .72, 0); edif.add(r); rodillos.push(r); }
+  // gatos y obrero
+  const gato = new THREE.Group(); gato.position.set(-AN / 2 - .8, 0, 2); edif.add(gato);
+  caja(.8, .9, .8, new THREE.MeshStandardMaterial({ color: '#C0392B', roughness: .5 }), 0, .45, 0, gato);
+  const palanca = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 1.8, 8), acero); palanca.rotation.z = Math.PI / 2; palanca.position.y = 1.0; gato.add(palanca);
+  const obrero = personaje(e, 'obrero', 3.2);
+  // fantasma del edificio nuevo (planos azules)
+  const fantasma = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(18, 26, 14)), new THREE.LineBasicMaterial({ color: '#4fd3ff', transparent: true }));
+  fantasma.position.set(0, 13, 0); e.add(fantasma);
+  const fantasmaCaja = new THREE.Mesh(new THREE.BoxGeometry(18, 26, 14), new THREE.MeshBasicMaterial({ color: '#4fd3ff', transparent: true, opacity: .12, depthWrite: false })); fantasmaCaja.position.copy(fantasma.position); e.add(fantasmaCaja);
+  // bola de demolición
+  const grua = new THREE.Group(); grua.position.set(26, 0, 14); e.add(grua);
+  caja(1, 30, 1, new THREE.MeshStandardMaterial({ color: '#E0A92C' }), 0, 15, 0, grua);
+  const brazo = caja(18, .8, .8, new THREE.MeshStandardMaterial({ color: '#E0A92C' }), -8, 29.5, 0, grua);
+  const pendulo = new THREE.Group(); pendulo.position.set(-15, 29, 0); grua.add(pendulo);
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 16, 6), new THREE.MeshStandardMaterial({ color: '#222' })); cable.position.y = -8; pendulo.add(cable);
+  const bola = new THREE.Mesh(new THREE.SphereGeometry(1.6, 24, 16), new THREE.MeshStandardMaterial({ color: '#2b2b2b', metalness: .7, roughness: .4, envMap: entorno })); bola.position.y = -16; bola.castShadow = true; pendulo.add(bola);
+  // regla en el suelo
+  const regla = new THREE.Mesh(new THREE.PlaneGeometry(10, .8), new THREE.MeshStandardMaterial({ map: canvasTex(1024, 80, (g, w, h) => { g.fillStyle = '#F2D16B'; g.fillRect(0, 0, w, h); g.fillStyle = '#1F2A44'; for (let x = 0; x < w; x += 20) g.fillRect(x, 0, 3, x % 100 === 0 ? h * .7 : h * .35); }) })); regla.rotation.x = -Math.PI / 2; regla.position.set(7.6, .08, 9); e.add(regla);
+  // tubos flexibles (agua, luz, teléfono) desde la calle
+  const tomas = [[v3(12, .3, 16.5), '#2F80ED', .28], [v3(10, .3, 16.5), '#1a1a1a', .14], [v3(8, .3, 16.5), '#F2C14E', .14]];
+  const tubos = tomas.map(([p, c, r]) => { const m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: c, roughness: .5 })); m.castShadow = true; e.add(m); m.userData = { p, r }; return m; });
+  const hidrante = caja(.6, 1.1, .6, new THREE.MeshStandardMaterial({ color: '#D63A2F' }), 12, .55, 16.5);
+  // pasarela móvil
+  const pasarela = new THREE.Mesh(new THREE.BoxGeometry(2.2, .2, 1), new THREE.MeshStandardMaterial({ color: '#8a5a34', roughness: .7 })); pasarela.castShadow = true; e.add(pasarela);
+  const barandas = [0, 1].map(() => { const b = new THREE.Mesh(new THREE.BoxGeometry(.08, .08, 1), new THREE.MeshStandardMaterial({ color: '#2b2b2b' })); e.add(b); return b; });
+  const oficinista = personaje(e, 'oficinista_feliz', 3.0);
+  const directivo = personaje(e, 'directivo', 3.2);
+  e.add(new THREE.HemisphereLight('#dff0ff', '#7a6040', 1.0));
+  const sol = new THREE.DirectionalLight('#fff0d8', 3.2); sol.position.set(30, 50, 30); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -.0004; sol.shadow.normalBias = .03; Object.assign(sol.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 150 }); sol.shadow.camera.updateProjectionMatrix(); e.add(sol);
+  const cam = new THREE.PerspectiveCamera(50, W / H, .1, 600);
+  const puntoEdif = (x, y, z) => { edif.updateMatrixWorld(true); return edif.localToWorld(v3(x, y, z)); };
+  return {
+    escena: e, cam, puntoEdif, AN, FO, AL, BASE,
+    preparar({ tiempo, giro = 0, rodar = 0, fantasmaK = 0, bolaK = null, obreroK = false, oficinistaK = null, directivoK = false }) {
+      pivote.rotation.y = giro;
+      rodillos.forEach(r => r.rotation.y = rodar * 6);
+      palanca.rotation.y = tiempo * 2.2;
+      obrero.visible = obreroK; if (obreroK) { obrero.position.copy(puntoEdif(-AN / 2 - 2, 0, 3.2)); mirar(obrero, cam); }
+      fantasma.visible = fantasmaCaja.visible = fantasmaK > 0; fantasma.material.opacity = fantasmaK; fantasmaCaja.material.opacity = .14 * fantasmaK; fantasma.scale.y = fantasmaCaja.scale.y = salida(fantasmaK);
+      grua.visible = bolaK !== null; if (bolaK !== null) pendulo.rotation.z = lerp(-.75, .18, salida(bolaK)) + (bolaK > .6 ? Math.sin(tiempo * 9) * .03 * (1 - bolaK) : 0);
+      // tubos: de la calle a un punto del edificio que gira (curva con comba)
+      tubos.forEach((m, i) => { const a = m.userData.p, b = puntoEdif(AN / 2 - 1 - i * 1.2, BASE + .6, FO / 2); const mid = a.clone().lerp(b, .5); mid.y = .2; const curva = new THREE.CatmullRomCurve3([a, a.clone().lerp(mid, .5).setY(.4), mid, mid.clone().lerp(b, .5).setY(.5), b]); m.geometry.dispose(); m.geometry = new THREE.TubeGeometry(curva, 40, m.userData.r, 10); });
+      // pasarela: de la acera a la puerta del edificio
+      const puerta = puntoEdif(-2, BASE + 1.0, FO / 2 + .3), acera = v3(puerta.x, .3, 16);
+      const d = puerta.clone().sub(acera), largo = d.length();
+      pasarela.scale.z = largo; pasarela.position.copy(acera).add(puerta).multiplyScalar(.5); pasarela.lookAt(puerta);
+      barandas.forEach((b, i) => { b.scale.z = largo; b.position.copy(pasarela.position).add(v3((i ? 1 : -1) * 1.05, .9, 0).applyQuaternion(pasarela.quaternion)); b.quaternion.copy(pasarela.quaternion); });
+      oficinista.visible = oficinistaK !== null; if (oficinistaK !== null) { oficinista.position.copy(acera.clone().lerp(puerta, oficinistaK)).add(v3(0, -.1, 0)); mirar(oficinista, cam); }
+      directivo.visible = directivoK; if (directivoK) { directivo.position.set(-12, .25, 17.5); mirar(directivo, cam); }
+    },
+  };
+}
+
+// =================== ESCENARIO 2: DENTRO (centralita y oficina) ===================
+function crearDentro() {
+  const e = new THREE.Scene(); e.environment = entorno; e.background = new THREE.Color('#2a1d14');
+  const caja = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; e.add(o); return o; };
+  caja(30, .2, 20, new THREE.MeshStandardMaterial({ map: canvasTex(256, 256, (g, w, h) => { for (let y = 0; y < h; y += 32) for (let x = 0; x < w; x += 32) { g.fillStyle = (x + y) / 32 % 2 ? '#2c2c2c' : '#E8E0D0'; g.fillRect(x, y, 32, 32); } }, 8, 6), roughness: .6 }), 0, -.1, 0);
+  caja(30, 12, .3, new THREE.MeshStandardMaterial({ color: '#3F7A6A', roughness: .9 }), 0, 6, -5);
+  // centralita
+  caja(8, 5, .6, new THREE.MeshStandardMaterial({ color: '#6B3A1E', roughness: .6 }), -4, 3.2, -4.6);
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(7.4, 4.2), new THREE.MeshStandardMaterial({ map: canvasTex(512, 300, (g, w, h) => { g.fillStyle = '#2a2a2a'; g.fillRect(0, 0, w, h); g.fillStyle = '#9aa3ad'; for (let y = 20; y < h; y += 26) for (let x = 16; x < w; x += 24) { g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill(); } }), roughness: .5 }));
+  panel.position.set(-4, 3.4, -4.28); e.add(panel);
+  const luces = []; for (let i = 0; i < 40; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFB020' })); l.position.set(-7.4 + (i % 20) * .36, 4.9 - Math.floor(i / 20) * .25, -4.2); l.userData.f = rnd() * 10; e.add(l); luces.push(l); }
+  const clavijas = []; for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([v3(-6 + i * .8, 2.6, -4.2), v3(-5.6 + i * .7, 1.6, -3.6), v3(-5 + i * .5, 2.2 + (i % 3) * .5, -4.2)]), 20, .03, 6), new THREE.MeshStandardMaterial({ color: ['#C0392B', '#2F80ED', '#F2C14E'][i % 3] })); e.add(c); clavijas.push(c); }
+  // escritorio con taza de café
+  caja(5, .25, 2.4, new THREE.MeshStandardMaterial({ color: '#8a5a34', roughness: .6 }), 4, 2.3, -1.5);
+  for (const [x, z] of [[1.8, -2.5], [6.2, -2.5], [1.8, -.5], [6.2, -.5]]) caja(.2, 2.3, .2, new THREE.MeshStandardMaterial({ color: '#5a3a22' }), x, 1.15, z);
+  const taza = new THREE.Mesh(new THREE.CylinderGeometry(.32, .26, .6, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#FAFAF5', roughness: .3, side: THREE.DoubleSide })); taza.position.set(3.2, 2.73, -1); e.add(taza);
+  const cafe = new THREE.Mesh(new THREE.CircleGeometry(.3, 24), new THREE.MeshStandardMaterial({ color: '#3b1f0e', roughness: .05, metalness: .2, envMap: entorno })); cafe.rotation.x = -Math.PI / 2; cafe.position.set(3.2, 2.98, -1); e.add(cafe);
+  const vapor = [...Array(8)].map(() => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texRadial('rgba(255,255,255,.6)'), transparent: true, depthWrite: false })); s.userData.f = rnd(); e.add(s); return s; });
+  // ventana: la calle de fuera se desliza (el edificio se mueve)
+  const exterior = canvasTex(512, 512, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5fa8ff'); gr.addColorStop(1, '#cfe8ff'); g.fillStyle = gr; g.fillRect(0, 0, w, h); for (let i = 0; i < 8; i++) { g.fillStyle = ['#C9A27A', '#8FA6B8', '#D9C9A8', '#A8806A'][i % 4]; const bw = 50 + rnd() * 60, bh = 150 + rnd() * 200; g.fillRect(i * 64, h - bh, bw, bh); g.fillStyle = 'rgba(255,240,200,.7)'; for (let y = h - bh + 10; y < h - 10; y += 26) for (let x = i * 64 + 6; x < i * 64 + bw - 10; x += 16) g.fillRect(x, y, 8, 12); } });
+  exterior.wrapS = THREE.RepeatWrapping;
+  const vent = new THREE.Mesh(new THREE.PlaneGeometry(4, 4.5), new THREE.MeshBasicMaterial({ map: exterior })); vent.position.set(5, 6.5, -4.8); e.add(vent);
+  caja(4.4, .25, .4, new THREE.MeshStandardMaterial({ color: '#E3D6BC' }), 5, 4.2, -4.7); caja(.2, 4.5, .3, new THREE.MeshStandardMaterial({ color: '#E3D6BC' }), 5, 6.5, -4.7);
+  const P = { operadora: personaje(e, 'operadora', 3.4), oficinista: personaje(e, 'oficinista', 3.4), directivo: personaje(e, 'directivo', 3.4) };
+  e.add(new THREE.HemisphereLight('#ffe8c8', '#3a2a1a', .9));
+  const lampara = new THREE.SpotLight('#fff0d0', 260, 30, .9, .6, 1.3); lampara.position.set(0, 11, 4); lampara.target.position.set(0, 2, -2); lampara.castShadow = true; lampara.shadow.mapSize.set(2048, 2048); e.add(lampara, lampara.target);
+  const cam = new THREE.PerspectiveCamera(46, W / H, .05, 100);
+  return {
+    escena: e, cam,
+    preparar({ tiempo, quienes = [] }) {
+      luces.forEach(l => { l.visible = Math.sin(tiempo * 6 + l.userData.f * 3) > .2; });
+      exterior.offset.x = tiempo * .004;   // muy despacio, como el edificio
+      vapor.forEach(s => { const k = (tiempo * .5 + s.userData.f) % 1; s.position.set(3.2 + Math.sin(k * 6 + s.userData.f * 9) * .08, 3.05 + k * 1.2, -1); s.scale.setScalar(.2 + k * .5); s.material.opacity = (1 - k) * .45; });
+      for (const k in P) P[k].visible = false;
+      quienes.forEach(([k, pos]) => { P[k].visible = true; P[k].position.copy(pos); mirar(P[k], cam); });
+    },
+  };
+}
+
+const calle = crearCalle(), dentro = crearDentro();
+const comp = new EffectComposer(renderer);
+const rp = new RenderPass(calle.escena, calle.cam); comp.addPass(rp);
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .2, .5, .9); comp.addPass(bloom); comp.addPass(new OutputPass());
+
+// =================== PLANOS ===================
+const cam = (c, pos, mira, fov) => { c.fov = fov; c.position.copy(pos); c.lookAt(mira); };
+const CENTRO = v3(0, 9, 0);
+// giro del edificio en el bucle: continuo entre el final (t-DURACION) y el principio (t)
+const giroBucle = tl => .35 + tl * .06;
+const DRON = (t, tl, k, r = 46, alto = 30) => {
+  const g = giroBucle(tl); calle.preparar({ tiempo: t, giro: g, rodar: tl });
+  const a = .7 + tl * .05; cam(calle.cam, v3(Math.sin(a) * r, alto, Math.cos(a) * r), CENTRO, 46);
+};
+const PLANOS = [
+  { desde: 0, nombre: 'GANCHO: dron, el edificio girando sobre rodillos', esc: 'calle', f(k, t) { DRON(t, t, k); } },
+  { desde: 3, nombre: 'con 600 personas dentro: ventanas con gente', esc: 'calle', f(k, t) {
+      const g = giroBucle(t); calle.preparar({ tiempo: t, giro: g, rodar: t });
+      const p = calle.puntoEdif(1, 11, calle.FO / 2 + .1); cam(calle.cam, p.clone().add(v3(4 * Math.cos(g), lerp(1, 2, k), 13 * Math.cos(g * .3))), p, 44);
+    } },
+  { desde: 7, nombre: 'Indianápolis, 1930: la calle', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: 0 });
+      cam(calle.cam, v3(lerp(-14, -6, k), lerp(3, 4, k), 34), v3(lerp(-4, 0, k), 8, 0), 50);
+    } },
+  { desde: 9, nombre: 'la compañía telefónica: el directivo', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: 0, directivoK: true });
+      cam(calle.cam, v3(lerp(-8, -9, k), 2.6, lerp(25, 23.5, k)), v3(-12, 2.6, 17.5), 44);
+    } },
+  { desde: 14, nombre: 'un edificio nuevo en ese mismo solar: el fantasma azul', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: 0, fantasmaK: suave(k * 1.6) });
+      cam(calle.cam, v3(lerp(28, 24, k), lerp(14, 18, k), lerp(34, 30, k)), v3(0, 10, 0), 48);
+    } },
+  { desde: 20, nombre: 'no podía dejar a la ciudad sin teléfono: centralita', esc: 'dentro', f(k, t) {
+      dentro.preparar({ tiempo: t, quienes: [['operadora', v3(-4, 0, -3)]] });
+      cam(dentro.cam, v3(lerp(-1.5, -2.5, k), 3.6, lerp(5, 4.2, k)), v3(-4, 3.2, -4), 46);
+    } },
+  { desde: 29, nombre: 'ni un día: el directivo, serio', esc: 'dentro', f(k, t) {
+      dentro.preparar({ tiempo: t, quienes: [['directivo', v3(1, 0, -2)]] });
+      cam(dentro.cam, v3(lerp(1.6, 1.4, k), 3.2, lerp(3.4, 2.8, k)), v3(1, 2.9, -2), 42);
+    } },
+  { desde: 32, nombre: 'no lo derribaron: la bola se frena', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: 0, bolaK: k * 1.3 });
+      cam(calle.cam, v3(lerp(30, 27, k), lerp(9, 10, k), lerp(30, 28, k)), v3(8, 12, 6), 52);
+    } },
+  { desde: 37, nombre: 'lo movieron: el edificio empieza a deslizarse', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: lerp(0, .06, k), rodar: k });
+      cam(calle.cam, v3(lerp(16, 14, k), 1.5, lerp(26, 24, k)), v3(2, 6, 2), 50);
+    } },
+  { desde: 39, nombre: 'once mil toneladas: contrapicado enorme', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .08, rodar: 1 + k });
+      cam(calle.cam, v3(lerp(5, 4, k), .6, lerp(16, 15, k)), v3(1, 18, 0), 60);
+    } },
+  { desde: 42, nombre: 'sobre rodillos: primer plano de los rodillos', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .1 + k * .01, rodar: 2 + k * 2 });
+      const p = calle.puntoEdif(2, .7, calle.FO / 2 + .5); cam(calle.cam, p.clone().add(v3(lerp(3, 1.5, k), .4, 3)), p.clone().add(v3(-1, .2, 0)), 42);
+    } },
+  { desde: 47, nombre: 'y lo empujaron con gatos: el obrero', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .11, rodar: 4 + k, obreroK: true });
+      const p = calle.puntoEdif(-calle.AN / 2 - 1.5, 1.5, 3); cam(calle.cam, p.clone().add(v3(-4, 1, 5)), p, 46);
+    } },
+  { desde: 51, nombre: 'a 38 cm por hora: la regla en el suelo', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .11 + k * .012, rodar: 5 + k });
+      cam(calle.cam, v3(lerp(9, 8, k), 1.6, 12), v3(7.4, .4, 8.4), 44);
+    } },
+  { desde: 59, nombre: 'nadie lo notaba: la taza de café, quieta', esc: 'dentro', f(k, t) {
+      dentro.preparar({ tiempo: t, quienes: [['oficinista', v3(5.2, 0, -2.6)]] });
+      cam(dentro.cam, v3(lerp(2.4, 2.6, k), lerp(3.4, 3.2, k), lerp(1.6, 1.1, k)), v3(3.4, 2.9, -1.2), 40);
+    } },
+  { desde: 66, nombre: 'el agua, la luz y el teléfono: los tubos', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .13 + k * .01, rodar: 6 + k });
+      cam(calle.cam, v3(lerp(18, 16, k), lerp(6, 4, k), lerp(26, 24, k)), v3(9, 1, 12), 46);
+    } },
+  { desde: 73, nombre: 'seguían conectados con tubos flexibles: se estiran', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .14 + k * .05, rodar: 7 + k });
+      cam(calle.cam, v3(lerp(12, 13, k), 1.4, lerp(21, 20, k)), v3(9, .6, 13), 44);
+    } },
+  { desde: 78, nombre: 'los empleados entraban por una pasarela', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .2, rodar: 8, oficinistaK: k * .9 });
+      const p = calle.puntoEdif(-2, 2, calle.FO / 2 + 4); cam(calle.cam, p.clone().add(v3(-6, 2, 7)), p, 46);
+    } },
+  { desde: 85, nombre: 'que se movía con el edificio', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: .2 + k * .08, rodar: 8 + k });
+      cam(calle.cam, v3(lerp(-4, -2, k), lerp(10, 9, k), 36), v3(0, 4, 10), 46);
+    } },
+  { desde: 91, nombre: 'en un mes giró 90 grados: cenital en cámara rápida', esc: 'calle', f(k, t) {
+      calle.preparar({ tiempo: t, giro: lerp(.28, Math.PI / 2, suave(k)), rodar: 9 + k * 6 });
+      cam(calle.cam, v3(.1, 64, 1), v3(0, 0, 0), 46);
+    } },
+  { desde: 97, nombre: 'BUCLE: y dentro, nadie dejó de trabajar (dron = primer plano)', esc: 'calle', f(k, t) { DRON(t, t - DURACION, k, lerp(52, 46, suave(k)), lerp(34, 30, suave(k))); } },
+];
+PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
+PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
+const ESC = { calle, dentro };
+
+// =================== SUBTÍTULOS ===================
+const INICIO_SUB = 7;
+const unidades = []; for (let i = INICIO_SUB; i < PAL.length; i++) {
+  if (i === 53) { unidades.push({ w: '38', t0: PAL[53].t0, t1: PAL[55].t1, i }); i = 55; continue; }
+  if (i === 56) { unidades.push({ w: 'cm', t0: PAL[56].t0, t1: PAL[56].t1, i }); continue; }
+  if (i === 39) { unidades.push({ w: '11.000', t0: PAL[39].t0, t1: PAL[40].t1, i }); i = 40; continue; }
+  if (i === 95) { unidades.push({ w: '90', t0: PAL[95].t0, t1: PAL[95].t1, i }); continue; }
+  unidades.push({ w: PAL[i].w, t0: PAL[i].t0, t1: PAL[i].t1, i });
+}
+const finFrase = w => /[.,:;…!?]$/.test(w);
+const frases = []; let f0 = [];
+unidades.forEach((u, j) => { f0.push(u); if (finFrase(u.w) || j === unidades.length - 1) { frases.push(f0); f0 = []; } });
+for (let i = 0; i < frases.length; i++) if (frases[i].length === 1) {
+  const prev = frases[i - 1], ant = prev && !/[.:…!?]$/.test(prev[prev.length - 1].w);
+  if (ant) { prev.push(...frases[i]); frases.splice(i, 1); i--; } else if (frases[i + 1]) { frases[i + 1].unshift(...frases[i]); frases.splice(i, 1); i--; } else if (prev) { prev.push(...frases[i]); frases.splice(i, 1); i--; }
+}
+const bloques = [];
+frases.forEach(fr => { const n = fr.length, k = Math.ceil(n / 4); let i = 0; for (let b = 0; b < k; b++) { const tam = Math.floor(n / k) + (b < n % k ? 1 : 0); bloques.push(fr.slice(i, i + tam)); i += tam; } });
+const CLAVE = new Set(['Indianápolis', '1930', 'teléfono', 'derribaron', 'movieron', '11.000', 'toneladas', 'rodillos', 'gatos', '38', 'cm', 'nadie', 'notaba', 'flexibles', 'pasarela', 'mes', '90', 'grados', 'trabajar']);
+const marcar = w => w.split(' ').map(p => CLAVE.has(p.replace(/[^\wáéíóúñü.]/gi, '').replace(/\.$/, '')) ? `<b>${p}</b>` : p).join(' ');
+const FIN_GANCHO = T(INICIO_SUB) - .06;
+
+// =================== EDICIÓN ===================
+const golpes = [T(32) + .75, T(39), T(39) + .4];
+const $ = id => document.getElementById(id);
+function edicion(t) {
+  const g = $('gancho'); g.style.opacity = t < FIN_GANCHO ? 1 : 0; g.style.transform = `scale(${lerp(1.1, 1, salida(t / .25))})`;
+  const sub = $('sub');
+  const b = t >= FIN_GANCHO ? bloques.find((bl, i) => bl[0].t0 - .05 <= t && t < (bloques[i + 1]?.[0].t0 ?? DURACION) - .05) : null;
+  if (b) { sub.innerHTML = marcar(b.map(u => u.w.replace('…', '...')).join(' ')); const k = clamp((t - b[0].t0) / .1); sub.style.transform = `scale(${lerp(1.18, 1, salida(k))})`; sub.style.opacity = 1; } else sub.style.opacity = 0;
+  $('flash').style.opacity = 0;
+  let escala = 1; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .25) escala = Math.max(escala, lerp(1.06, 1, salida(d / .25))); }
+  let sx = 0, sy = 0; for (const gp of golpes) { const d = t - gp; if (d >= 0 && d < .4) { const a = (1 - d / .4) * 20; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
+  $('lienzo').style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.03})`;
+}
+
+window.DURACION = DURACION;
+window.PLANOS = PLANOS.map(p => ({ nombre: p.nombre, t0: p.t0, t1: p.t1, esc: p.esc }));
+window.BLOQUES = bloques.map(b => b.map(u => u.w).join(' '));
+window.renderAt = (t) => {
+  const p = PLANOS.find(p => t >= p.t0 && t < p.t1) || PLANOS[PLANOS.length - 1];
+  const k = clamp((t - p.t0) / (p.t1 - p.t0));
+  p.f(k, t);
+  const s = ESC[p.esc]; s.cam.aspect = W / H; s.cam.updateProjectionMatrix();
+  rp.scene = s.escena; rp.camera = s.cam;
+  renderer.toneMappingExposure = .9; bloom.strength = .18;
+  comp.render(); edicion(t);
+};
+await Promise.all(CARGAS);
+window.LISTO = true;
+</script>
+</body></html>
