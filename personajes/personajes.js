@@ -274,3 +274,13 @@ Object.assign(PRESETS, {
 });
 PRESETS.roosevelt_papeles = Object.assign({}, PRESETS.roosevelt, { expr: 'neutral', brazoD: 'M46,-250 q50,-10 60,-90', manos: [[-80, -136], [106, -340]], objeto: `<g transform="translate(106,-360)">${PAPELES}</g>` });
 PRESETS.roosevelt_sorpresa = Object.assign({}, PRESETS.roosevelt, { expr: 'sorprendido', brazoD: 'M46,-250 q20,20 -10,40', manos: [[-80, -136], [10, -200]] });
+
+// ---------- Short "La explosión de Halifax" (1917) ----------
+const GORRO_MAR = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-70,-40 C-70,-110 70,-110 70,-40 z" fill="#2c3550"/><rect x="-74" y="-52" width="148" height="22" rx="8" fill="#384466"/><path d="M-60,-48 v14 M-40,-48 v14 M-20,-48 v14 M0,-48 v14 M20,-48 v14 M40,-48 v14 M60,-48 v14" stroke="#252c44" stroke-width="3"/></g><path d="M-30,56 q30,22 60,0" fill="none" stroke="#6a5040" stroke-width="5" stroke-dasharray="3 5"/>`;
+Object.assign(PRESETS, {
+  marinero: { expr: 'sorprendido', pantalon: '#1e2436', torso: '#1f2740', manga: '#1f2740',
+    brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]],
+    detalle: `<path d="M-50,-262 l40,60 M50,-262 l-40,60" stroke="#141a2c" stroke-width="6"/><g fill="#C9A24A" stroke="${INK}" stroke-width="2"><circle cx="-18" cy="-200" r="6"/><circle cx="18" cy="-200" r="6"/><circle cx="-18" cy="-172" r="6"/><circle cx="18" cy="-172" r="6"/></g>`,
+    cabeza: GORRO_MAR },
+});
+PRESETS.marinero_remando = Object.assign({}, PRESETS.marinero, { expr: 'preocupado', brazoI: 'M-46,-250 q40,40 80,40', brazoD: 'M46,-250 q30,40 40,40', manos: [[34, -210], [86, -210]] });
