@@ -25,6 +25,7 @@ Idioma: español de España.
 - Frases de personajes cortas (máx. 1 frase) y solo cuando están en pantalla.
 - edge-tts solo tiene 3 voces de España (Álvaro, Elvira, Ximena): para más personajes se distinguen con velocidad y tono (`--rate`, `--pitch`).
 - Música baja que cambia con la tensión; efectos en los momentos clave. Audio a -14 LUFS, voz siempre por encima.
+- **Mezcla con `tools/mezclar.py`** (voz comprimida +6 dB, música -13 dB y efectos -4 dB, ambos con ducking bajo la voz). Objetivo: **la voz ≥ 15 LU por encima del fondo** (el script lo mide). El dueño se quejó de que el fondo aplastaba al narrador en el short 06.
 
 ## 3. Estructura (30-40 s)
 - 0-2 s gancho · 2-8 s contexto mínimo (dónde, cuándo, quién) · 8-20 s problema/tensión ("iban a… pero") · 20-30 s solución o dato más sorprendente con un plano claro.
@@ -48,7 +49,7 @@ Idioma: español de España.
 
 ## 6. Subtítulos
 - Bloques de 2-4 palabras, grandes, blancos con borde negro, clave en amarillo, sincronizados.
-- **Posición: tercio central, un poco por debajo del centro** → bloque con `top: 1120px` (96 px, máx. 2 líneas, acaba hacia 1330 px). Compromiso entre la v3 ("tercio central") y la petición del dueño de "un poco por debajo del centro".
+- **Posición: más abajo del centro** → bloque con `top: 1320px` (96 px, máx. 2 líneas, acaba hacia 1530 px, por encima del texto de abajo de TikTok/YouTube). Lo pidió el dueño tras el short 06 ("los subtítulos más abajo"); manda sobre el "tercio central" de la v3.
 - Sin títulos pequeños arriba ni textos repetidos.
 
 ## 7. Final y bucle
