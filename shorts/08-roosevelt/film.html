@@ -243,7 +243,7 @@ function crearTeatro() {
   const polvo = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pp, 3)), new THREE.PointsMaterial({ color: '#fff0d0', size: .05, transparent: true, opacity: .8, blending: THREE.AdditiveBlending, depthWrite: false, map: BRILLO })); e.add(polvo);
   // público (de cara al escenario: los vemos desde el escenario)
   const publico = []; for (let f = 0; f < 5; f++) for (let i = 0; i < 7; i++) { const n = ['estudiante', 'estudiante_feliz', 'vecino1', 'vecina', 'vecino2', 'obrero'][(f * 7 + i) % 6]; const p = personaje(e, n, 2.6, { rim: '#ffb070' }); p.userData.base = v3(-9 + i * 3 + (f % 2) * 1.2, -1.6 + f * .35, 4 + f * 2.6); publico.push(p); }
-  const P = { roosevelt: personaje(e, 'roosevelt', 3.3, { rim: '#fff0d0', brillo: .14 }), papeles: personaje(e, 'roosevelt_papeles', 3.3, { rim: '#fff0d0', brillo: .14 }) };
+  const P = { roosevelt: personaje(e, 'roosevelt', 3.3, { rim: '#ffcf90', brillo: 0 }), papeles: personaje(e, 'roosevelt_papeles', 3.3, { rim: '#ffcf90', brillo: 0 }) };
   const cam = new THREE.PerspectiveCamera(46, W / H, .05, 200);
   return {
     escena: e, cam,
@@ -279,7 +279,7 @@ const C = (c, pos, mira, fov) => { c.fov = fov; c.position.copy(pos); c.lookAt(m
 let FOCO = null;
 // bala del gancho/bucle: se acerca a cámara (z crece). tl negativo = final del vídeo
 const balaBucle = tl => -2 + (tl + 1.2) * 2.2;
-const ROOS = v3(-4.2, .02, 2.2);
+const ROOS = v3(-2.4, .02, 1.0);
 const PLANOS = [
   { desde: 0, nombre: 'GANCHO: la bala en súper cámara lenta, hacia la cámara', esc: 'macro', f(k, t) {
       macro.preparar({ tiempo: t, modo: 'vuelo', balaZ: balaBucle(t) });
@@ -296,7 +296,7 @@ const PLANOS = [
     } },
   { desde: 12, nombre: 'Theodore Roosevelt sale del hotel (contrapicado)', esc: 'calle', f(k, t) {
       calle.preparar({ tiempo: t, roosevelt: ROOS.clone().add(v3(lerp(-1, 0, k), 0, 0)) });
-      C(calle.cam, v3(lerp(-1.4, -1.8, k), .6, lerp(6.6, 6, k)), v3(-4.2, 2.6, 2.2), 46); FOCO = ROOS.clone().add(v3(0, 2, 0));
+      C(calle.cam, v3(lerp(-1.0, -1.4, k), .8, lerp(4.6, 4.0, k)), ROOS.clone().add(v3(0, 2.2, 0)), 42); FOCO = ROOS.clone().add(v3(0, 2, 0));
     } },
   { desde: 18, nombre: 'salía de su hotel: la multitud y el coche', esc: 'calle', f(k, t) {
       calle.preparar({ tiempo: t, roosevelt: ROOS.clone().add(v3(lerp(0, .6, k), 0, lerp(0, 1, k))) });
@@ -408,7 +408,7 @@ window.renderAt = (t) => {
   const s = ESC[p.esc]; s.cam.aspect = W / H; s.cam.updateProjectionMatrix(); s.cam.updateMatrixWorld();
   rp.scene = s.escena; rp.camera = s.cam; dof.escena = s.escena; dof.cam = s.cam;
   if (FOCO) { dof.foco = -FOCO.clone().applyMatrix4(s.cam.matrixWorldInverse).z; dof.apertura = p.esc === 'macro' ? .004 : .0011; } else dof.apertura = 0;
-  renderer.toneMappingExposure = p.esc === 'calle' ? 1.25 : p.esc === 'teatro' ? .85 : .85;
+  renderer.toneMappingExposure = p.esc === 'calle' ? 1.25 : p.esc === 'teatro' ? .78 : .85;
   bloom.strength = p.esc === 'rayos' ? .7 : p.esc === 'calle' ? .45 : .2;
   comp.render(); edicion(t);
 };
