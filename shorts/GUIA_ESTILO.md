@@ -55,6 +55,14 @@ Idioma: español de España.
 - **Posición: más abajo del centro** → bloque con `top: 1320px` (**88 px**, máx. 2 líneas, acaba hacia 1510 px; el dueño los pidió "un poquitillo más pequeños" tras el short 06, por encima del texto de abajo de TikTok/YouTube). Lo pidió el dueño tras el short 06 ("los subtítulos más abajo"); manda sobre el "tercio central" de la v3.
 - Sin títulos pequeños arriba ni textos repetidos.
 
+## 6b. Animación tipo "Ricks Clips" (pedido tras el short 09)
+Referencia: youtube.com/shorts/i4hYq1oSXTg. Parecerse en la animación **sin perder nuestra esencia** (nuestros personajes, voz, gancho brutal, subtítulos grandes con clave en amarilla).
+- **Personajes protagonistas**: en 2 de cada 3 planos un personaje ocupa medio cuadro o más, a la altura de los ojos o en contrapicado suave, con fondo desenfocado (DOF). El escenario es decorado, no el protagonista.
+- **Escenas de diálogo y grupo**: 2-4 personajes que se miran y reaccionan; multitudes y ejércitos de personajes con estandartes cuando toque.
+- **Luz soleada y colores saturados**: cielo azul con nubes, luz dorada, sombras definidas, hierba con briznas en 3D, piedra y madera con mucho relieve. Nada de neblina gris que lave la imagen.
+- **Vestuario rico**: cascos, armaduras, uniformes y peinados de la época sobre nuestra cabeza de judía.
+- Cámara cercana con movimientos suaves (empujes y arcos lentos alrededor del personaje).
+
 ## 7. Final y bucle
 - Sin fundido a negro ni pantalla final. El último plano enlaza visualmente con el primero.
 - (La voz final da el dato nuevo + pregunta; el bucle es visual.)
