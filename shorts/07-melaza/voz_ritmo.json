@@ -1,0 +1,656 @@
+[
+{
+"t0": 0.04,
+"t1": 0.301,
+"w": "Una",
+"quien": "narrador"
+},
+{
+"t0": 0.313,
+"t1": 0.506,
+"w": "ola",
+"quien": "narrador"
+},
+{
+"t0": 0.517,
+"t1": 0.62,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 0.631,
+"t1": 0.983,
+"w": "melaza",
+"quien": "narrador"
+},
+{
+"t0": 0.995,
+"t1": 1.256,
+"w": "mató",
+"quien": "narrador"
+},
+{
+"t0": 1.267,
+"t1": 1.301,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 1.313,
+"t1": 1.688,
+"w": "veintiuna",
+"quien": "narrador"
+},
+{
+"t0": 1.699,
+"t1": 2.392,
+"w": "personas.",
+"quien": "narrador"
+},
+{
+"t0": 2.712,
+"t1": 3.224,
+"w": "Boston,",
+"quien": "narrador"
+},
+{
+"t0": 3.44,
+"t1": 5.099,
+"w": "enero de 1919",
+"quien": "narrador"
+},
+{
+"t0": 5.359,
+"t1": 5.711,
+"w": "Junto",
+"quien": "narrador"
+},
+{
+"t0": 5.722,
+"t1": 5.802,
+"w": "al",
+"quien": "narrador"
+},
+{
+"t0": 5.813,
+"t1": 6.097,
+"w": "puerto",
+"quien": "narrador"
+},
+{
+"t0": 6.109,
+"t1": 6.302,
+"w": "había",
+"quien": "narrador"
+},
+{
+"t0": 6.313,
+"t1": 6.438,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 6.45,
+"t1": 6.711,
+"w": "tanque",
+"quien": "narrador"
+},
+{
+"t0": 6.722,
+"t1": 7.109,
+"w": "gigante",
+"quien": "narrador"
+},
+{
+"t0": 7.12,
+"t1": 7.302,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 7.313,
+"t1": 7.575,
+"w": "casi",
+"quien": "narrador"
+},
+{
+"t0": 7.586,
+"t1": 7.779,
+"w": "ocho",
+"quien": "narrador"
+},
+{
+"t0": 7.79,
+"t1": 8.143,
+"w": "millones",
+"quien": "narrador"
+},
+{
+"t0": 8.154,
+"t1": 8.222,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 8.234,
+"t1": 8.518,
+"w": "litros",
+"quien": "narrador"
+},
+{
+"t0": 8.529,
+"t1": 8.597,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 8.609,
+"t1": 9.143,
+"w": "melaza.",
+"quien": "narrador"
+},
+{
+"t0": 9.463,
+"t1": 9.701,
+"w": "Era",
+"quien": "narrador"
+},
+{
+"t0": 9.713,
+"t1": 9.815,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 9.826,
+"t1": 9.985,
+"w": "día",
+"quien": "narrador"
+},
+{
+"t0": 9.997,
+"t1": 10.474,
+"w": "templado",
+"quien": "narrador"
+},
+{
+"t0": 10.485,
+"t1": 10.565,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 10.576,
+"t1": 10.667,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 10.679,
+"t1": 11.008,
+"w": "barrio",
+"quien": "narrador"
+},
+{
+"t0": 11.02,
+"t1": 11.315,
+"w": "estaba",
+"quien": "narrador"
+},
+{
+"t0": 11.326,
+"t1": 11.554,
+"w": "lleno",
+"quien": "narrador"
+},
+{
+"t0": 11.565,
+"t1": 11.645,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 11.656,
+"t1": 12.156,
+"w": "gente.",
+"quien": "narrador"
+},
+{
+"t0": 12.416,
+"t1": 12.689,
+"w": "Pero",
+"quien": "narrador"
+},
+{
+"t0": 12.7,
+"t1": 12.734,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 12.746,
+"t1": 13.246,
+"w": "mediodía,",
+"quien": "narrador"
+},
+{
+"t0": 13.45,
+"t1": 13.552,
+"w": "se",
+"quien": "narrador"
+},
+{
+"t0": 13.564,
+"t1": 13.746,
+"w": "oyó",
+"quien": "narrador"
+},
+{
+"t0": 13.757,
+"t1": 13.859,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 13.871,
+"t1": 14.496,
+"w": "estruendo.",
+"quien": "narrador"
+},
+{
+"t0": 14.816,
+"t1": 15.024,
+"w": "¿Qué",
+"quien": "joven"
+},
+{
+"t0": 15.035,
+"t1": 15.093,
+"w": "ha",
+"quien": "joven"
+},
+{
+"t0": 15.105,
+"t1": 15.383,
+"w": "sido",
+"quien": "joven"
+},
+{
+"t0": 15.394,
+"t1": 15.718,
+"w": "eso?",
+"quien": "joven"
+},
+{
+"t0": 16.038,
+"t1": 16.254,
+"w": "El",
+"quien": "narrador"
+},
+{
+"t0": 16.266,
+"t1": 16.527,
+"w": "tanque",
+"quien": "narrador"
+},
+{
+"t0": 16.538,
+"t1": 17.129,
+"w": "reventó.",
+"quien": "narrador"
+},
+{
+"t0": 17.389,
+"t1": 17.662,
+"w": "Una",
+"quien": "narrador"
+},
+{
+"t0": 17.673,
+"t1": 17.844,
+"w": "ola",
+"quien": "narrador"
+},
+{
+"t0": 17.855,
+"t1": 18.23,
+"w": "marrón,",
+"quien": "narrador"
+},
+{
+"t0": 18.48,
+"t1": 18.639,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 18.651,
+"t1": 18.878,
+"w": "alta",
+"quien": "narrador"
+},
+{
+"t0": 18.889,
+"t1": 18.991,
+"w": "que",
+"quien": "narrador"
+},
+{
+"t0": 19.003,
+"t1": 19.139,
+"w": "una",
+"quien": "narrador"
+},
+{
+"t0": 19.151,
+"t1": 19.48,
+"w": "casa,",
+"quien": "narrador"
+},
+{
+"t0": 19.73,
+"t1": 20.06,
+"w": "arrasó",
+"quien": "narrador"
+},
+{
+"t0": 20.071,
+"t1": 20.173,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 20.185,
+"t1": 20.423,
+"w": "calle",
+"quien": "narrador"
+},
+{
+"t0": 20.435,
+"t1": 20.594,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 20.605,
+"t1": 20.923,
+"w": "rápido",
+"quien": "narrador"
+},
+{
+"t0": 20.935,
+"t1": 21.048,
+"w": "que",
+"quien": "narrador"
+},
+{
+"t0": 21.06,
+"t1": 21.196,
+"w": "una",
+"quien": "narrador"
+},
+{
+"t0": 21.207,
+"t1": 21.571,
+"w": "persona",
+"quien": "narrador"
+},
+{
+"t0": 21.582,
+"t1": 22.207,
+"w": "corriendo.",
+"quien": "narrador"
+},
+{
+"t0": 22.527,
+"t1": 22.675,
+"w": "Y",
+"quien": "narrador"
+},
+{
+"t0": 22.687,
+"t1": 22.8,
+"w": "lo",
+"quien": "narrador"
+},
+{
+"t0": 22.812,
+"t1": 23.096,
+"w": "peor:",
+"quien": "narrador"
+},
+{
+"t0": 23.3,
+"t1": 23.38,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 23.391,
+"t1": 23.721,
+"w": "melaza",
+"quien": "narrador"
+},
+{
+"t0": 23.732,
+"t1": 23.982,
+"w": "pesa",
+"quien": "narrador"
+},
+{
+"t0": 23.993,
+"t1": 24.266,
+"w": "casi",
+"quien": "narrador"
+},
+{
+"t0": 24.277,
+"t1": 24.425,
+"w": "una",
+"quien": "narrador"
+},
+{
+"t0": 24.437,
+"t1": 24.652,
+"w": "vez",
+"quien": "narrador"
+},
+{
+"t0": 24.664,
+"t1": 24.698,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 24.709,
+"t1": 24.982,
+"w": "media",
+"quien": "narrador"
+},
+{
+"t0": 24.993,
+"t1": 25.187,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 25.198,
+"t1": 25.289,
+"w": "que",
+"quien": "narrador"
+},
+{
+"t0": 25.3,
+"t1": 25.38,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 25.391,
+"t1": 25.789,
+"w": "agua.",
+"quien": "narrador"
+},
+{
+"t0": 26.049,
+"t1": 26.287,
+"w": "Lo",
+"quien": "narrador"
+},
+{
+"t0": 26.299,
+"t1": 26.39,
+"w": "que",
+"quien": "narrador"
+},
+{
+"t0": 26.401,
+"t1": 26.844,
+"w": "atrapaba,",
+"quien": "narrador"
+},
+{
+"t0": 27.094,
+"t1": 27.219,
+"w": "ya",
+"quien": "narrador"
+},
+{
+"t0": 27.231,
+"t1": 27.333,
+"w": "no",
+"quien": "narrador"
+},
+{
+"t0": 27.344,
+"t1": 27.833,
+"w": "salía.",
+"quien": "narrador"
+},
+{
+"t0": 28.153,
+"t1": 28.426,
+"w": "Hubo",
+"quien": "narrador"
+},
+{
+"t0": 28.437,
+"t1": 28.789,
+"w": "veintiún",
+"quien": "narrador"
+},
+{
+"t0": 28.801,
+"t1": 29.153,
+"w": "muertos",
+"quien": "narrador"
+},
+{
+"t0": 29.164,
+"t1": 29.21,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 29.221,
+"t1": 29.437,
+"w": "unos",
+"quien": "narrador"
+},
+{
+"t0": 29.448,
+"t1": 29.721,
+"w": "ciento",
+"quien": "narrador"
+},
+{
+"t0": 29.732,
+"t1": 30.13,
+"w": "cincuenta",
+"quien": "narrador"
+},
+{
+"t0": 30.142,
+"t1": 30.664,
+"w": "heridos.",
+"quien": "narrador"
+},
+{
+"t0": 30.924,
+"t1": 31.072,
+"w": "Y",
+"quien": "narrador"
+},
+{
+"t0": 31.083,
+"t1": 31.424,
+"w": "durante",
+"quien": "narrador"
+},
+{
+"t0": 31.436,
+"t1": 31.867,
+"w": "décadas,",
+"quien": "narrador"
+},
+{
+"t0": 32.083,
+"t1": 32.197,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 32.208,
+"t1": 32.504,
+"w": "barrio",
+"quien": "narrador"
+},
+{
+"t0": 32.515,
+"t1": 32.822,
+"w": "siguió",
+"quien": "narrador"
+},
+{
+"t0": 32.833,
+"t1": 33.174,
+"w": "oliendo",
+"quien": "narrador"
+},
+{
+"t0": 33.186,
+"t1": 33.208,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 33.22,
+"t1": 33.777,
+"w": "melaza.",
+"quien": "narrador"
+},
+{
+"t0": 34.037,
+"t1": 34.207,
+"w": "¿Tú",
+"quien": "narrador"
+},
+{
+"t0": 34.218,
+"t1": 34.502,
+"w": "habrías",
+"quien": "narrador"
+},
+{
+"t0": 34.514,
+"t1": 34.775,
+"w": "podido",
+"quien": "narrador"
+},
+{
+"t0": 34.787,
+"t1": 35.287,
+"w": "escapar?",
+"quien": "narrador"
+}
+]

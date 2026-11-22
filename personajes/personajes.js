@@ -235,3 +235,23 @@ Object.assign(PRESETS, {
 });
 PRESETS.anatomista_feliz = Object.assign({}, PRESETS.anatomista, { expr: 'eureka', objeto: `<g transform="translate(106,-320)">${PERGAMINO}</g>` });
 PRESETS.toni_camara = Object.assign({}, PRESETS.toni, { expr: 'sorprendido', brazoD: 'M46,-250 q40,0 40,-40', brazoI: 'M-46,-250 q-10,10 30,-40', manos: [[-16, -290], [86, -290]], objeto: `<g transform="translate(36,-290)">${CAMARA}</g>` });
+
+// ---------- Short "La ola de melaza" (Boston, 1919) ----------
+const PERIODICOS = `<g stroke="${INK}" stroke-width="4"><rect x="-30" y="-30" width="60" height="44" rx="4" fill="#8A6A45"/><rect x="-24" y="-44" width="48" height="20" fill="#F2EEE2"/><path d="M-18,-38 h36 M-18,-31 h28" stroke="#888" stroke-width="3"/></g>`;
+const GORRA_REPARTIDOR = GORRA_PLANA.replace('#8A6A45', '#6B7A5A').replace('#6E5235', '#55634A');
+Object.assign(PRESETS, {
+  repartidor: { expr: 'sorprendido', pantalon: '#4A4F5A', torso: '#C9A27A', manga: '#C9A27A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    detalle: `<path d="M-46,-262 l90,90" stroke="#5A3B26" stroke-width="7"/><g transform="translate(30,-160)">${PERIODICOS}</g>`,
+    objeto: `<g transform="translate(106,-320) rotate(-10)"><rect x="-24" y="-30" width="48" height="36" fill="#F2EEE2" stroke="${INK}" stroke-width="4"/><path d="M-16,-20 h32 M-16,-12 h24 M-16,-4 h28" stroke="#888" stroke-width="3"/></g>`, cabeza: GORRA_REPARTIDOR },
+  corredor: { expr: 'sorprendido', pantalon: '#3A3F4A', torso: '#7A5A3A', manga: '#7A5A3A',
+    brazoI: 'M-46,-250 q-60,0 -70,-70', brazoD: 'M46,-250 q50,40 70,80', manos: [[-116, -320], [116, -170]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/>`, cabeza: FEDORA },
+  vecino_olor: { expr: 'preocupado', pantalon: '#4A4F5A', torso: '#5E7A9A', manga: '#5E7A9A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q20,-40 -30,-90', manos: [[-80, -136], [16, -340]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/>`, cabeza: PELO.replace('#3A2A22', '#7A5A3A') + `<path d="M30,70 q10,-30 -6,-50" fill="none" stroke="#5E7A9A" stroke-width="16" stroke-linecap="round"/><circle cx="6" cy="16" r="17" fill="${SKIN}" stroke="${INK}" stroke-width="5"/><path d="M-8,10 h16" stroke="${INK}" stroke-width="3"/>` },
+  rescatador: { expr: 'preocupado', pantalon: '#3a3a3a', torso: '#2F3F5A', manga: '#2F3F5A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: `<path d="M-50,-200 h100" stroke="#C9A24A" stroke-width="5"/><circle cx="-24" cy="-230" r="6" fill="#C9A24A"/><circle cx="24" cy="-230" r="6" fill="#C9A24A"/>`,
+    cabeza: `<g stroke="${INK}" stroke-width="5"><path d="M-66,-44 q66,-70 132,0 z" fill="#2F3F5A"/><rect x="-74" y="-50" width="148" height="12" rx="6" fill="#1f2a3a"/><rect x="-10" y="-90" width="20" height="16" fill="#C9A24A"/></g>` + BIGOTE('#3a2a22') },
+});
