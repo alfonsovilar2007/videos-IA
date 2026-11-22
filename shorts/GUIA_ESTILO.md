@@ -12,6 +12,7 @@ Idioma: español de España.
    (Además, si se pide, subir a Drive "videos IA" con la receta comprimida <3 MB; ver al final.)
 
 ## 1. Gancho (0-2 s)
+- **Golpe sonoro antes de la primera palabra**: ~0,45 s de tambor + cañonazo/impacto con destello y temblor, y luego entra la voz (retrasar la voz con `adelay` y sumar el mismo tiempo al JSON). Pedido tras el short 10.
 - Preferencia del dueño: **gancho brutal** (impacto, catástrofe, lo imposible) y, si puede ser, **curiosidad histórica**.
 - Tras el short 07 pidió un gancho **todavía más fuerte, "como una bala de pistola"**: acción extrema en cámara lenta, en primerísimo plano, desde el fotograma 1.
 - El primer segundo enseña el **MOMENTO ESTRELLA** (clímax, resultado, lo imposible). Nunca un plano tranquilo o de contexto.
@@ -22,6 +23,7 @@ Idioma: español de España.
 - Prueba: sin sonido y solo el primer segundo, ¿quiero saber qué pasa? Si no, rehacer.
 
 ## 2. Voces
+- **Narrador SIEMPRE con la misma voz, velocidad y tono** (`narrador` de `tools/voces.py`: Álvaro +10 %, -2 Hz), sin cambiar de una frase a otra y sin ecualizador extra. El dueño lo pidió tras el short 10 ("cambia todo el rato, me gustaba más la de antes"). La variedad la ponen los personajes (soldado, sultán…), no el narrador.
 - Narrador: natural, cercano, con energía, ritmo ágil y claro (Álvaro, `es-ES-AlvaroNeural`, `+10%`, `-2Hz`).
 - **Cada personaje que habla tiene su propia voz** acorde a edad, sexo, carácter y época; emoción acorde a la escena.
 - Frases de personajes cortas (máx. 1 frase) y solo cuando están en pantalla.
