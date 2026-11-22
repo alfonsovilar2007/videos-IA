@@ -1,57 +1,76 @@
-# Guía de estilo de los shorts
+# Guía de los shorts (v3, la vigente)
 
-Leer antes de hacer cada short nuevo. Recoge lo que el dueño del canal ha aprobado o pedido.
-Las **instrucciones obligatorias** (v2) mandan sobre cualquier costumbre anterior.
+Instrucciones del dueño del canal. **Mandan sobre todo lo anterior.** Leer entera antes de cada short.
+Idioma: español de España.
 
-## 1. Formato (obligatorio)
-- Vertical 9:16, 1080×1920, 30 fps.
-- **Duración 30-40 s. Nunca más de 45 s.** (≈ 95-115 palabras con la voz de Álvaro y pausas recortadas).
-- Audio a -14 LUFS; la voz clara y por encima de la música.
+## 0. Flujo de trabajo
+1. Investigar el tema y comprobar con búsquedas cada fecha, nombre, cifra y lugar. Si no se confirma, no se usa.
+2. Entregar el guion **plano a plano en una tabla** (segundo, imagen, voz, personaje, texto en pantalla) y **ESPERAR el OK** antes de animar.
+3. Voces, animación, subtítulos y música.
+4. Renderizar, revisar (punto 10) y corregir.
+5. Entregar en `output/` como `tema_en_minusculas.mp4` + `tema.txt` (títulos, descripción, hashtags).
+   (Además, si se pide, subir a Drive "videos IA" con la receta comprimida <3 MB; ver al final.)
 
-## 2. Gancho (0-2 s): lo más importante
-- **El primer fotograma es el plano MÁS impactante** del vídeo (el momento clave, el choque, el resultado, el antes/después). Nada de introducción.
-- **Movimiento desde el primer fotograma.** Nada de planos estáticos.
-- La frase gancho se dice en el segundo 0 **y se escribe GRANDE en pantalla** (máx. 8 palabras, que genere curiosidad o sorpresa).
-- **Nada de títulos pequeños arriba.** Si hay título, grande y solo los 2 primeros segundos.
+## 1. Gancho (0-2 s)
+- El primer segundo enseña el **MOMENTO ESTRELLA** (clímax, resultado, lo imposible). Nunca un plano tranquilo o de contexto.
+- **Lo que dice el texto se ve en la imagen en ese momento** (si dice "giró", se ve girar).
+- Movimiento desde el fotograma 1 (zoom rápido, time-lapse, acción).
+- Texto GRANDE, **máx. 8 palabras, con un dato concreto y sorprendente**.
+- La voz arranca en el segundo 0 con **la misma frase**. Prohibido "¿Sabías que…?" / "Hoy te cuento…".
+- Prueba: sin sonido y solo el primer segundo, ¿quiero saber qué pasa? Si no, rehacer.
 
-## 3. Ritmo
-- Cambio de plano, zoom o movimiento de cámara **cada 1,5-2,5 s**. Primer cambio de plano **antes del segundo 2**.
-- Sin pausas ni silencios; cada frase aporta algo nuevo.
-- Estructura: gancho → contexto rápido → giro o dato sorprendente → explicación → cierre.
+## 2. Voces
+- Narrador: natural, cercano, con energía, ritmo ágil y claro (Álvaro, `es-ES-AlvaroNeural`, `+10%`, `-2Hz`).
+- **Cada personaje que habla tiene su propia voz** acorde a edad, sexo, carácter y época; emoción acorde a la escena.
+- Frases de personajes cortas (máx. 1 frase) y solo cuando están en pantalla.
+- edge-tts solo tiene 3 voces de España (Álvaro, Elvira, Ximena): para más personajes se distinguen con velocidad y tono (`--rate`, `--pitch`).
+- Música baja que cambia con la tensión; efectos en los momentos clave. Audio a -14 LUFS, voz siempre por encima.
 
-## 4. Subtítulos
-- **Bloques de 2 a 4 palabras, nunca palabra a palabra.**
-- Letra grande, blanca con borde negro, palabras clave en amarillo #FFD93B.
-- **Posición: un poco por debajo del centro.** Bloque con `top: 1300px` (en Agloe estaba en 1220 px y el dueño lo quiere algo más abajo). Letra de 96 px, máximo 2 líneas: así el bloque acaba como mucho hacia los 1500 px, por encima del texto de abajo de TikTok/YouTube. Margen lateral ≥ 90 px, lejos de los botones de la derecha.
-  (Esta preferencia del dueño manda sobre el "tercio central" de las instrucciones v2.)
-- No repetir en pantalla un texto que ya está en el subtítulo (sellos y rótulos solo si dicen algo distinto).
+## 3. Estructura (30-40 s)
+- 0-2 s gancho · 2-8 s contexto mínimo (dónde, cuándo, quién) · 8-20 s problema/tensión ("iban a… pero") · 20-30 s solución o dato más sorprendente con un plano claro.
+- **Últimos 3-5 s: un dato NUEVO + una pregunta para comentarios.** Nunca repetir al final lo que dijo el gancho.
 
-## 5. Aspecto visual
-- Colores vivos y buen contraste; nada de escenas grises o apagadas.
-- Colores de acento (rojo, azul, amarillo) para marcar los momentos clave.
-- Escenarios 3D (three.js) con personajes 2D planos dentro. Personajes del canal: cabeza de judía crema, contorno azul marino, brazos "fideo" (`personajes/personajes.js`).
-- Cuidado con la luz: el bloom quema el papel claro y los sprites. Revisar hoja de contactos antes del render completo.
+## 4. Ritmo
+- Cambio de plano/zoom/movimiento cada 1,5-2,5 s; **ningún plano de más de 3 s**. Sin pausas ni relleno. Un "pero…" o giro a mitad.
 
-## 6. Final
-- **Nada de fundido a negro ni pantalla final.**
-- El último plano y la última frase enlazan con el principio para que el vídeo haga **bucle**.
+## 5. Calidad visual
+- Luz principal con sombras suaves + **luz de contorno** que separe personajes y objetos del fondo.
+- Texturas y decorado en cada escena (farolas, coches, árboles, gente de fondo). Nada de cajas lisas ni fondos vacíos.
+- **Desenfoque de fondo** en primeros planos; atmósfera suave en planos lejanos.
+- Cámara de cine con aceleración y frenada; generales, medios y primeros planos; contrapicados para dar grandeza.
+- **Nada de cenitales** que conviertan un edificio en un rectángulo. Los planos clave se entienden sin sonido.
+- Referencias visuales para cifras: flechas, contadores, relojes acelerados, personas para dar escala.
+- Desenfoque de movimiento en objetos rápidos; personajes con expresiones y gestos que cambian.
+- Transiciones con intención (zoom de impacto, barrido, match cut). Nada de fundidos lentos.
+- Partículas, polvo, chispas, humo, destellos y temblor en los impactos.
+- Color con estilo propio por vídeo (cálido = antiguo, frío = tensión), contraste alto, colores vivos.
+- Coherencia de estilo. Textos en pantalla con animación de entrada.
 
-## 7. Datos
-- **Comprobar con búsqueda** cada fecha, nombre, cifra y modelo antes de usarlo. Si no se puede confirmar, no se pone.
+## 6. Subtítulos
+- Bloques de 2-4 palabras, grandes, blancos con borde negro, clave en amarillo, sincronizados.
+- **Posición: tercio central, un poco por debajo del centro** → bloque con `top: 1120px` (96 px, máx. 2 líneas, acaba hacia 1330 px). Compromiso entre la v3 ("tercio central") y la petición del dueño de "un poco por debajo del centro".
+- Sin títulos pequeños arriba ni textos repetidos.
 
-## 8. Publicación (entregar aparte en texto)
-- 3 opciones de título corto (máx. 60 caracteres).
-- Descripción de 1-2 frases + 3-5 hashtags relevantes (incluye #Shorts).
-- Recordar que en TikTok hay que **marcarlo como contenido generado con IA**.
+## 7. Final y bucle
+- Sin fundido a negro ni pantalla final. El último plano enlaza visualmente con el primero.
+- (La voz final da el dato nuevo + pregunta; el bucle es visual.)
 
-## Antes de entregar
-- Capturas de los segundos **0, 1, 2 y del final**; comprobar cada punto de esta guía y corregir lo que falle.
-- Enviar el MP4 en máxima calidad (CRF 18) como archivo descargable.
-- **Subir a la carpeta "videos IA" de Drive** (id `1A4aA9L1MdYE9bFSJOSG1mQla2KeTns15`). El conector solo admite ~3 MB por envío desde las sesiones en la nube: para 30-40 s funciona bien una versión 1080p a dos pasadas, `-preset veryslow -tune animation -b:v 540k` + AAC 64k (≈2,8 MB; probado en el short 03). Avisar de que la de Drive va comprimida y enviar aparte la de máxima calidad.
+## 8. Exportación
+- 1080×1920, 30 fps, H.264, **≥12 Mbps** (`-b:v 14M -minrate 12M -maxrate 18M -bufsize 24M`), AAC 48 kHz. Sin pixelado ni bandas (render en PNG o JPG de alta calidad; `-tune animation` si hace falta).
 
-## Sonido y voz
-- Voz: edge-tts `es-ES-AlvaroNeural`, `--rate=+10%`, `--pitch=-2Hz`; pausas recortadas a 0,28 s (`tools/apretar_pausas.py`).
-- Música y efectos originales (`tools/banda_sonora.py`); música atenuada bajo la voz; mezcla final a -14 LUFS, pico -1 dB.
+## 9. `tema.txt`
+- 3 títulos (máx. 60 caracteres, distintos del gancho, pensados para búsquedas), descripción de 1-2 frases, 3-5 hashtags con #Shorts.
+- Recordar en TikTok la etiqueta de contenido generado con IA.
+
+## 10. Revisión obligatoria
+- ffmpeg: fotogramas de 0, 1, 2, la mitad y el final (mirarlos); duración, resolución, cortes (scene detection), sonoridad -14 LUFS.
+- Capturas a tamaño completo de 3 escenas distintas: si alguna está vacía, plana o sin sombras, mejorarla.
+- Repasar cada punto; si falla, corregir y volver a renderizar.
+- Al terminar, **nota del 1 al 10** en gancho, voces, ritmo, calidad visual, subtítulos y final, y qué mejoraría.
+
+## Herramientas
+- Voz: `tools/voz.py` + `tools/apretar_pausas.py`. Banda sonora: `tools/banda_sonora.py`. Render: `tools/render_film.js`. Personajes: `personajes/personajes.js` + `tools/sprite.js`.
+- Drive (si se pide): el conector solo admite ~3 MB; versión 1080p a dos pasadas `-preset veryslow -tune animation -b:v 540k` + AAC 64k.
 
 ## Histórico
-- Short 01 (Agloe) y 02 (ventanas): 52 s, subtítulos palabra a palabra y línea de contexto arriba. Ya no se hace así (v2).
+- Shorts 01-02 (v1, 52 s, palabra a palabra). Shorts 03-05 (v2, 30-40 s, bucle repitiendo la frase del gancho; ya no vale en v3).
