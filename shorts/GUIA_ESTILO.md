@@ -13,6 +13,7 @@ Idioma: español de España.
 
 ## 1. Gancho (0-2 s)
 - Preferencia del dueño: **gancho brutal** (impacto, catástrofe, lo imposible) y, si puede ser, **curiosidad histórica**.
+- Tras el short 07 pidió un gancho **todavía más fuerte, "como una bala de pistola"**: acción extrema en cámara lenta, en primerísimo plano, desde el fotograma 1.
 - El primer segundo enseña el **MOMENTO ESTRELLA** (clímax, resultado, lo imposible). Nunca un plano tranquilo o de contexto.
 - **Lo que dice el texto se ve en la imagen en ese momento** (si dice "giró", se ve girar).
 - Movimiento desde el fotograma 1 (zoom rápido, time-lapse, acción).
@@ -36,7 +37,7 @@ Idioma: español de España.
 - Cambio de plano/zoom/movimiento cada 1,5-2,5 s; **ningún plano de más de 3 s**. Sin pausas ni relleno. Un "pero…" o giro a mitad.
 
 ## 5. Calidad visual
-- Preferencia del dueño: **fondos lo más realistas posible** (texturas con relieve, luz de sol y cielo creíbles, bruma, mucho detalle de época).
+- Preferencia del dueño: **fondos lo más realistas posible** (texturas con relieve, luz de sol y cielo creíbles, bruma, mucho detalle de época). El escenario del short 07 (calle de Boston) le gustó mucho: **cada short, un paso más realista** (materiales PBR con relieve, reflejos del cielo, sombras largas, detalle de fondo, nada oscuro ni vacío).
 - Luz principal con sombras suaves + **luz de contorno** que separe personajes y objetos del fondo.
 - Texturas y decorado en cada escena (farolas, coches, árboles, gente de fondo). Nada de cajas lisas ni fondos vacíos.
 - **Desenfoque de fondo** en primeros planos; atmósfera suave en planos lejanos.
