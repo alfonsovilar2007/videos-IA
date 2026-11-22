@@ -50,10 +50,13 @@ Idioma: español de España.
 - Color con estilo propio por vídeo (cálido = antiguo, frío = tensión), contraste alto, colores vivos.
 - Coherencia de estilo. Textos en pantalla con animación de entrada.
 
-## 6. Subtítulos
-- Bloques de 2-4 palabras, grandes, blancos con borde negro, clave en amarillo, sincronizados.
-- **Posición: más abajo del centro** → bloque con `top: 1320px` (**88 px**, máx. 2 líneas, acaba hacia 1510 px; el dueño los pidió "un poquitillo más pequeños" tras el short 06, por encima del texto de abajo de TikTok/YouTube). Lo pidió el dueño tras el short 06 ("los subtítulos más abajo"); manda sobre el "tercio central" de la v3.
-- Sin títulos pequeños arriba ni textos repetidos.
+## 6. Subtítulos (v4, elegido por el dueño tras el short 09: opción "B, mucho más abajo")
+- Fuente **Montserrat Black (900)**, local en `fuentes/montserrat-latin-900-normal.woff2` (cargar con `@font-face` desde `/fuentes/...`).
+- **66 px**, blanco, borde negro fino `-webkit-text-stroke: 11px #000` + `paint-order: stroke`, sombra `0 6px 0 rgba(0,0,0,.5)`, `letter-spacing: -.5px`. Palabras clave en amarillo `#FFD93B`.
+- **Una sola línea** de 2-4 palabras (si no cabe, partir el bloque), sincronizada con la voz, pequeño "pop" de escala al entrar.
+- **Posición: mucho más abajo → `top: 1530px`** (la línea acaba hacia 1610 px). Manda sobre los 1320 px anteriores.
+- Frases de personajes en cursiva. Sin títulos pequeños arriba ni textos repetidos.
+- El texto del gancho (arriba) puede seguir en Montserrat Black más grande (~76 px).
 
 ## 6b. Animación tipo "Ricks Clips" (pedido tras el short 09)
 Referencia: youtube.com/shorts/i4hYq1oSXTg. Parecerse en la animación **sin perder nuestra esencia** (nuestros personajes, voz, gancho brutal, subtítulos grandes con clave en amarilla).
