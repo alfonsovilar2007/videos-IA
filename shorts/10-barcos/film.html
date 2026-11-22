@@ -457,7 +457,7 @@ function edicion(t) {
   const sub = $('sub');
   const b = bloques.find((bl, i) => bl[0].t0 - .05 <= t && t < Math.min(bl[bl.length - 1].t1 + .35, (bloques[i + 1]?.[0].t0 ?? DURACION) - .05));
   if (b) { sub.innerHTML = marcar(b.map(u => u.w.replace('…', '...')).join(' ')); sub.className = 'txt' + (b[0].quien !== 'narrador' ? ' personaje' : ''); const k = clamp((t - b[0].t0) / .1); sub.style.transform = `scale(${lerp(1.2, 1, salida(k))})`; sub.style.opacity = 1; } else sub.style.opacity = 0;
-  let fl = [[0, .85, .3], [T(73), .25, .15], [T(85), .3, .25]].reduce((a, [ti, f, d]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / d) : 0), 0);
+  let fl = [[0, 1, .35], [T(73), .25, .15], [T(85), .3, .25]].reduce((a, [ti, f, d]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / d) : 0), 0);
   $('flash').style.opacity = fl;
   let escala = 1, barrido = 0; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .25) { escala = Math.max(escala, lerp(1.08, 1, salida(d / .25))); if (BARRIDOS.has(p.desde) && d < .18) barrido = 1 - d / .18; } }
   // barrido de salida al final, que engancha con el golpe del principio

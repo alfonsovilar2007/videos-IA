@@ -1,10 +1,10 @@
-soldado[+20%,+12Hz,0.08]|¿¡Barcos… en la montaña!?
-narrador[+14%,+3Hz]|Este sultán llevó setenta barcos… ¡por tierra!
-narrador[+12%,-1Hz]|Constantinopla, 1453. Una de las ciudades mejor protegidas del mundo.
-narrador[+16%,+2Hz]|Mehmed, un sultán de solo veintiún años, quería conquistarla.
-narrador[+8%,-4Hz]|Pero había un problema: el puerto estaba cerrado con una cadena gigante.
+soldado[,,0.12]|¿¡Barcos… en la montaña!?
+narrador|Este sultán llevó setenta barcos… ¡por tierra!
+narrador|Constantinopla, 1453. Una de las ciudades mejor protegidas del mundo.
+narrador|Mehmed, un sultán de solo veintiún años, quería conquistarla.
+narrador|Pero había un problema: el puerto estaba cerrado con una cadena gigante.
 mehmed|Si mis barcos no pueden entrar por el mar… entrarán por la montaña.
-narrador[+15%,+2Hz]|Sus hombres hicieron un camino de troncos engrasados, y con bueyes y cuerdas arrastraron los barcos colina arriba.
-soldado[+18%,+10Hz,0.08]|¡Barcos! ¡Hay barcos dentro del puerto!
-narrador[+10%,-2Hz]|Poco más de un mes después, Constantinopla cayó.
-narrador[+16%,+5Hz]|¿Tú te habrías atrevido?
+narrador|Sus hombres hicieron un camino de troncos engrasados, y con bueyes y cuerdas arrastraron los barcos colina arriba.
+soldado[,,0.12]|¡Barcos! ¡Hay barcos dentro del puerto!
+narrador|Poco más de un mes después, Constantinopla cayó.
+narrador|¿Tú te habrías atrevido?
