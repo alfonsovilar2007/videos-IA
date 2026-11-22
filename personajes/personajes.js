@@ -255,3 +255,22 @@ Object.assign(PRESETS, {
     detalle: `<path d="M-50,-200 h100" stroke="#C9A24A" stroke-width="5"/><circle cx="-24" cy="-230" r="6" fill="#C9A24A"/><circle cx="24" cy="-230" r="6" fill="#C9A24A"/>`,
     cabeza: `<g stroke="${INK}" stroke-width="5"><path d="M-66,-44 q66,-70 132,0 z" fill="#2F3F5A"/><rect x="-74" y="-50" width="148" height="12" rx="6" fill="#1f2a3a"/><rect x="-10" y="-90" width="20" height="16" fill="#C9A24A"/></g>` + BIGOTE('#3a2a22') },
 });
+
+// ---------- Short "La bala que no paró a Roosevelt" (Milwaukee, 1912) ----------
+const QUEVEDOS = `<g fill="none" stroke="${INK}" stroke-width="4"><circle cx="-24" cy="-4" r="14"/><circle cx="24" cy="-4" r="14"/><path d="M-10,-6 q10,-6 20,0"/><path d="M38,-4 q20,10 18,40" stroke-width="2"/></g>`;
+const BIGOTE_TR = `<path d="M-40,14 q20,-16 40,-4 q20,-12 40,4 q-10,16 -40,8 q-30,8 -40,-8z" fill="#7A5A3A" stroke="${INK}" stroke-width="3.5"/>`;
+const PELO_TR = `<path d="M-68,-28 C-74,-82 -30,-100 4,-96 C40,-96 72,-76 68,-30 C54,-56 26,-62 0,-58 C-24,-64 -52,-54 -68,-28Z" fill="#7A5A3A" stroke="${INK}" stroke-width="5"/>`;
+const REVOLVER = `<g stroke="${INK}" stroke-width="4" stroke-linejoin="round"><rect x="-4" y="-16" width="70" height="14" rx="3" fill="#3a3a3e"/><rect x="-10" y="-26" width="34" height="30" rx="6" fill="#4a4a50"/><path d="M-10,0 l-14,40 h22 l8,-36z" fill="#5a3a22"/></g>`;
+const PAPELES = `<g stroke="${INK}" stroke-width="4"><rect x="-30" y="-50" width="60" height="76" rx="3" fill="#F2EEE2"/><path d="M-20,-36 h40 M-20,-24 h34 M-20,-12 h40 M-20,0 h30" stroke="#888" stroke-width="3"/><circle cx="6" cy="-10" r="7" fill="#1a1a1a" stroke="none"/></g>`;
+Object.assign(PRESETS, {
+  roosevelt: { expr: 'eureka', pantalon: '#2B2B2B', torso: '#3A3F4A', manga: '#3A3F4A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-80', manos: [[-80, -136], [106, -330]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M0,-240 l-8,10 8,40 8,-40z" fill="#2a2a2a"/><path d="M-40,-232 q-6,40 -2,80 M40,-232 q6,40 2,80" stroke="#2a2a30" stroke-width="5" fill="none"/>`,
+    cabeza: PELO_TR + QUEVEDOS + BIGOTE_TR },
+  tirador: { expr: 'neutral', pantalon: '#1e1e22', torso: '#2a2a30', manga: '#2a2a30',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-10 96,-30', manos: [[-80, -136], [142, -280]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#d8d0c0" stroke="${INK}" stroke-width="4"/>`,
+    objeto: `<g transform="translate(142,-290)">${REVOLVER}</g>`, cabeza: BOMBIN + `<path d="M-70,-30 q70,30 140,0 l0,60 q-70,24 -140,0z" fill="rgba(0,0,0,.35)"/>` },
+});
+PRESETS.roosevelt_papeles = Object.assign({}, PRESETS.roosevelt, { expr: 'neutral', brazoD: 'M46,-250 q50,-10 60,-90', manos: [[-80, -136], [106, -340]], objeto: `<g transform="translate(106,-360)">${PAPELES}</g>` });
+PRESETS.roosevelt_sorpresa = Object.assign({}, PRESETS.roosevelt, { expr: 'sorprendido', brazoD: 'M46,-250 q20,20 -10,40', manos: [[-80, -136], [10, -200]] });

@@ -232,7 +232,32 @@ def viento(dur=8.0):
     n = int(dur * SR); tt = np.arange(n) / SR
     r = lowpass(rng.standard_normal(n), 500 + 300 * np.sin(2 * np.pi * .15 * tt)) * (.6 + .4 * np.sin(2 * np.pi * .23 * tt))
     return r * np.minimum(1, tt / 1.0) * np.minimum(1, (dur - tt) / 1.0) * 2.5
-SFX = {"pala": (pala, .7), "aranazo": (aranazo, .45), "viento": (viento, .35), "limado": (limado, .5), "moneda": (moneda, .5), "alarma": (alarma, .35), "puerta": (puerta, .6), "clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
+def disparo():
+    """Disparo de revólver: chasquido seco + estampido grave + cola de eco."""
+    n = int(1.4 * SR); tt = np.arange(n) / SR
+    chasq = rng.standard_normal(n) * np.exp(-tt * 90) * 1.6
+    boom = np.sin(2 * np.pi * np.cumsum(np.linspace(120, 35, n)) / SR) * np.exp(-tt * 9)
+    cola = lowpass(rng.standard_normal(n), 1500) * np.exp(-tt * 3.5) * .5
+    eco = np.zeros(n); d = int(.18 * SR); eco[d:] = (chasq[:-d] * .25 + boom[:-d] * .3)
+    return chasq + boom + cola + eco
+def zumbido_bala(dur=1.2):
+    n = int(dur * SR); tt = np.arange(n) / SR
+    f = 900 - 500 * tt / dur
+    return (np.sin(2 * np.pi * np.cumsum(f) / SR) * .3 + lowpass(rng.standard_normal(n), 3000) * .5) * np.sin(np.pi * tt / dur) ** 2
+def aplausos(dur=2.4):
+    out = np.zeros(int(dur * SR))
+    for i in range(400):
+        c = lowpass(rng.standard_normal(int(.02 * SR)), 4000) * env(int(.02 * SR), .001, .006); p = int(rng.uniform(0, dur - .05) * SR); out[p:p + len(c)] += c * rng.uniform(.2, .6)
+    tt = np.arange(len(out)) / SR; return out * np.minimum(1, tt / .3) * np.minimum(1, (dur - tt) / .4)
+def tictac(dur=2.0):
+    out = np.zeros(int(dur * SR))
+    for i in range(int(dur * 8)):
+        c = np.sin(2 * np.pi * (2500 if i % 2 else 1800) * np.arange(int(.015 * SR)) / SR) * env(int(.015 * SR), .0005, .004); p = int(i / 8 * SR); out[p:p + len(c)] += c * .6
+    return out
+def papel(dur=.8):
+    n = int(dur * SR); tt = np.arange(n) / SR; r = rng.standard_normal(n); r = r - lowpass(r, 2000)
+    return r * (np.abs(np.sin(2 * np.pi * 9 * tt)) ** 3) * np.sin(np.pi * tt / dur) * .8
+SFX = {"disparo": (disparo, 1.0), "zumbido": (zumbido_bala, .5), "aplausos": (aplausos, .5), "tictac": (tictac, .45), "papel": (papel, .55), "pala": (pala, .7), "aranazo": (aranazo, .45), "viento": (viento, .35), "limado": (limado, .5), "moneda": (moneda, .5), "alarma": (alarma, .35), "puerta": (puerta, .6), "clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
 for c in ev["cortes"]:
     poner(fx, whoosh(), c - .2, .28)
 for t, nombre in ev["efectos"]:
