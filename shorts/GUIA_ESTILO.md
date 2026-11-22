@@ -59,11 +59,13 @@ Idioma: español de España.
 ## 8. Exportación
 - 1080×1920, 30 fps, H.264, **≥12 Mbps** (`-b:v 14M -minrate 12M -maxrate 18M -bufsize 24M`), AAC 48 kHz. Sin pixelado ni bandas (render en PNG o JPG de alta calidad; `-tune animation` si hace falta).
 
-## 9. `tema.txt`
+## 9. `tema.txt` y textos en el mensaje
+- **OBLIGATORIO: en el mensaje de entrega del vídeo, poner SIEMPRE en el propio chat los 3 títulos y la descripción con hashtags lista para copiar** (en bloque de código), además de guardarlos en `output/tema.txt`. El dueño lo pidió tras el short 06: no basta con el archivo.
 - 3 títulos (máx. 60 caracteres, distintos del gancho, pensados para búsquedas), descripción de 1-2 frases, 3-5 hashtags con #Shorts.
 - Recordar en TikTok la etiqueta de contenido generado con IA.
 
 ## 10. Revisión obligatoria
+- Checklist final del mensaje de entrega: vídeo (tarjeta), revisión técnica, **títulos + descripción + hashtags en el chat**, aviso de etiqueta IA en TikTok, notas del 1 al 10.
 - ffmpeg: fotogramas de 0, 1, 2, la mitad y el final (mirarlos); duración, resolución, cortes (scene detection), sonoridad -14 LUFS.
 - Capturas a tamaño completo de 3 escenas distintas: si alguna está vacía, plana o sin sombras, mejorarla.
 - Repasar cada punto; si falla, corregir y volver a renderizar.
