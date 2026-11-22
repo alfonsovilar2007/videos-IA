@@ -77,7 +77,7 @@ const PRESETS={
     cabeza:`<g stroke="${INK}" stroke-width="6" stroke-linejoin="round"><path d="M-68,-50 q68,-80 136,0 z" fill="#F2C14E"/><rect x="-80" y="-56" width="160" height="14" rx="7" fill="#F2C14E"/></g>`},
 };
 // Devuelve el SVG (string) de un personaje con los pies en (x,y).
-function dibujar(nombre,x,y,sc,cambios){return personaje(x,y,sc,Object.assign({},PRESETS[nombre],cambios||{}));}
+function dibujar(nombre,x,y,sc,cambios){if(PRESETS[nombre]&&PRESETS[nombre].svg)return `<g transform="translate(${x},${y}) scale(${sc})">${PRESETS[nombre].svg}</g>`;return personaje(x,y,sc,Object.assign({},PRESETS[nombre],cambios||{}));}
 
 // ---------- Short "El pueblo que no existía" (Agloe) ----------
 const VISERA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-70,-44 q70,-24 140,0 l0,9 q-70,-22 -140,0z" fill="#2E7D4F"/><path d="M-64,-38 q64,-16 128,0 q-14,20 -64,22 q-50,-2 -64,-22z" fill="rgba(80,200,130,.55)"/></g>`;
@@ -284,3 +284,55 @@ Object.assign(PRESETS, {
     cabeza: GORRO_MAR },
 });
 PRESETS.marinero_remando = Object.assign({}, PRESETS.marinero, { expr: 'preocupado', brazoI: 'M-46,-250 q40,40 80,40', brazoD: 'M46,-250 q30,40 40,40', manos: [[34, -210], [86, -210]] });
+
+
+// ---------- Short "Los 70 barcos que cruzaron una montaña" (Constantinopla, 1453) ----------
+const TURBANTE = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-30,-118 q30,-52 60,0z" fill="#B3262E"/><path d="M-84,-34 C-100,-130 100,-130 84,-34 q-84,22 -168,0z" fill="#F6F2E8"/><path d="M-80,-60 q80,-40 160,6 M-86,-42 q90,-36 170,10 M-70,-86 q70,-34 142,8" fill="none" stroke="#d8d0c0" stroke-width="5"/><path d="M-84,-34 q84,22 168,0" fill="none"/><g transform="translate(-6,-92)"><ellipse cx="0" cy="0" rx="10" ry="12" fill="#2E8B57"/><path d="M0,-10 q-6,-40 14,-62 q-2,30 -6,62z" fill="#F2EEE2" stroke-width="3"/></g></g>`;
+const BARBA = c => `<path d="M-48,40 q48,22 96,0 q-6,34 -48,44 q-42,-10 -48,-44z" fill="${c}" stroke="${INK}" stroke-width="4"/><path d="M-30,14 q15,-12 30,-2 q15,-10 30,2 q-14,10 -30,4 q-16,6 -30,-4z" fill="${c}" stroke="${INK}" stroke-width="3"/>`;
+const BORK = c => `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M40,-96 q78,26 70,170 q-26,-60 -58,-120z" fill="${c}"/><path d="M-62,-40 q-10,-72 20,-118 q66,-30 82,36 q6,40 -6,82 q-48,10 -96,0z" fill="${c}"/><rect x="-74" y="-50" width="148" height="20" rx="8" fill="#C9A24A"/><path d="M-12,-50 l12,-46 12,46z" fill="#C9A24A"/></g>`;
+const BIGOTE_J = `<path d="M-44,16 q22,-18 44,-4 q22,-14 44,4 q-6,22 -22,14 q-12,-6 -22,-4 q-10,-2 -22,4 q-16,8 -22,-14z" fill="#2a1d16" stroke="${INK}" stroke-width="3.5"/>`;
+const CASCO_BIZ = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-76,-36 l-4,66 q14,12 28,2 l2,-60z M76,-36 l4,66 q-14,12 -28,2 l-2,-60z" fill="#7d8691"/><path d="M-76,-36 q76,-120 152,0z" fill="#A9B2BC"/><rect x="-80" y="-44" width="160" height="14" rx="6" fill="#8A6A3A"/><path d="M-4,-112 h8 v-14 h-8z" fill="#8A6A3A"/><path d="M-5,-36 h10 v36 h-10z" fill="#A9B2BC"/></g>`;
+const CORONA_BIZ = `<g stroke="${INK}" stroke-width="4" stroke-linejoin="round"><path d="M-66,-46 q66,-70 132,0z" fill="#E7C14B"/><rect x="-70" y="-52" width="140" height="18" rx="5" fill="#C99A2E"/><circle cx="0" cy="-74" r="9" fill="#B3262E"/><circle cx="-36" cy="-58" r="6" fill="#1f6fb2"/><circle cx="36" cy="-58" r="6" fill="#1f6fb2"/><path d="M-66,-36 v40 M66,-36 v40" stroke="#C99A2E" stroke-width="6"/></g>`;
+const TUNICA = (c, borde) => `<path d="M-56,-170 l-10,128 q66,18 132,0 l-10,-128z" fill="${c}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/><path d="M-62,-52 q62,16 124,0" fill="none" stroke="${borde}" stroke-width="8"/><path d="M-50,-160 h100" stroke="${borde}" stroke-width="12"/>`;
+const LANZA = `<g stroke="${INK}" stroke-width="4"><path d="M0,60 V-300" stroke="#7a5a3a" stroke-width="8"/><path d="M-10,-298 l10,-40 10,40z" fill="#c8ccd2"/></g>`;
+const CUERDA_MANO = `<path d="M-120,4 L120,-4" stroke="#C8A266" stroke-width="10" stroke-linecap="round"/>`;
+Object.assign(PRESETS, {
+  mehmed: { expr: 'eureka', pantalon: '#7a1620', torso: '#9C1F2A', manga: '#9C1F2A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: TUNICA('#9C1F2A', '#E7C14B') + `<path d="M0,-268 v226" stroke="#E7C14B" stroke-width="7"/><path d="M-54,-176 h108" stroke="#2E8B57" stroke-width="14"/>`,
+    cabeza: TURBANTE + BARBA('#2a1d16') },
+  jenizaro: { expr: 'neutral', pantalon: '#1f2f55', torso: '#2F4A7A', manga: '#2F4A7A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q20,50 30,100', manos: [[-80, -136], [76, -150]],
+    detalle: TUNICA('#2F4A7A', '#C9A24A') + `<path d="M-54,-176 h108" stroke="#B3262E" stroke-width="14"/>`, objeto: `<g transform="translate(76,-150)">${LANZA}</g>`,
+    cabeza: BORK('#F2EFE6') + BIGOTE_J },
+  soldado_biz: { expr: 'sorprendido', pantalon: '#5a3a2a', torso: '#8E2A2A', manga: '#8a929c',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-20 90,-90', manos: [[-80, -136], [136, -340]],
+    detalle: `<path d="M-50,-262 h100 M-52,-236 h104 M-54,-210 h108" stroke="#8a929c" stroke-width="6" stroke-dasharray="6 4"/>` + TUNICA('#8E2A2A', '#E7C14B'),
+    cabeza: CASCO_BIZ },
+  constantino: { expr: 'preocupado', pantalon: '#3a1f48', torso: '#5B2A6E', manga: '#5B2A6E',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: TUNICA('#5B2A6E', '#E7C14B') + `<path d="M-40,-262 l80,110 M40,-262 l-80,110" stroke="#E7C14B" stroke-width="10"/>`,
+    cabeza: CORONA_BIZ + BARBA('#6a4a2a') },
+});
+PRESETS.mehmed_senala = Object.assign({}, PRESETS.mehmed, { brazoD: 'M46,-250 q70,-10 120,-60', manos: [[-80, -136], [166, -310]] });
+PRESETS.jenizaro_tira = Object.assign({}, PRESETS.jenizaro, { expr: 'preocupado', brazoI: 'M-46,-250 q50,10 100,30', brazoD: 'M46,-250 q50,10 100,30', manos: [[54, -220], [146, -220]], objeto: `<g transform="translate(100,-220)">${CUERDA_MANO}</g>` });
+PRESETS.jenizaro_rojo = Object.assign({}, PRESETS.jenizaro, { torso: '#9C3A2A', manga: '#9C3A2A', detalle: TUNICA('#9C3A2A', '#C9A24A') + `<path d="M-54,-176 h108" stroke="#2F4A7A" stroke-width="14"/>`, expr: 'eureka' });
+PRESETS.jenizaro_tira2 = Object.assign({}, PRESETS.jenizaro_tira, { torso: '#9C3A2A', manga: '#9C3A2A', detalle: TUNICA('#9C3A2A', '#C9A24A') + `<path d="M-54,-176 h108" stroke="#2F4A7A" stroke-width="14"/>` });
+PRESETS.jenizaro_tronco = Object.assign({}, PRESETS.jenizaro, { expr: 'preocupado', brazoI: 'M-46,-250 q-40,-40 -30,-100', brazoD: 'M46,-250 q40,-40 30,-100', manos: [[-76, -350], [76, -350]], objeto: `<g stroke="${INK}" stroke-width="5"><rect x="-150" y="-388" width="300" height="40" rx="20" fill="#8a6440"/><ellipse cx="150" cy="-368" rx="12" ry="20" fill="#c9a46a"/></g>` });
+PRESETS.soldado_biz2 = Object.assign({}, PRESETS.soldado_biz, { expr: 'preocupado', brazoD: 'M46,-250 q20,50 30,100', manos: [[-80, -136], [76, -150]], objeto: `<g transform="translate(76,-150)">${LANZA}</g>`, torso: '#2a5a8e', detalle: `<path d="M-50,-262 h100 M-52,-236 h104 M-54,-210 h108" stroke="#8a929c" stroke-width="6" stroke-dasharray="6 4"/>` + TUNICA('#2a5a8e', '#E7C14B') });
+PRESETS.mehmed_serio = Object.assign({}, PRESETS.mehmed, { expr: 'neutral' });
+PRESETS.buey = { svg: `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+  <ellipse cx="0" cy="2" rx="150" ry="12" fill="#000" opacity=".12" stroke="none"/>
+  <path d="M-110,-110 v108 M-70,-100 v100 M60,-100 v100 M100,-110 v108" stroke="${INK}" stroke-width="26"/>
+  <path d="M-110,-110 v108 M-70,-100 v100 M60,-100 v100 M100,-110 v108" stroke="#8a6a4a" stroke-width="16"/>
+  <path d="M-150,-150 q-30,40 -20,70" fill="none" stroke-width="8"/>
+  <ellipse cx="-10" cy="-150" rx="150" ry="74" fill="#A9845C"/>
+  <path d="M-60,-210 q40,40 20,110" fill="none" stroke="#8a6a4a" stroke-width="8"/>
+  <path d="M110,-170 q40,-6 60,10 q30,30 10,70 q-30,26 -66,4 q-24,-30 -4,-84z" fill="#B8936A"/>
+  <path d="M120,-176 q-30,-50 6,-70 M168,-168 q40,-40 14,-76" fill="none" stroke="#F2EEE2" stroke-width="12"/>
+  <path d="M120,-176 q-30,-50 6,-70 M168,-168 q40,-40 14,-76" fill="none" stroke="${INK}" stroke-width="3"/>
+  <ellipse cx="170" cy="-110" rx="26" ry="18" fill="#E8C8A8"/><circle cx="162" cy="-112" r="4" fill="${INK}"/><circle cx="180" cy="-108" r="4" fill="${INK}"/>
+  <ellipse cx="128" cy="-150" rx="9" ry="11" fill="#fff"/><circle cx="131" cy="-149" r="5" fill="${INK}"/>
+  <path d="M92,-200 q30,-10 40,20" fill="#8a6a4a"/>
+  <rect x="70" y="-232" width="30" height="96" rx="8" fill="#6a4a2a"/>
+</g>` };

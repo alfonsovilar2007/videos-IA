@@ -15,7 +15,11 @@ VOCES = {
     "viejo":    ("es-ES-AlvaroNeural", "-12%", "-20Hz"),
     "roosevelt": ("es-ES-AlvaroNeural", "-4%", "-9Hz"),   # enérgico y rotundo, más grave que el narrador
     "marinero": ("es-ES-AlvaroNeural", "+18%", "+6Hz"),   # gritando, urgente
+    "soldado":  ("es-ES-AlvaroNeural", "+16%", "+9Hz"),   # soldado joven, alarmado
+    "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
+# Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;
+# un tercer valor fija el hueco tras la línea en segundos: "narrador[+10%,-2Hz,0.05]|texto".
 
 async def sintetizar(texto, voz, rate, pitch):
     com = edge_tts.Communicate(texto, voz, rate=rate, pitch=pitch, boundary="WordBoundary", proxy=PROXY)
@@ -53,12 +57,18 @@ async def main(guion, base):
     lineas = [l.split("|", 1) for l in open(guion, encoding="utf-8").read().strip().splitlines() if "|" in l]
     total, palabras, t = [], [], 0.0
     for quien, texto in lineas:
-        voz, rate, pitch = VOCES[quien.strip()]
+        quien = quien.strip(); hueco = HUECO
+        m = re.match(r"(\w+)\[(.*)\]", quien)
+        if m:
+            quien, extra = m.group(1), [x.strip() for x in m.group(2).split(",")]
+            voz, rate, pitch = VOCES[quien]; rate, pitch = extra[0] or rate, extra[1] if len(extra) > 1 and extra[1] else pitch
+            if len(extra) > 2: hueco = float(extra[2])
+        else: voz, rate, pitch = VOCES[quien]
         audio, pal = await sintetizar(texto.strip(), voz, rate, pitch)
         audio, pal = apretar(audio, puntuar(texto.strip(), pal))
         for a, b, w in pal: palabras.append({"t0": round(t + a, 3), "t1": round(t + b, 3), "w": w, "quien": quien.strip()})
         total.append(audio); t += len(audio) / SR
-        total.append(np.zeros(int(HUECO * SR), np.float32)); t += HUECO
+        total.append(np.zeros(int(hueco * SR), np.float32)); t += hueco
     audio = np.concatenate(total[:-1])
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-", base + "_ritmo.wav"], input=audio.tobytes(), check=True)
     json.dump(palabras, open(base + "_ritmo.json", "w", encoding="utf-8"), ensure_ascii=False, indent=0)

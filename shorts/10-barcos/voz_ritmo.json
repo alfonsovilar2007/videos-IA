@@ -1,0 +1,548 @@
+[
+{
+"t0": 0.04,
+"t1": 0.488,
+"w": "¿¡Barcos…",
+"quien": "soldado"
+},
+{
+"t0": 0.717,
+"t1": 0.78,
+"w": "en",
+"quien": "soldado"
+},
+{
+"t0": 0.79,
+"t1": 0.863,
+"w": "la",
+"quien": "soldado"
+},
+{
+"t0": 0.873,
+"t1": 1.384,
+"w": "montaña!?",
+"quien": "soldado"
+},
+{
+"t0": 1.624,
+"t1": 1.854,
+"w": "Este",
+"quien": "narrador"
+},
+{
+"t0": 1.865,
+"t1": 2.205,
+"w": "sultán",
+"quien": "narrador"
+},
+{
+"t0": 2.216,
+"t1": 2.435,
+"w": "llevó",
+"quien": "narrador"
+},
+{
+"t0": 2.446,
+"t1": 2.819,
+"w": "setenta",
+"quien": "narrador"
+},
+{
+"t0": 2.83,
+"t1": 3.258,
+"w": "barcos…",
+"quien": "narrador"
+},
+{
+"t0": 3.488,
+"t1": 3.63,
+"w": "¡por",
+"quien": "narrador"
+},
+{
+"t0": 3.641,
+"t1": 4.047,
+"w": "tierra!",
+"quien": "narrador"
+},
+{
+"t0": 4.367,
+"t1": 5.148,
+"w": "Constantinopla,",
+"quien": "narrador"
+},
+{
+"t0": 5.408,
+"t1": 7.004,
+"w": "1453.",
+"quien": "narrador"
+},
+{
+"t0": 7.264,
+"t1": 7.521,
+"w": "Una",
+"quien": "narrador"
+},
+{
+"t0": 7.532,
+"t1": 7.599,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 7.61,
+"t1": 7.755,
+"w": "las",
+"quien": "narrador"
+},
+{
+"t0": 7.767,
+"t1": 8.135,
+"w": "ciudades",
+"quien": "narrador"
+},
+{
+"t0": 8.146,
+"t1": 8.447,
+"w": "mejor",
+"quien": "narrador"
+},
+{
+"t0": 8.458,
+"t1": 8.95,
+"w": "protegidas",
+"quien": "narrador"
+},
+{
+"t0": 8.961,
+"t1": 9.072,
+"w": "del",
+"quien": "narrador"
+},
+{
+"t0": 9.083,
+"t1": 9.53,
+"w": "mundo.",
+"quien": "narrador"
+},
+{
+"t0": 9.85,
+"t1": 10.216,
+"w": "Mehmed,",
+"quien": "narrador"
+},
+{
+"t0": 10.443,
+"t1": 10.529,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 10.54,
+"t1": 10.841,
+"w": "sultán",
+"quien": "narrador"
+},
+{
+"t0": 10.852,
+"t1": 10.938,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 10.949,
+"t1": 11.143,
+"w": "solo",
+"quien": "narrador"
+},
+{
+"t0": 11.154,
+"t1": 11.499,
+"w": "veintiún",
+"quien": "narrador"
+},
+{
+"t0": 11.509,
+"t1": 11.854,
+"w": "años,",
+"quien": "narrador"
+},
+{
+"t0": 12.059,
+"t1": 12.328,
+"w": "quería",
+"quien": "narrador"
+},
+{
+"t0": 12.339,
+"t1": 13.061,
+"w": "conquistarla.",
+"quien": "narrador"
+},
+{
+"t0": 13.381,
+"t1": 13.624,
+"w": "Pero",
+"quien": "narrador"
+},
+{
+"t0": 13.636,
+"t1": 13.821,
+"w": "había",
+"quien": "narrador"
+},
+{
+"t0": 13.832,
+"t1": 13.925,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 13.937,
+"t1": 14.4,
+"w": "problema:",
+"quien": "narrador"
+},
+{
+"t0": 14.654,
+"t1": 14.793,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 14.805,
+"t1": 15.059,
+"w": "puerto",
+"quien": "narrador"
+},
+{
+"t0": 15.071,
+"t1": 15.349,
+"w": "estaba",
+"quien": "narrador"
+},
+{
+"t0": 15.36,
+"t1": 15.719,
+"w": "cerrado",
+"quien": "narrador"
+},
+{
+"t0": 15.731,
+"t1": 15.87,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 15.881,
+"t1": 16.02,
+"w": "una",
+"quien": "narrador"
+},
+{
+"t0": 16.032,
+"t1": 16.344,
+"w": "cadena",
+"quien": "narrador"
+},
+{
+"t0": 16.356,
+"t1": 16.934,
+"w": "gigante.",
+"quien": "narrador"
+},
+{
+"t0": 17.254,
+"t1": 17.553,
+"w": "Si",
+"quien": "mehmed"
+},
+{
+"t0": 17.567,
+"t1": 17.73,
+"w": "mis",
+"quien": "mehmed"
+},
+{
+"t0": 17.743,
+"t1": 18.124,
+"w": "barcos",
+"quien": "mehmed"
+},
+{
+"t0": 18.138,
+"t1": 18.26,
+"w": "no",
+"quien": "mehmed"
+},
+{
+"t0": 18.273,
+"t1": 18.559,
+"w": "pueden",
+"quien": "mehmed"
+},
+{
+"t0": 18.572,
+"t1": 18.926,
+"w": "entrar",
+"quien": "mehmed"
+},
+{
+"t0": 18.939,
+"t1": 19.089,
+"w": "por",
+"quien": "mehmed"
+},
+{
+"t0": 19.102,
+"t1": 19.197,
+"w": "el",
+"quien": "mehmed"
+},
+{
+"t0": 19.211,
+"t1": 19.469,
+"w": "mar…",
+"quien": "mehmed"
+},
+{
+"t0": 19.727,
+"t1": 20.176,
+"w": "entrarán",
+"quien": "mehmed"
+},
+{
+"t0": 20.189,
+"t1": 20.339,
+"w": "por",
+"quien": "mehmed"
+},
+{
+"t0": 20.352,
+"t1": 20.434,
+"w": "la",
+"quien": "mehmed"
+},
+{
+"t0": 20.447,
+"t1": 21.14,
+"w": "montaña.",
+"quien": "mehmed"
+},
+{
+"t0": 21.46,
+"t1": 21.764,
+"w": "Sus",
+"quien": "narrador"
+},
+{
+"t0": 21.775,
+"t1": 22.047,
+"w": "hombres",
+"quien": "narrador"
+},
+{
+"t0": 22.058,
+"t1": 22.373,
+"w": "hicieron",
+"quien": "narrador"
+},
+{
+"t0": 22.384,
+"t1": 22.471,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 22.482,
+"t1": 22.754,
+"w": "camino",
+"quien": "narrador"
+},
+{
+"t0": 22.764,
+"t1": 22.862,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 22.873,
+"t1": 23.21,
+"w": "troncos",
+"quien": "narrador"
+},
+{
+"t0": 23.221,
+"t1": 23.775,
+"w": "engrasados,",
+"quien": "narrador"
+},
+{
+"t0": 24.004,
+"t1": 24.025,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 24.036,
+"t1": 24.21,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 24.221,
+"t1": 24.514,
+"w": "bueyes",
+"quien": "narrador"
+},
+{
+"t0": 24.525,
+"t1": 24.569,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 24.58,
+"t1": 24.906,
+"w": "cuerdas",
+"quien": "narrador"
+},
+{
+"t0": 24.917,
+"t1": 25.341,
+"w": "arrastraron",
+"quien": "narrador"
+},
+{
+"t0": 25.351,
+"t1": 25.471,
+"w": "los",
+"quien": "narrador"
+},
+{
+"t0": 25.482,
+"t1": 25.786,
+"w": "barcos",
+"quien": "narrador"
+},
+{
+"t0": 25.797,
+"t1": 26.091,
+"w": "colina",
+"quien": "narrador"
+},
+{
+"t0": 26.101,
+"t1": 26.536,
+"w": "arriba.",
+"quien": "narrador"
+},
+{
+"t0": 26.856,
+"t1": 27.449,
+"w": "¡Barcos!",
+"quien": "soldado"
+},
+{
+"t0": 27.709,
+"t1": 27.911,
+"w": "¡Hay",
+"quien": "soldado"
+},
+{
+"t0": 27.921,
+"t1": 28.239,
+"w": "barcos",
+"quien": "soldado"
+},
+{
+"t0": 28.25,
+"t1": 28.483,
+"w": "dentro",
+"quien": "soldado"
+},
+{
+"t0": 28.493,
+"t1": 28.61,
+"w": "del",
+"quien": "soldado"
+},
+{
+"t0": 28.62,
+"t1": 28.981,
+"w": "puerto!",
+"quien": "soldado"
+},
+{
+"t0": 29.221,
+"t1": 29.493,
+"w": "Poco",
+"quien": "narrador"
+},
+{
+"t0": 29.505,
+"t1": 29.687,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 29.698,
+"t1": 29.766,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 29.777,
+"t1": 29.868,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 29.88,
+"t1": 30.027,
+"w": "mes",
+"quien": "narrador"
+},
+{
+"t0": 30.039,
+"t1": 30.493,
+"w": "después,",
+"quien": "narrador"
+},
+{
+"t0": 30.675,
+"t1": 31.334,
+"w": "Constantinopla",
+"quien": "narrador"
+},
+{
+"t0": 31.346,
+"t1": 31.755,
+"w": "cayó.",
+"quien": "narrador"
+},
+{
+"t0": 32.075,
+"t1": 32.247,
+"w": "¿Tú",
+"quien": "narrador"
+},
+{
+"t0": 32.258,
+"t1": 32.333,
+"w": "te",
+"quien": "narrador"
+},
+{
+"t0": 32.344,
+"t1": 32.603,
+"w": "habrías",
+"quien": "narrador"
+},
+{
+"t0": 32.613,
+"t1": 33.109,
+"w": "atrevido?",
+"quien": "narrador"
+}
+]

@@ -157,6 +157,25 @@ def bocina(dur=1.6):
     n = int(dur * SR); tt = np.arange(n) / SR; f = 98
     s = sum(np.sin(2 * np.pi * f * k * tt + k) / k for k in range(1, 9)) * env(n, .08, .35)
     return lowpass(s, 1400) * .8
+def tambor():
+    n = int(1.4 * SR); tt = np.arange(n) / SR
+    cuerpo = np.sin(2 * np.pi * np.cumsum(np.linspace(110, 48, n)) / SR) * np.exp(-tt * 4.5) * 1.6
+    piel = lowpass(rng.standard_normal(n), 2200) * np.exp(-tt * 28) * 1.2
+    return (cuerpo + piel) / 2
+def tambores(dur=4.0):
+    n = int(dur * SR); out = np.zeros(n); g = tambor(); paso = .42
+    for i in range(int(dur / paso)):
+        p = int(i * paso * SR); a = 1 if i % 4 == 0 else .55
+        m = min(len(g), n - p); out[p:p + m] += g[:m] * a
+    return out * .8
+def chapuzon():
+    n = int(1.8 * SR); tt = np.arange(n) / SR
+    golpe = lowpass(rng.standard_normal(n), 900) * np.exp(-tt * 9) * 2
+    espuma = (rng.standard_normal(n) - lowpass(rng.standard_normal(n), 1500)) * np.exp(-tt * 2.2) * np.minimum(1, tt * 20) * .7
+    return golpe + espuma
+def ola_gente(dur=2.5):
+    n = int(dur * SR); tt = np.arange(n) / SR; r = lowpass(rng.standard_normal(n), 1800) - lowpass(rng.standard_normal(n), 300)
+    return r * np.sin(np.pi * tt / dur) ** .6 * 1.4
 def sello():
     n = int(.35 * SR); tt = np.arange(n) / SR
     return (np.sin(2 * np.pi * np.cumsum(np.linspace(160, 50, n)) / SR) * env(n, .001, .08) + lowpass(rng.standard_normal(n), 2500) * env(n, .001, .02) * .8)
@@ -271,7 +290,7 @@ def tictac(dur=2.0):
 def papel(dur=.8):
     n = int(dur * SR); tt = np.arange(n) / SR; r = rng.standard_normal(n); r = r - lowpass(r, 2000)
     return r * (np.abs(np.sin(2 * np.pi * 9 * tt)) ** 3) * np.sin(np.pi * tt / dur) * .8
-SFX = {"megaexplosion": (megaexplosion, 1.0), "bocina": (bocina, .55), "disparo": (disparo, 1.0), "zumbido": (zumbido_bala, .5), "aplausos": (aplausos, .5), "tictac": (tictac, .45), "papel": (papel, .55), "pala": (pala, .7), "aranazo": (aranazo, .45), "viento": (viento, .35), "limado": (limado, .5), "moneda": (moneda, .5), "alarma": (alarma, .35), "puerta": (puerta, .6), "clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
+SFX = {"tambor": (tambor, 1.0), "tambores": (tambores, .5), "chapuzon": (chapuzon, .7), "gentio": (ola_gente, .45), "megaexplosion": (megaexplosion, 1.0), "bocina": (bocina, .55), "disparo": (disparo, 1.0), "zumbido": (zumbido_bala, .5), "aplausos": (aplausos, .5), "tictac": (tictac, .45), "papel": (papel, .55), "pala": (pala, .7), "aranazo": (aranazo, .45), "viento": (viento, .35), "limado": (limado, .5), "moneda": (moneda, .5), "alarma": (alarma, .35), "puerta": (puerta, .6), "clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
 for c in ev["cortes"]:
     poner(fx, whoosh(), c - .2, .28)
 for t, nombre in ev["efectos"]:
