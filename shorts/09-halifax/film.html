@@ -67,11 +67,11 @@ const texLlama = canvasTex(128, 256, (g, w, h) => { for (let i = 0; i < 14; i++)
 
 const CARGAS = []; const cargador = new THREE.TextureLoader(); const texturas = {};
 const spriteTex = n => { if (texturas[n]) return texturas[n]; let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return texturas[n] = t; };
-function personaje(padre, nombre, alto, { rim = '#ffe2b8', brillo = .12 } = {}) {
+function personaje(padre, nombre, alto, { rim = '#ffe2b8', brillo = .12, tono = 1 } = {}) {
   const t = spriteTex(nombre), g = new THREE.Group();
   const geo = new THREE.PlaneGeometry(alto * 400 / 640, alto); geo.translate(0, alto / 2, 0);
   const p = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: brillo, side: THREE.DoubleSide, fog: false }));
-  p.castShadow = true; p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  p.material.color.setScalar(tono); p.castShadow = true; p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
   const r = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, color: rim, transparent: true, opacity: .7, alphaTest: .5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
   r.scale.set(1.05, 1.025, 1); r.position.set(0, -alto * .012, -.03);
   g.add(r, p); padre.add(g); return g;
@@ -245,8 +245,8 @@ function crearExplosion(escena, { sprites = 230 } = {}) {
       // bola de fuego: crece en medio segundo, sube y se apaga entre el humo
       const rb = 175 * (1 - Math.exp(-e * 7)) + e * 12, sube = Math.max(0, e - .5) * 70;
       bola.scale.set(rb, rb * (1 - clamp(e - .4) * .25), rb); bola.position.y = sube + rb * .35;
-      uBola.tiempo.value = t; uBola.calor.value = clamp(1.25 - e * .42); uBola.op.value = clamp(1.6 - e * .32);
-      bola.visible = e < 5;
+      uBola.tiempo.value = t; uBola.calor.value = clamp(1.25 - e * .42); uBola.op.value = clamp(1.5 - e * .55);
+      bola.visible = e < 2.8;
       luz.position.set(0, sube + 60, 0); luz.intensity = 0; luz.distance = 0;
       // humo del hongo (color según la luz del sol y el resplandor del fuego)
       const Hh = altoHongo(e), Rc = 120 + 380 * (1 - Math.exp(-e / 2.6)), fuego = Math.exp(-e * .9), cS = new THREE.Color(), oscuro = new THREE.Color('#3b3632'), claro = new THREE.Color('#ece6de'), naranja = new THREE.Color('#ff8a3a');
@@ -314,7 +314,7 @@ function crearPuerto() {
       const tv = Math.max(0, (S - c.dist) / 420) * sev; const hT = c.h * (1 - cae * .7);
       const tp = v3(0, hT, 0).applyQuaternion(q).add(pp).addScaledVector(c.dir, tv * 40 * (.5 + c.azar)); tp.y += Math.max(-hT, tv * (25 + c.azar * 20) - tv * tv * 30);
       const qt = q.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(tv * 4 * c.azar, tv * 3, tv * 5 * (c.azar - .5))));
-      sc.set(c.w * 1.12, 3 + c.w * .15, c.d * 1.06); mm.compose(tp, qt, sc); instTejado.setMatrixAt(i, mm);
+      sc.set(c.w * 1.12, 3 + c.w * .15, c.d * 1.06); if (tv > 0 && tp.distanceTo(cam.position) < 90) sc.setScalar(0); mm.compose(tp, qt, sc); instTejado.setMatrixAt(i, mm);
     });
     instCasa.instanceMatrix.needsUpdate = instTejado.instanceMatrix.needsUpdate = true;
   }
@@ -355,7 +355,7 @@ function crearPuerto() {
   const espuma = [...Array(14)].map((_, i) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HUMOS[i % 3], color: '#f4f8fa', transparent: true, depthWrite: false, opacity: .7 })); e.add(s); return s; });
   // ---- personas ----
   const gente = [['obrero', -58, 46], ['vecina', -55.5, 45], ['estudiante', -60.5, 44.4], ['vecino1', -53.5, 43.4], ['repartidor_tranquilo', -57.5, 43], ['vecino2', -62, 42.2], ['estudiante_feliz', -55, 41.8], ['corredor', -59.5, 41.2], ['vecina', -52.5, 40.8], ['obrero', -63, 40.6], ['vecino1', -57, 40.4], ['rescatador', -61, 46.4], ['vecino2', -54, 46.6]].map(([n, x, z]) => { const p = personaje(e, n, 1.8, { rim: '#ffe6c0' }); p.userData.base = v3(x, 2.8, z); return p; });
-  const marinero = personaje(mb.g, 'marinero', 1.8, { rim: '#ffb060', brillo: .03 }); marinero.position.set(mb.L * .02 + 4, mb.D, 3);
+  const marinero = personaje(mb.g, 'marinero', 1.8, { rim: '#ffb060', brillo: 0, tono: .62 }); marinero.position.set(mb.L * .02 + 4, mb.D, 3);
   const botes = [0, 1].map(i => { const b = new THREE.Group(); e.add(b); const s = new THREE.Shape(); s.moveTo(-3.6, -1.1); s.lineTo(1.5, -1.1); s.quadraticCurveTo(3.4, -1, 3.8, 0); s.quadraticCurveTo(3.4, 1, 1.5, 1.1); s.lineTo(-3.6, 1.1); s.quadraticCurveTo(-3.9, 0, -3.6, -1.1); const geo = new THREE.ExtrudeGeometry(s, { depth: 1.2, bevelEnabled: false }); geo.rotateX(-Math.PI / 2); geo.translate(0, -.5, 0); const casco = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: '#e4ded2', roughness: .6 })); casco.castShadow = true; b.add(casco); const borde = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .5, bevelEnabled: false }).rotateX(-Math.PI / 2).translate(0, .7, 0), [new THREE.MeshBasicMaterial({ visible: false }), new THREE.MeshStandardMaterial({ color: '#6a4a30', side: THREE.DoubleSide })]); b.add(borde); const remeros = [-2.4, -.8, .8].map((x, j) => { const p = personaje(b, 'marinero_remando', 1.7, { rim: '#ffc890' }); p.position.set(x, .05, 0); return p; }); const remos = []; for (const x of [-2, -.4, 1.2]) for (const sg of [-1, 1]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 5, 6), new THREE.MeshStandardMaterial({ color: '#8a6a44' })); r.userData = { x, sg }; b.add(r); remos.push(r); } return { b, remeros, remos }; });
   const hollin = (() => { const n = 2200, pos = new Float32Array(n * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); const p = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#1a1614', size: .35, transparent: true, opacity: .8, depthWrite: false, map: BRILLO })); e.add(p); return { p, pos, d: [...Array(n)].map(() => [rnd(), rnd(), rnd(), rnd()]) }; })();
   // incendios en las ruinas
@@ -389,7 +389,7 @@ function crearPuerto() {
       // fuego
       const fz = fuego * (mb.g.visible ? 1 : 0);
       llamas.forEach(s => { const u = s.userData; const ph = (t * u.v + u.f) % 1; s.visible = fz > 0 && u.f < fz * 1.2; s.position.set(mb.L * .24 + u.x * (.4 + fz * .6), mb.D + 1 + ph * 9 * fz, u.z); s.scale.set(u.s * (1 - ph * .5) * (.5 + fz), u.s * 2.2 * (.5 + fz), 1); s.material.opacity = Math.sin(ph * Math.PI) * .55; });
-      luzFuego.position.set(mb.L * .24, mb.D + 6, 0); luzFuego.intensity = fz * (1600 + Math.sin(t * 23) * 300);
+      luzFuego.position.set(mb.L * .24, mb.D + 6, 0); luzFuego.intensity = fz * (1600 + Math.sin(t * 23) * 300) * (marineroVisible ? .15 : 1);
       const baseFuego = mb.g.visible ? v3(mb.L * .24, mb.D + 4, 0).applyMatrix4(mb.g.matrixWorld) : EXP.clone();
       humoFuego.forEach(s => { const u = s.userData; const ph = (t * .09 + u.f) % 1; s.visible = fz > 0 && !(ex > 0); if (!s.visible) return; const h = ph * 260 * (.4 + fz * .6); s.position.copy(baseFuego).add(v3(Math.cos(u.b) * (4 + ph * 25) + h * .32, h, Math.sin(u.b) * (4 + ph * 25) - h * .1)); s.scale.setScalar((10 + ph * 75) * (.5 + fz * .5)); s.material.opacity = clamp(ph * 6) * (1 - ph) * .95 * fz; const l = .1 + ph * .25; s.material.color.setRGB(l, l * .93, l * .88); });
       chispasFuego.p.visible = fz > 0 && mb.g.visible; chispasFuego.d.forEach((d, i) => { const ph = (t * .7 + d[2]) % 1; chispasFuego.pos[i * 3] = mb.L * .24 + d[0] * .6 + d[4] * ph; chispasFuego.pos[i * 3 + 1] = mb.D + 1 + ph * d[3] * 1.5; chispasFuego.pos[i * 3 + 2] = d[1]; }); chispasFuego.p.geometry.attributes.position.needsUpdate = true; chispasFuego.p.material.opacity = fz;
@@ -509,7 +509,7 @@ const PLANOS = [
       const p = mbNav(t); puerto.preparar({ tiempo: t, mbPos: p, mbRumbo: N, estela: 1 });
       puerto.sombra(p, 80);
       const b = p.clone(); const D = puerto.mb.D;
-      C(puerto.cam, b.clone().add(v3(lerp(2.5, 1.5, k), D + lerp(2.2, 1.9, k), lerp(4, 10, k))), b.clone().add(v3(0, D + .6, lerp(18, 26, k))), 44); FOCO = b.clone().add(v3(0, D + .9, lerp(11, 16, k)));
+      C(puerto.cam, b.clone().add(v3(lerp(9, 7.5, k), D + lerp(7.5, 6.5, k), lerp(4, 7, k))), b.clone().add(v3(0, D + .5, lerp(17, 19, k))), 46); FOCO = b.clone().add(v3(0, D + .9, 17));
     } },
   { desde: 26, nombre: 'Pero chocó con otro barco: la proa del Imo se clava', esc: 'puerto', f(k, t) {
       const tt = t - T_CHOQUE;
