@@ -382,7 +382,7 @@ const PLANOS = [
     } },
   { desde: 4, nombre: 'contraplano: barrotes, luna y el ladrón desenfocado', esc: 'cem', f(k, t) {
       cem.preparar({ tiempo: t, quienes: [['ladronS', v3(-2.1, 0, .9)]], linterna: v3(-1.4, 0, 1.6), pala: [GRIP, .7] });
-      C(cem.cam, v3(lerp(.9, .6, k), .55, lerp(-2.6, -2.2, k)), v3(-.6, 1.3, 1.2), 40); FOCO = v3(.3, .8, -1.2);
+      C(cem.cam, v3(lerp(2.7, 2.4, k), 1.3, lerp(-.6, -.2, k)), v3(-2.1, 1.85, .9), 38); FOCO = v3(-2.1, 1.9, .9);
     } },
   { desde: 8, nombre: 'Escocia, hace 200 años: grúa sobre el cementerio con niebla', esc: 'cem', f(k, t) {
       cem.preparar({ tiempo: t });
@@ -421,7 +421,7 @@ const PLANOS = [
     } },
   { desde: 54, nombre: 'mataron a 16 personas: 16 rayas en la pared', esc: 'cal', f(k, t) {
       cal.preparar({ tiempo: t, avance: .4 + k * .25, marcasN: 1 + k * 15.99 });
-      C(cal.cam, v3(lerp(.2, .5, k), 2.6, lerp(-1.6, -2.2, k)), v3(2.08, 2.6, -4.5), 44); FOCO = v3(2.08, 2.6, -4.5);
+      C(cal.cam, v3(lerp(-1.0, -.6, k), 2.3, lerp(-.2, -.9, k)), v3(2.08, 2.5, -4.6), 46); FOCO = v3(2.08, 2.6, -4.5);
     } },
   { desde: 58, nombre: 'para vender sus cuerpos: las sombras pasan con el baúl', esc: 'cal', f(k, t) {
       cal.preparar({ tiempo: t, avance: lerp(.78, 1, k), marcasN: 16 });
