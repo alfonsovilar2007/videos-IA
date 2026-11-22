@@ -14,6 +14,7 @@ VOCES = {
     "joven":    ("es-ES-XimenaNeural", "+8%", "+4Hz"),
     "viejo":    ("es-ES-AlvaroNeural", "-12%", "-20Hz"),
     "roosevelt": ("es-ES-AlvaroNeural", "-4%", "-9Hz"),   # enérgico y rotundo, más grave que el narrador
+    "marinero": ("es-ES-AlvaroNeural", "+18%", "+6Hz"),   # gritando, urgente
 }
 
 async def sintetizar(texto, voz, rate, pitch):
