@@ -12,6 +12,7 @@ Idioma: español de España.
    (Además, si se pide, subir a Drive "videos IA" con la receta comprimida <3 MB; ver al final.)
 
 ## 1. Gancho (0-2 s)
+- Preferencia del dueño: **gancho brutal** (impacto, catástrofe, lo imposible) y, si puede ser, **curiosidad histórica**.
 - El primer segundo enseña el **MOMENTO ESTRELLA** (clímax, resultado, lo imposible). Nunca un plano tranquilo o de contexto.
 - **Lo que dice el texto se ve en la imagen en ese momento** (si dice "giró", se ve girar).
 - Movimiento desde el fotograma 1 (zoom rápido, time-lapse, acción).
@@ -35,6 +36,7 @@ Idioma: español de España.
 - Cambio de plano/zoom/movimiento cada 1,5-2,5 s; **ningún plano de más de 3 s**. Sin pausas ni relleno. Un "pero…" o giro a mitad.
 
 ## 5. Calidad visual
+- Preferencia del dueño: **fondos lo más realistas posible** (texturas con relieve, luz de sol y cielo creíbles, bruma, mucho detalle de época).
 - Luz principal con sombras suaves + **luz de contorno** que separe personajes y objetos del fondo.
 - Texturas y decorado en cada escena (farolas, coches, árboles, gente de fondo). Nada de cajas lisas ni fondos vacíos.
 - **Desenfoque de fondo** en primeros planos; atmósfera suave en planos lejanos.
@@ -49,7 +51,7 @@ Idioma: español de España.
 
 ## 6. Subtítulos
 - Bloques de 2-4 palabras, grandes, blancos con borde negro, clave en amarillo, sincronizados.
-- **Posición: más abajo del centro** → bloque con `top: 1320px` (96 px, máx. 2 líneas, acaba hacia 1530 px, por encima del texto de abajo de TikTok/YouTube). Lo pidió el dueño tras el short 06 ("los subtítulos más abajo"); manda sobre el "tercio central" de la v3.
+- **Posición: más abajo del centro** → bloque con `top: 1320px` (**88 px**, máx. 2 líneas, acaba hacia 1510 px; el dueño los pidió "un poquitillo más pequeños" tras el short 06, por encima del texto de abajo de TikTok/YouTube). Lo pidió el dueño tras el short 06 ("los subtítulos más abajo"); manda sobre el "tercio central" de la v3.
 - Sin títulos pequeños arriba ni textos repetidos.
 
 ## 7. Final y bucle
