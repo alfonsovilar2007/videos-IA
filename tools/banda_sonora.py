@@ -218,7 +218,21 @@ def puerta(dur=1.0):
     n = int(dur * SR); tt = np.arange(n) / SR
     f = 180 + 120 * np.sin(2 * np.pi * 1.3 * tt) + 40 * rng.standard_normal(n).cumsum() / np.sqrt(np.arange(1, n + 1))
     return lowpass(np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)), 1800) * env(n, .05, .5) * .6
-SFX = {"limado": (limado, .5), "moneda": (moneda, .5), "alarma": (alarma, .35), "puerta": (puerta, .6), "clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
+def pala():
+    """Pala clavándose en tierra: golpe sordo + arrastre de tierra."""
+    n = int(.5 * SR); tt = np.arange(n) / SR
+    g = np.sin(2 * np.pi * np.cumsum(np.linspace(110, 50, n)) / SR) * env(n, .002, .07)
+    r = lowpass(rng.standard_normal(n), 900) * env(n, .01, .18) * 1.5
+    return g * .8 + r
+def aranazo():
+    n = int(.25 * SR); tt = np.arange(n) / SR
+    r = rng.standard_normal(n); r = r - lowpass(r, 3500)
+    return r * np.sin(np.pi * tt / .25) * .7
+def viento(dur=8.0):
+    n = int(dur * SR); tt = np.arange(n) / SR
+    r = lowpass(rng.standard_normal(n), 500 + 300 * np.sin(2 * np.pi * .15 * tt)) * (.6 + .4 * np.sin(2 * np.pi * .23 * tt))
+    return r * np.minimum(1, tt / 1.0) * np.minimum(1, (dur - tt) / 1.0) * 2.5
+SFX = {"pala": (pala, .7), "aranazo": (aranazo, .45), "viento": (viento, .35), "limado": (limado, .5), "moneda": (moneda, .5), "alarma": (alarma, .35), "puerta": (puerta, .6), "clank": (clank, .8), "cristal": (cristal, .9), "chisporroteo": (chisporroteo, .6), "frenazo": (frenazo, .8), "martillo": (martillo, .7), "motor": (motor, .5), "confeti": (confeti, .6), "grieta": (grieta, .9), "explosion": (explosion, 1.0), "sello": (sello, .8), "desgarro": (desgarro, 1.0), "pop": (pop, .35), "ding": (ding, .5), "latido": (latido, .7), "subida": (subida, .35)}
 for c in ev["cortes"]:
     poner(fx, whoosh(), c - .2, .28)
 for t, nombre in ev["efectos"]:

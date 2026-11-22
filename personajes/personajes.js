@@ -195,3 +195,43 @@ Object.assign(PRESETS, {
     detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M0,-240 l-8,10 8,50 8,-50z" fill="#7A2A3A"/>`,
     objeto: `<g transform="translate(106,-320)">${RELOJ}</g>`, cabeza: BOMBIN + BIGOTE('#3A2A22') },
 });
+
+// ---------- Short "Las jaulas de las tumbas" (Escocia, siglo XIX) ----------
+const GORRO_LANA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-68,-36 q-4,-70 68,-72 q72,2 68,72 q-68,-16 -136,0z" fill="#4A3B5C"/><path d="M-70,-40 q70,-16 140,0 l0,14 q-70,-16 -140,0z" fill="#3A2E4A"/><circle cx="0" cy="-110" r="12" fill="#3A2E4A"/></g>`;
+const BUFANDA = `<g stroke="${INK}" stroke-width="4"><path d="M-48,-272 q48,22 96,0 l-4,22 q-44,18 -88,0z" fill="#7A2E2E"/><path d="M24,-262 l12,48 l-18,4 l-6,-46z" fill="#7A2E2E"/></g>`;
+const PALA = `<g transform="rotate(20)"><rect x="-6" y="-150" width="12" height="150" rx="4" fill="#7A5634" stroke="${INK}" stroke-width="4"/><path d="M-22,-146 h44 l-5,-56 q-17,-18 -34,0z" fill="#8F99A3" stroke="${INK}" stroke-width="4"/><rect x="-18" y="6" width="36" height="12" rx="5" fill="#7A5634" stroke="${INK}" stroke-width="4"/></g>`;
+const SACO = `<g stroke="${INK}" stroke-width="4"><path d="M-40,0 q-14,-70 26,-90 q30,-6 48,12 q30,40 6,78 q-40,14 -80,0z" fill="#B59A6A"/><path d="M-12,-88 l8,-16 10,14" fill="none"/></g>`;
+const SOMBRERO_COPA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-84,-58 q84,-20 168,0 q-84,14 -168,0z" fill="#1E1E1E"/><rect x="-48" y="-150" width="96" height="94" rx="8" fill="#252525"/><rect x="-48" y="-78" width="96" height="14" fill="#7A2A3A"/></g>`;
+const VELO = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-74,-30 C-80,-110 80,-110 74,-30 L82,60 q-20,-50 -10,-80 C60,-70 -60,-70 -72,-20 q10,30 -10,80z" fill="#1d1d24"/><path d="M-60,-60 q60,-40 120,0" fill="none" stroke="#3a3a46"/></g>`;
+const FLORES = `<g stroke="${INK}" stroke-width="3"><path d="M0,0 l-10,-50 M0,0 l0,-56 M0,0 l10,-50" stroke="#3E7B4F" stroke-width="4"/>${[[-10, -54], [0, -62], [10, -54], [-4, -46], [6, -44]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="#F5F5F0"/><circle cx="${x}" cy="${y}" r="3" fill="#F2C14E" stroke="none"/>`).join('')}</g>`;
+const BISTURI = `<g transform="rotate(-35)"><rect x="-4" y="-70" width="8" height="54" rx="3" fill="#C9D1DA" stroke="${INK}" stroke-width="3"/><path d="M-4,-70 q4,-26 8,0z" fill="#E8EEF5" stroke="${INK}" stroke-width="3"/></g>`;
+const PERGAMINO = `<g stroke="${INK}" stroke-width="4"><rect x="-34" y="-80" width="68" height="84" rx="4" fill="#F1E3BC"/><path d="M-24,-64 h48 M-24,-52 h48 M-24,-40 h40 M-24,-28 h44" stroke="#9A8A6A" stroke-width="3"/><circle cx="18" cy="-10" r="10" fill="#B3262E"/></g>`;
+const DELANTAL_CUERO = `<path d="M-40,-250 h80 l8,108 h-96z" fill="#6B4423" stroke="${INK}" stroke-width="5"/>`;
+const CAMARA = `<g stroke="${INK}" stroke-width="4"><rect x="-34" y="-26" width="68" height="44" rx="8" fill="#2B2B2B"/><circle cx="0" cy="-4" r="15" fill="#4A6A8A"/><circle cx="0" cy="-4" r="7" fill="#9FC3E8"/><rect x="14" y="-34" width="14" height="8" fill="#2B2B2B"/></g>`;
+const PELO_RIZADO = `<g stroke="${INK}" stroke-width="5">${[-50, -25, 0, 25, 50].map((x, i) => `<circle cx="${x}" cy="${-72 + (i % 2) * 8}" r="22" fill="#2A1E1A"/>`).join('')}</g>`;
+Object.assign(PRESETS, {
+  resurreccionista: { expr: 'eureka', pantalon: '#3A3A3A', torso: '#4E5A4A', manga: '#4E5A4A',
+    brazoI: 'M-46,-250 q-30,40 -10,90', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-56, -160], [106, -320]],
+    detalle: BUFANDA + `<path d="M-30,-200 l10,8 M20,-180 l12,6" stroke="#2c2c2c" stroke-width="5"/>`,
+    objeto: `<g transform="translate(106,-320)">${PALA}</g>`, cabeza: GORRO_LANA + BIGOTE('#3a2a22') },
+  resurreccionista2: { expr: 'neutral', pantalon: '#2E2E38', torso: '#6A4A3A', manga: '#6A4A3A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q40,30 50,60', manos: [[-80, -136], [96, -170]],
+    detalle: `<path d="M-46,-268 l-6,118 M46,-268 l6,118" stroke="#4A3428" stroke-width="6"/>`,
+    objeto: `<g transform="translate(110,-120)">${SACO}</g>`, cabeza: GORRO_LANA.replaceAll('#4A3B5C', '#5A4A2E').replaceAll('#3A2E4A', '#4A3A20') },
+  anatomista: { expr: 'preocupado', pantalon: '#2B2B2B', torso: '#1F1F26', manga: '#1F1F26',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    detalle: `<path d="M-18,-266 l18,30 18,-30" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M-10,-258 q10,10 20,0 l-4,10 q-6,4 -12,0z" fill="#FAFAF5" stroke="${INK}" stroke-width="3"/><path d="M-30,-232 v80 M30,-232 v80" stroke="#3a3a46" stroke-width="5"/>`,
+    objeto: `<g transform="translate(106,-320)">${BISTURI}</g>`, cabeza: PELO_RIZADO + GAFAS },
+  estudiante: { expr: 'sorprendido', pantalon: '#4A4F5A', torso: '#6B4A2E', manga: '#6B4A2E',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: `<path d="M-14,-266 l14,22 14,-22" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M-10,-246 q10,8 20,0" fill="none" stroke="#FAFAF5" stroke-width="6"/>`, cabeza: SOMBRERO_COPA },
+  viuda: { expr: 'preocupado', pantalon: '#1d1d24', torso: '#24242c', manga: '#24242c',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,10 40,60', manos: [[-80, -136], [86, -190]],
+    detalle: `<path d="M-50,-160 l-20,160 h140 l-20,-160z" fill="#24242c" stroke="${INK}" stroke-width="5"/><path d="M-10,-264 h20" stroke="#F5F5F0" stroke-width="6"/>`,
+    objeto: `<g transform="translate(86,-190)">${FLORES}</g>`, cabeza: VELO },
+  herrero: { expr: 'neutral', pantalon: '#3A3A3A', torso: '#C8B79A', manga: '#C8B79A',
+    brazoI: 'M-46,-250 q-50,-20 -60,-90', brazoD: 'M46,-250 q50,-20 60,-90', manos: [[-106, -340], [106, -340]],
+    detalle: DELANTAL_CUERO, cabeza: PELO + BIGOTE('#2A1E1A') },
+});
+PRESETS.anatomista_feliz = Object.assign({}, PRESETS.anatomista, { expr: 'eureka', objeto: `<g transform="translate(106,-320)">${PERGAMINO}</g>` });
+PRESETS.toni_camara = Object.assign({}, PRESETS.toni, { expr: 'sorprendido', brazoD: 'M46,-250 q40,0 40,-40', brazoI: 'M-46,-250 q-10,10 30,-40', manos: [[-16, -290], [86, -290]], objeto: `<g transform="translate(36,-290)">${CAMARA}</g>` });
