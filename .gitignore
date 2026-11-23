@@ -1,0 +1,5 @@
+shorts/*/frames/
+shorts/*/tmp/
+node_modules/
+__pycache__/
+*.wav
