@@ -27,6 +27,10 @@ Transcripción completa en `referencias/reel_perro_escapa_transcripcion.txt`. 82
 **Texto en pantalla**: solo la **palabra clave** de cada frase, arriba (y ≈ 3-5 %), en minúsculas gruesas con borde: **rojo = error**, **amarillo = lo que hay que hacer**, **morado = resumen**. Bocadillos de cómic pequeños ("¡CANELA!", "¡MAL HECHO!", "¡VAMOS A PASEAR!", "¿DÓNDE ANDABAS?"), flechas de trayectoria discontinuas rojas, X roja en lo incorrecto, "?" y "!" sobre el perro.
 **Por qué funciona**: utilidad (se guarda y se comparte), miedo real y cotidiano, enfoque "errores que todos cometemos", un truco que casi nadie sabe a mitad, final emotivo y resumen para recordar.
 
+## 0d. FORMATO "FÁBULA + LECCIÓN" (reel de la serpiente y el serrucho; usado en el short 13, el elefante)
+Transcripción en `referencias/reel_serpiente_serrucho_transcripcion.txt`. 1) Empieza en plena fábula, sin presentar (animal + objeto). 2) Remate de la fábula en una frase ("No fue el serrucho, fue su reacción"). 3) Nombre del concepto ("efecto caballo salvaje", "indefensión aprendida") + fórmula corta. 4) "Nos pasa a todos": 2-3 ejemplos cotidianos. 5) Moraleja que vuelve a la imagen del principio ("acuérdate de la serpiente / del elefante").
+**Montaje**: animación en la mitad de arriba (atardecer naranja-morado, siluetas, sin cortes duros), mitad de abajo negra con **titular amarillo grande** (2-3 palabras, mayúsculas) + línea blanca pequeña; arriba subtítulo tipo **karaoke** con la palabra que suena resaltada en amarillo. Tono tranquilo. Máximo 40 s (pedido del dueño).
+
 ## 0. Flujo de trabajo
 1. Investigar el tema y comprobar con búsquedas cada fecha, nombre, cifra y lugar. Si no se confirma, no se usa.
 2. Entregar el guion **plano a plano en una tabla** (segundo, imagen, voz, personaje, texto en pantalla) y **ESPERAR el OK** antes de animar.

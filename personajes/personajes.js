@@ -394,3 +394,46 @@ const rcp = (baja) => {
 };
 PRESETS.rcp_arriba = { svg: rcp(false) };
 PRESETS.rcp_abajo = { svg: rcp(true) };
+
+// ---------- Short "El elefante y la cuerda" (fábula) — todo dibujado, de perfil ----------
+function elefante({ esc = 1, x = 0, inclina = 0, tumbado = false, esfuerzo = false, triste = false, cuerda = 'floja', estaca = 'clavada' } = {}) {
+  const G = '#9aa3ad', G2 = '#7f8893', P = (d, w, c) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 7}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+  let g = `<g transform="translate(${x},0) scale(${esc}) rotate(${inclina} 0 0)" stroke-linejoin="round">`;
+  g += `<ellipse cx="0" cy="4" rx="170" ry="14" fill="#000" opacity=".15"/>`;
+  if (!tumbado) {
+    for (const [lx, c] of [[-100, G2], [80, G2]]) g += `<rect x="${lx}" y="-130" width="40" height="130" rx="16" fill="${c}" stroke="${INK}" stroke-width="6"/>`;
+    g += `<ellipse cx="-10" cy="-175" rx="155" ry="102" fill="${G}" stroke="${INK}" stroke-width="7"/>`;
+    for (const [lx, c] of [[-130, G], [110, G]]) g += `<rect x="${lx}" y="-130" width="44" height="132" rx="16" fill="${c}" stroke="${INK}" stroke-width="6"/>`;
+  } else {
+    g += `<ellipse cx="-10" cy="-70" rx="160" ry="72" fill="${G}" stroke="${INK}" stroke-width="7"/>`;
+    for (const lx of [-110, -40, 50]) g += `<ellipse cx="${lx}" cy="-8" rx="34" ry="16" fill="${G2}" stroke="${INK}" stroke-width="6"/>`;
+  }
+  const hy = tumbado ? -70 : -205;
+  g += P(`M-160,${hy + 10} q-20,30 -14,70`, 6, G2);
+  g += `<circle cx="125" cy="${hy}" r="72" fill="${G}" stroke="${INK}" stroke-width="7"/>`;
+  g += P(tumbado ? `M178,${hy + 20} q40,30 20,60 q-10,10 -30,6` : `M178,${hy + 20} q30,60 10,140 q-4,16 -20,14`, 26, G);
+  g += `<path d="M160,${hy + 36} q22,10 30,-8" fill="#F2EEE2" stroke="${INK}" stroke-width="4"/>`;
+  g += `<ellipse cx="86" cy="${hy + 4}" rx="48" ry="64" fill="${G2}" stroke="${INK}" stroke-width="6"/><ellipse cx="90" cy="${hy + 6}" rx="30" ry="44" fill="#d9a3a8" opacity=".6"/>`;
+  if (esfuerzo) g += `<path d="M132,${hy - 18} l14,8 -14,8 M150,${hy - 20} l-6,2" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M168,${hy - 50} q6,-14 0,-24 M182,${hy - 40} q8,-12 4,-22" fill="none" stroke="#6fc3ff" stroke-width="6" stroke-linecap="round"/>`;
+  else if (triste) g += `<ellipse cx="146" cy="${hy - 6}" rx="7" ry="9" fill="${INK}"/><path d="M132,${hy - 28} l26,10" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M150,${hy + 8} q2,10 -2,18" stroke="#6fc3ff" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  else g += `<ellipse cx="146" cy="${hy - 8}" rx="8" ry="11" fill="${INK}"/><circle cx="149" cy="${hy - 12}" r="3" fill="#fff"/><path d="M134,${hy - 30} q12,-6 24,0" stroke="${INK}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  g += `<ellipse cx="160" cy="${hy + 16}" rx="10" ry="6" fill="${BLUSH}" opacity=".6"/>`;
+  g += '</g>';
+  // cuerda y estaca (en coordenadas del sprite, sin girar)
+  const pie = [x - 110 * esc, -12 * esc];
+  let est = `<rect x="-192" y="-42" width="13" height="46" rx="3" fill="#7a5634" stroke="${INK}" stroke-width="4"/>`, sx = -186, sy = -34;
+  if (estaca === 'volando') { est = `<g transform="translate(-150,-150) rotate(-40)"><rect x="-6" y="-23" width="13" height="46" rx="3" fill="#7a5634" stroke="${INK}" stroke-width="4"/></g>` + [...Array(7)].map((_, i) => `<circle cx="${-190 + i * 9}" cy="${-8 - (i % 3) * 14}" r="${5 + (i % 2) * 3}" fill="#6a4a30"/>`).join('') + `<path d="M-200,2 q14,-12 28,0z" fill="#3a2a1e"/>`; sx = -150; sy = -150; }
+  const cu = cuerda === 'tensa' ? `M${pie[0]},${pie[1]} L${sx},${sy}` : `M${pie[0]},${pie[1]} q${(sx - pie[0]) / 2},${30} ${sx - pie[0]},${sy - pie[1]}`;
+  return g + `<path d="${cu}" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="${cu}" fill="none" stroke="#d8b478" stroke-width="3.5" stroke-linecap="round"/>` + est;
+}
+PRESETS.ele_grande = { svg: elefante({ esc: .82, x: -8 }) };
+PRESETS.ele_grande_tira = { svg: elefante({ esc: .82, x: 4, inclina: 7, esfuerzo: true, cuerda: 'tensa', estaca: 'volando' }) };
+PRESETS.ele_bebe_tira = { svg: elefante({ esc: .62, x: 40, inclina: 9, esfuerzo: true, cuerda: 'tensa' }) };
+PRESETS.ele_bebe_triste = { svg: elefante({ esc: .62, x: 30, tumbado: true, triste: true }) };
+const ESTACA_TONI = (estado) => estado === 'volando' ? `<path d="M-36,-6 L-150,-130" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M-36,-6 L-150,-130" fill="none" stroke="#d8b478" stroke-width="3.5"/><g transform="translate(-150,-130) rotate(-40)"><rect x="-6" y="-23" width="13" height="46" rx="3" fill="#7a5634" stroke="${INK}" stroke-width="4"/></g><path d="M-190,2 q14,-12 28,0z" fill="#3a2a1e"/>` : `<path d="M-36,-6 q-60,22 -134,-14" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M-36,-6 q-60,22 -134,-14" fill="none" stroke="#d8b478" stroke-width="3.5"/><rect x="-182" y="-42" width="13" height="46" rx="3" fill="#7a5634" stroke="${INK}" stroke-width="4"/><circle cx="-40" cy="-8" r="9" fill="none" stroke="#d8b478" stroke-width="5"/>`;
+PRESETS.toni_estaca = Object.assign({}, PRESETS.toni, { expr: 'preocupado', objeto: ESTACA_TONI('clavada'), brazoD: 'M46,-250 q30,60 34,112', manos: [[-90, -136], [80, -136]] });
+PRESETS.toni_tira = Object.assign({}, PRESETS.toni, { expr: 'eureka', objeto: ESTACA_TONI('volando'), brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+PRESETS.toni_examen = Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoD: 'M46,-250 q40,10 40,-50', manos: [[-90, -136], [86, -300]], objeto: `<g transform="translate(86,-330)"><rect x="-34" y="-44" width="68" height="84" rx="3" fill="#F7F1E1" stroke="${INK}" stroke-width="4"/><path d="M-24,-30 h40 M-24,-20 h34 M-24,-10 h40" stroke="#8a9aaa" stroke-width="3"/><circle cx="4" cy="16" r="18" fill="none" stroke="#E8322A" stroke-width="5"/><text x="4" y="25" font-size="26" font-weight="900" text-anchor="middle" fill="#E8322A" stroke="none" font-family="DejaVu Sans">2</text></g>` });
+PRESETS.toni_mira = Object.assign({}, PRESETS.toni, { expr: 'neutral', objeto: '', brazoD: 'M46,-250 q30,60 34,112', manos: [[-90, -136], [80, -136]] });
+PRESETS.toni_nino = Object.assign({}, PRESETS.toni, { expr: 'preocupado', objeto: '', brazoD: 'M46,-250 q30,60 34,112', manos: [[-90, -136], [80, -136]], torso: '#E9C46A', manga: '#E9C46A', detalle: '' });
+PRESETS.adulto_senala = Object.assign({}, PRESETS.directivo, { expr: 'preocupado', brazoD: 'M46,-250 q60,0 100,20', manos: [[-80, -136], [146, -230]] });
