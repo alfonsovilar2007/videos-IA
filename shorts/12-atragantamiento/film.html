@@ -170,7 +170,7 @@ function crearTerraza() {
   // personajes
   const O = { brillo: 0, tono: .78, rim: '#ffe8c0' };
   const N = ['amiga', 'amiga_tose', 'amiga_ahoga', 'amiga_feliz', 'amiga_sola', 'toni_feliz', 'toni_golpe', 'toni_anima', 'toni_movil', 'heimlich', 'vecina', 'estudiante', 'vecino1'];
-  const P = {}; N.forEach(n => P[n] = personaje(e, n, n === 'heimlich' ? 1.78 : 1.75, O));
+  const P = {}; N.forEach(n => P[n] = personaje(e, n, n === 'heimlich' ? 1.78 : 1.75, O)); for (const n of ['rcp_arriba', 'rcp_abajo']) P[n] = personaje(e, n, 2.9, O);
   const cam = new THREE.PerspectiveCamera(42, W / H, .05, 2000);
   return {
     escena: e, cam, P,
@@ -311,10 +311,10 @@ const PLANOS = [
       terraza.preparar({ tiempo: t, sillaSola: true, ver: { amiga_sola: { pos: v3(-.55, 0, .82), inclina: -.32 - g * .12 } } });
       C(terraza.cam, v3(lerp(1.5, 1.3, k), lerp(1.3, 1.2, k), lerp(1.7, 1.5, k)), v3(-.55, .65, .95), 42); FOCO = v3(-.55, .7, .9);
     } },
-  { desde: 138, nombre: 'si se desmaya, reanimación hasta que llegue la ambulancia', esc: 'terraza', f(k, t) {
-      const g = latido(t, 1.9);
-      terraza.preparar({ tiempo: t, luces: true, ver: { amiga: { pos: v3(-.2, .03, 1.6), tumbada: true }, toni_anima: { pos: v3(-.2, -.55 - g * .05, 1.05) } } });
-      C(terraza.cam, v3(lerp(.4, .3, k), lerp(3.4, 3.1, k), lerp(2.9, 2.7, k)), v3(-.25, 0, 1.35), 44);
+  { desde: 138, nombre: 'si se desmaya, reanimación hasta que llegue la ambulancia (dibujo de rodillas, sin trucos)', esc: 'terraza', f(k, t) {
+      const abajo = Math.sin(t * 1.9 * Math.PI * 2) > 0;
+      terraza.preparar({ tiempo: t, luces: true, ver: { [abajo ? 'rcp_abajo' : 'rcp_arriba']: { pos: v3(-.2, 0, 1.35) } } });
+      C(terraza.cam, v3(lerp(.2, .1, k), lerp(1.45, 1.3, k), lerp(5.4, 4.9, k)), v3(.12, .62, 1.35), 42); FOCO = v3(-.2, .5, 1.35);
     } },
   { desde: 150, nombre: 'ELLA: "¡Uf… gracias! ¡Me has salvado!"', esc: 'terraza', f(k, t) {
       terraza.preparar({ tiempo: t, ver: { amiga_feliz: { pos: AM }, toni_feliz: { pos: TO } } });

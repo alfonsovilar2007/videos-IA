@@ -40,9 +40,11 @@ function personaje(x,y,sc,o){
   let g=`<g transform="translate(${x},${y}) scale(${sc})">`;
   g+=`<ellipse cx="0" cy="6" rx="70" ry="12" fill="#000" opacity=".12"/>`;
   // piernas fideo
+  if(o.piernas) g+=o.piernas; else {
   g+=`<path d="M-16,-150 q-6,80 -20,148" fill="none" stroke="${o.pantalon}" stroke-width="20" stroke-linecap="round"/><path d="M16,-150 q8,80 20,148" fill="none" stroke="${o.pantalon}" stroke-width="20" stroke-linecap="round"/>`;
   g+=`<path d="M-16,-150 q-6,80 -20,148 M16,-150 q8,80 20,148" fill="none" stroke="${INK}" stroke-width="26" stroke-linecap="round" opacity="0"/>`;
   g+=`<ellipse cx="-44" cy="-2" rx="22" ry="11" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/><ellipse cx="44" cy="-2" rx="22" ry="11" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/>`;
+  }
   // brazos
   g+=`<path d="${o.brazoI}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoI}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`;
   g+=`<path d="${o.brazoD}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoD}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`;
@@ -378,3 +380,17 @@ PRESETS.toni_feliz = Object.assign({}, PRESETS.toni, { expr: 'eureka', objeto: '
 PRESETS.heimlich = { svg: personaje(62, -4, 1, Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoI: 'M-46,-250 q0,0 0,0', brazoD: 'M46,-250 q0,0 0,0', manos: [], objeto: '' }))
   + personaje(-6, 0, 1, Object.assign({}, PRESETS.amiga, { expr: 'sorprendido', brazoI: 'M-46,-250 q-30,40 -50,60', brazoD: 'M46,-250 q30,40 50,60', manos: [[-96, -190], [96, -190]] }))
   + `<path d="M-40,-236 q20,40 40,46 M150,-236 q-60,40 -144,46" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="M-40,-236 q20,40 40,46 M150,-236 q-60,40 -144,46" fill="none" stroke="#FAFAF7" stroke-width="15" stroke-linecap="round"/><circle cx="0" cy="-192" r="20" fill="${SKIN}" stroke="${INK}" stroke-width="6"/><circle cx="12" cy="-186" r="16" fill="${SKIN}" stroke="${INK}" stroke-width="5"/>` };
+
+// ---------- Reanimación dibujada de verdad: ella tumbada boca arriba y Toni DE RODILLAS con las manos en su pecho ----------
+const PIERNAS_RODILLAS = (c) => `<path d="M-16,-150 q-10,70 -6,120 q50,14 110,14" fill="none" stroke="${INK}" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/><path d="M-16,-150 q-10,70 -6,120 q50,14 110,14" fill="none" stroke="${c}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><path d="M16,-150 q4,70 10,120 q40,12 96,12" fill="none" stroke="${INK}" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/><path d="M16,-150 q4,70 10,120 q40,12 96,12" fill="none" stroke="${c}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="112" cy="-14" rx="12" ry="20" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/><ellipse cx="128" cy="-18" rx="12" ry="20" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/>`;
+const rcp = (baja) => {
+  const dy = baja ? 7 : 0;
+  // Toni de rodillas detrás de ella (las rodillas quedan tapadas por su cuerpo, como en la realidad vista de frente); brazos de fideo rectos hasta el pecho
+  const toni = personaje(40, -10 + dy, .62, Object.assign({}, PRESETS.toni, { expr: 'preocupado', piernas: PIERNAS_RODILLAS('#3C4A63'), brazoI: 'M-46,-250 q8,100 46,185', brazoD: 'M46,-250 q-8,100 -36,185', manos: [], objeto: '' }));
+  // ella tumbada boca arriba con los ojos cerrados (dibujo girado 90º)
+  const ella = `<g transform="translate(176,-50) rotate(-90)">${personaje(0, 0, .58, Object.assign({}, PRESETS.amiga, { expr: 'eureka', brazoI: 'M-46,-250 q-40,40 -44,100', brazoD: 'M46,-250 q40,40 44,100', manos: [[-90, -150], [90, -150]] }))}</g>`;
+  const manos = `<g transform="translate(43,${-52 + dy})"><circle cx="-5" cy="0" r="11" fill="${SKIN}" stroke="${INK}" stroke-width="4"/><circle cx="5" cy="-4" r="11" fill="${SKIN}" stroke="${INK}" stroke-width="4"/></g>`;
+  return toni + ella + manos;
+};
+PRESETS.rcp_arriba = { svg: rcp(false) };
+PRESETS.rcp_abajo = { svg: rcp(true) };
