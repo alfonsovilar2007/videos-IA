@@ -3,6 +3,15 @@
 Instrucciones del dueño del canal. **Mandan sobre todo lo anterior.** Leer entera antes de cada short.
 Idioma: español de España.
 
+## 0b. FÓRMULA VIRAL (la de los shorts que más funcionan: nuestro "cristal que un martillo no puede romper" y "Why the Second Draw Always Wins" de Ricks Clips)
+1. **Paradoja visual en el segundo 1**: una afirmación que choca con la intuición + la prueba en imagen ("Un martillazo no la rompe. Un pellizco, sí."). Se entiende sin contexto.
+2. **Mini-escena con personajes** que demuestra la paradoja (duelo, experimento, alguien que lo intenta y falla), con caras muy expresivas (sudor, ojos abiertos).
+3. **Qué es / el porqué** explicado con imágenes clarísimas: código de colores, flechas, una metáfora cotidiana ("apretada como un puño").
+4. **Momento espectacular hacia el 60 %** (cámara lenta, explosión, revelación).
+5. **Giro histórico o dato extra** que no te esperas (un rey, un científico famoso que lo probó, cuánto se tardó en entender).
+6. **Cierre que repite la frase del gancho** → bucle perfecto, la gente lo ve dos veces.
+- 30-37 s, ~3 palabras/s, un corte cada ~1,5 s, 3-4 escenarios, cambios de luz (día/noche) para marcar el paso del tiempo.
+
 ## 0. Flujo de trabajo
 1. Investigar el tema y comprobar con búsquedas cada fecha, nombre, cifra y lugar. Si no se confirma, no se usa.
 2. Entregar el guion **plano a plano en una tabla** (segundo, imagen, voz, personaje, texto en pantalla) y **ESPERAR el OK** antes de animar.
