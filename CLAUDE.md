@@ -116,3 +116,13 @@ Si es un enlace de YouTube, saca al menos el título (oEmbed) y las miniaturas a
 - Ya instalados: Python 3, Node 22, ffmpeg 6, numpy, Playwright + Chromium (no reinstalar Playwright).
 - Instalar si faltan: `pip install edge-tts faster-whisper`; fuente Montserrat 900 desde Google Fonts.
 - Cada vídeo va en su carpeta `shorts/AAAA-MM-DD-tema/`. Los fotogramas JPG y los temporales NO se suben al repo (ver `.gitignore`); sí el código, guion, eventos.json, el .mp4 final y la miniatura.
+
+## VÍDEOS LARGOS MOTIVACIONALES (8-12 min)
+Fórmula sacada del análisis de referencias (detalle en `analisis/referencias-motivacionales.md`):
+1. Gancho 0-15 s: pregunta directa o escena/frase memorable; nunca presentarse.
+2. Nombrar el enemigo (el concepto) 15-30 s.
+3. Promesa concreta con número ("12 frases", "6 pasos") + "¿Estás listo?".
+4. Bloques numerados de 45-90 s con plantilla fija: anuncio → idea → problema → giro a "tú" → porqué → acción.
+5. Re-gancho cada 2-3 min. 6. Recapitulación rápida. 7. Cierre de identidad con anáfora ("Decide… Decide…") y pregunta para comentarios.
+- Voz del narrador grave, ~140-150 palabras/min, pausas de 0,6-0,8 s tras ideas clave, siempre "tú".
+- Nunca clonar ni imitar la voz de una persona real sin su permiso; clips de terceros solo como cita breve.
