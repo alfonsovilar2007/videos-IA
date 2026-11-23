@@ -3,3 +3,4 @@ shorts/*/tmp/
 node_modules/
 __pycache__/
 *.wav
+videos/*/tmp/
