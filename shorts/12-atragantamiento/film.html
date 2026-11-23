@@ -318,7 +318,7 @@ const PLANOS = [
     } },
   { desde: 150, nombre: 'ELLA: "¡Uf… gracias! ¡Me has salvado!"', esc: 'terraza', f(k, t) {
       terraza.preparar({ tiempo: t, ver: { amiga_feliz: { pos: AM }, toni_feliz: { pos: TO } } });
-      C(terraza.cam, v3(lerp(.1, 0, k), 1.35, lerp(2.6, 2.2, k)), v3(0, 1.05, .78), 42); FOCO = cab(AM); ANCLAS = { amiga: cab(AM).add(v3(0, .4, 0)) };
+      C(terraza.cam, v3(lerp(.05, 0, k), 1.4, lerp(3.7, 3.3, k)), v3(0, 1.0, .78), 42); FOCO = cab(AM); ANCLAS = { amiga: cab(AM).add(v3(0, .4, 0)) };
     } },
   { desde: 155, nombre: 'RESUMEN: no le golpeas mientras tose, ni le metes los dedos (X roja)', esc: 'terraza', f(k, t) {
       const dedos = t > T(162);
