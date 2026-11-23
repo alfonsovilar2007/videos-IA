@@ -18,10 +18,19 @@ ENFASIS = re.compile(r"\b(nunca|ahora|tú)\b", re.I)
 IMPULSO = re.compile(r"^(Regla número|Y la regla número|Empieza|Hazlo|Haz |Decide|Deja de|Prepárate|Mide|Cambia|Apúntalo|Celebra|No esperes|No quieras|Conviértete|Quédate|Así que|No es que seas|Si tu plan|Prometerte|Escríbelo|¿Estás listo|Empezamos|La motivación te hace|Pero es la constancia|Y cuando no tengas|Nada puede|Solo asegúrate|No te castigues)", re.I)
 CAIDA = re.compile(r"^(nada\.|Y tres semanas|¿Te suena|Solo eso|Y lo dejas|Simplemente eres así|Un voto no cambia)", re.I)
 def nivel(fr):
+    if "susurro" in efectos(fr): return "susurro"
     if IMPULSO.search(fr) or fr.endswith("!"): return "alto"
     if CAIDA.search(fr): return "bajo"
     return "normal"
-NIVELES = {"normal": (RATE, PITCH, "+0%"), "alto": ("+15%", "+3%", "+25%"), "bajo": ("+4%", "-11%", "-5%")}
+EFECTOS = {
+  "susurro": ("Pero ahora viene la parte que casi nadie te cuenta.", "Y si sabes cuál es, puedes prepararte para él.", "Vas a fallar.", "Pero la novedad se acaba."),
+  "radio": ("“Voy a hacer más ejercicio”", "El problema es lo que te dices después", "Total, para qué seguir", "Piensa: “Ya estoy en el bache.", "Esto es exactamente donde tengo que estar"),
+  "eco": ("hazlo igual.", "Por eso llegar vale tanto.", "Cien votos lo cambian todo.", "Pero es la constancia la que te hace llegar."),
+  "silencio": ("Pero ahora viene la parte que casi nadie te cuenta.", "Y la regla número siete.", "La motivación te hace empezar.", "Lo difícil es empezarla.", "hazlo igual."),
+  "frenazo": ("Hasta aquí, cuatro reglas para empezar y no frenar.",),
+}
+def efectos(fr): return {e for e, lst in EFECTOS.items() if any(fr.startswith(x) for x in lst)}
+NIVELES = {"susurro": ("-4%", "-4%", "+0%"), "normal": (RATE, PITCH, "+0%"), "alto": ("+15%", "+3%", "+25%"), "bajo": ("+4%", "-11%", "-5%")}
 
 src = open(f"{AQUI}/../../guiones/01-guion.py").read().split("WPM =")[0]
 ns = {}; exec(src, ns); S = ns["S"]
@@ -36,8 +45,12 @@ def ssml(texto):
     if nv == "alto" and texto.endswith("."): texto = texto[:-1] + "!"
     t = html.escape(texto, quote=False)
     t = ENFASIS.sub(lambda m: f'<emphasis level="strong">{m.group(0)}</emphasis>', t)
-    return (f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-MX">'
-            f'<voice name="{VOZ}"><prosody rate="{rate}" pitch="{pitch}" volume="{vol}">{t}</prosody></voice></speak>')
+    cuerpo = f'<prosody rate="{rate}" pitch="{pitch}" volume="{vol}">{t}</prosody>'
+    voz = VOZ
+    if nv == "susurro":
+        voz = "es-MX-JorgeNeural"; cuerpo = f'<mstts:express-as style="whispering">{cuerpo}</mstts:express-as>'
+    return (f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="es-MX">'
+            f'<voice name="{voz}">{cuerpo}</voice></speak>')
 
 def sintetiza(args):
     k, texto = args
@@ -70,23 +83,35 @@ resp = sosfilt(butter(2, [400, 2400], "band", fs=SR, output="sos"), rs.standard_
 resp = resp / np.abs(resp).max() * 0.025
 
 partes = [np.zeros(int(INICIO * SR))]; t = INICIO
-palabras = []; out_filas = {}; prev_sec = 0; prev_pausa = 1.0
+palabras = []; out_filas = {}; prev_sec = 0; prev_pausa = 1.0; efs = []
 for k, (i, fr) in enumerate(lista):
     si = filas[i][0]
     if si != prev_sec:
         partes.append(np.zeros(int(PAUSA_SECCION * SR))); t += PAUSA_SECCION; prev_pausa = 2.0
-    if prev_pausa >= 0.8:
+    ef = efectos(fr)
+    if "silencio" in ef:
+        partes.append(np.zeros(int(1.0 * SR))); t += 1.0; efs.append({"tipo": "silencio", "t": round(t, 3)})
+    if "frenazo" in ef: efs.append({"tipo": "frenazo", "t": round(t, 3)})
+    if prev_pausa >= 0.8 and "susurro" not in ef:
         partes.append(resp); t += len(resp) / SR
     import hashlib
     a = leer(f"{TMP}/az/f_{hashlib.md5(ssml(fr).encode()).hexdigest()[:12]}.wav"); d = len(a) / SR
-    if nivel(fr) == "alto": a = a * 1.0  # el volumen ya lo sube Azure; la compresión lo iguala sin aplastarlo
+    if "susurro" in ef: a = a * 0.75
+    if "radio" in ef:
+        a = sosfilt(butter(4, [380, 3200], "band", fs=SR, output="sos"), a); a = np.tanh(a * 4) * 0.35
+    if "eco" in ef:
+        cola = np.zeros(len(a) + int(1.3 * SR)); cola[:len(a)] += a
+        for k2, g in ((0.33, 0.42), (0.66, 0.24), (0.99, 0.12)):
+            i0 = int(k2 * SR); cola[i0:i0 + len(a)] += g * sosfilt(butter(2, 2500, "low", fs=SR, output="sos"), a)
+        habla = len(a) / SR; a = cola
+    else: habla = None
     # tiempos de palabra repartidos por longitud dentro de la frase
     ws = fr.split(); pesos = np.array([len(w) + 1.5 for w in ws], float); cum = np.concatenate([[0], np.cumsum(pesos)]) / pesos.sum()
     for j, w in enumerate(ws):
         palabras.append({"t0": round(t + cum[j] * d, 3), "t1": round(t + cum[j + 1] * d - 0.02, 3), "w": w, "fila": i})
     f = out_filas.setdefault(i, {"i": i, "sec": si, "seccion": filas[i][1], "t0": round(t, 3), "texto": filas[i][4], "img": filas[i][3], "voz": filas[i][2]})
     f["t1"] = round(t + d, 3)
-    partes.append(a); t += d
+    partes.append(a); t += len(a) / SR
     p = PAUSA.get(fr.rstrip("”\"")[-1], 0.5)
     if k + 1 < len(lista) and lista[k + 1][0] != i: p += 0.25
     partes.append(np.zeros(int(p * SR))); t += p; prev_pausa = p; prev_sec = si
@@ -95,5 +120,5 @@ x = np.concatenate(partes); x = x / np.abs(x).max() * 0.9
 with wave.open(f"{TMP}/voz.wav", "wb") as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((x * 32767).astype(np.int16).tobytes())
 json.dump({"total": round(total, 3), "palabras": palabras, "filas": [out_filas[i] for i in sorted(out_filas)],
-           "secciones": [n for n, _ in S]}, open(f"{TMP}/tiempos.json", "w"), ensure_ascii=False)
+           "secciones": [n for n, _ in S], "efectos": efs}, open(f"{TMP}/tiempos.json", "w"), ensure_ascii=False)
 print(f"voz: {int(total // 60)}:{total % 60:04.1f}  frases={len(lista)} palabras={len(palabras)}")

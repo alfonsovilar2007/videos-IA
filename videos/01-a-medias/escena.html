@@ -8,6 +8,7 @@ canvas{display:block}
 </style></head>
 <body><canvas id="c" width="1920" height="1080"></canvas>
 <script src="tmp/tiempos.js"></script>
+<script src="tmp/clips_asig.js"></script>
 <script>
 "use strict";
 const W = 1920, H = 1080;
@@ -66,13 +67,15 @@ const planos = [];
       if (i === 0 && NUM_REGLA[s]) tipo = 'saco';
       else if (i === 0) tipo = 'espalda';
       else {
-        const menu = escal ? ['espalda', 'espalda', 'subida', 'subida', 'saco', 'saco', 'pies', 'perfil']
-                           : ['espalda', 'espalda', 'espalda', 'perfil', 'perfil', 'saco', 'saco', 'pies'];
+        const menu = escal ? ['espalda', 'subida', 'subida', 'saco', 'pies', 'clip', 'clip', 'clip']
+                           : ['espalda', 'espalda', 'perfil', 'saco', 'pies', 'clip', 'clip', 'clip', 'clip'];
         let k = 0;
         do { tipo = menu[Math.floor(hash(n * 7.31 + k * 3.7 + 0.13) * menu.length)]; k++; } while (tipo === prevTipo && k < 20);
       }
       const fila = filas.filter(f => f.sec === s && f.t0 <= cortes[i] + 0.4).pop() || fs[0];
-      planos.push({ n, s, env, tipo, t0: cortes[i], t1: cortes[i + 1], titulo: i === 0 ? fs[0].texto : null,
+      let tema = null;
+      if (tipo === 'saco' && i > 0 && hash(n * 4.4) < 0.55) { tipo = 'clip'; tema = 'boxeo'; }
+      planos.push({ n, s, env, tipo, tema, fila: fila.i, t0: cortes[i], t1: cortes[i + 1], titulo: i === 0 ? fs[0].texto : null,
         num: i === 0 ? NUM_REGLA[s] : null, zoom: 1 + 0.06 * hash(n * 3.1), lado: hash(n * 5.7) < 0.5 ? -1 : 1, semilla: n });
       prevTipo = tipo; n++;
     }
@@ -100,7 +103,29 @@ window.eventos = () => ({
   truenos: planos.flatMap(relampagos),
   secciones: T.secciones.map((n, s) => ({ nombre: n, t: (filas.find(f => f.sec === s) || { t0: 0 }).t0 })),
   pasos: [],
+  planos: planos.map(p => ({ n: p.n, t0: p.t0, t1: p.t1, tipo: p.tipo, s: p.s, fila: p.fila, tema: p.tema })),
 });
+// ---- clips reales: fotogramas pre-extraídos en tmp/clipframes/<plano>/NNNN.jpg
+const ASIG = window.CLIPS_ASIG || {};
+window._img = null; window._src = '';
+window.prepara = async (t) => {
+  const p = planoEn(t), a = ASIG[p.n];
+  if (p.tipo !== 'clip' || !a) return;
+  const idx = Math.min(a.frames - 1, Math.floor((t - p.t0) * 30));
+  const src = `tmp/clipframes/${p.n}/${String(idx + 1).padStart(4, '0')}.jpg`;
+  if (src === window._src) return;
+  const img = new Image(); img.src = src; await img.decode(); window._img = img; window._src = src;
+};
+function planoClip(g, t, p, tl) {
+  const img = window._img;
+  if (!img || !ASIG[p.n]) return planoEspalda(g, t, p, tl);
+  const k = tl / Math.max(1, p.t1 - p.t0), esc = 1.03 + 0.07 * k, dx = (ASIG[p.n].lado || 1) * 30 * k;
+  const w = W * esc, h = H * esc;
+  g.drawImage(img, (W - w) / 2 + dx, (H - h) / 2, w, h);
+  g.fillStyle = 'rgba(5,15,20,0.22)'; g.fillRect(0, 0, W, H);
+  g.save(); g.globalCompositeOperation = 'saturation'; g.globalAlpha = 0.25; g.fillStyle = '#808080'; g.fillRect(0, 0, W, H); g.restore();
+  if (p.titulo) tituloGrande(g, p, tl, 'delante');
+}
 
 // ---------------------------------------------------------------- CAPAS PRE-RENDERIZADAS
 const cache = {};
@@ -585,6 +610,7 @@ function renderAt(t) {
   else if (p.tipo === 'perfil') planoPerfil(g, t, p, tl, false);
   else if (p.tipo === 'pies') planoPerfil(g, t, p, tl, true);
   else if (p.tipo === 'subida') planoSubida(g, t, p, tl);
+  else if (p.tipo === 'clip') planoClip(g, t, p, tl);
   else planoSaco(g, t, p, tl);
   g.restore();
   // gris -> color al final de la regla 5

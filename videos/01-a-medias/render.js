@@ -18,7 +18,7 @@ const FPS = +(process.argv[2] || 30), NW = +(process.argv[3] || 3);
       if (fs.existsSync(out)) continue;
       const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-r', String(FPS), out + '.tmp.mp4'], { stdio: ['pipe', 'inherit', 'inherit'] });
       for (let f = a; f < z; f++) {
-        await pg.evaluate(t => window.renderAt(t), f / FPS);
+        await pg.evaluate(async t => { await window.prepara(t); window.renderAt(t); }, f / FPS);
         const buf = await pg.screenshot({ type: 'jpeg', quality: 93 });
         if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
       }

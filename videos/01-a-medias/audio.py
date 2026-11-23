@@ -112,6 +112,20 @@ if gris:
     a, z = int(gris["t"] * SR), int((sig - 6) * SR)
     mus[a:z] = lp(mus[a:z], 500); drums[a:z] *= 0.35
 musica = mus + drums
+# efectos dramáticos de la voz: silencios con golpe y frenazo de cinta
+efs = json.load(open(f"{TMP}/tiempos.json")).get("efectos", [])
+for e in efs:
+    t = e["t"]; i0 = int((t - 1.0) * SR); i1 = int(t * SR)
+    if e["tipo"] == "silencio":
+        f = int(0.08 * SR); musica[i0:i0 + f] *= np.linspace(1, 0, f); musica[i0 + f:i1] = 0
+        rampa = int(0.6 * SR); musica[i1:i1 + rampa] *= np.linspace(0, 1, rampa)
+        add(musica, t - 0.05, boom(), 0.9)
+    elif e["tipo"] == "frenazo":
+        d = int(0.8 * SR); a0 = i1 - d; seg = musica[a0:i1].copy()
+        vel = np.linspace(1, 0.05, d); pos = np.cumsum(vel); pos = np.clip(pos, 0, d - 1)
+        musica[a0:i1] = np.interp(pos, np.arange(d), seg) * np.linspace(1, 0.3, d)
+        musica[i1:i1 + int(1.0 * SR)] = 0
+        rampa = int(1.2 * SR); musica[i1 + int(1.0 * SR):i1 + int(1.0 * SR) + rampa] *= np.linspace(0, 1, rampa)
 fade_out = int(3 * SR); musica[int((DUR - 3) * SR):int(DUR * SR)] *= np.linspace(1, 0, fade_out); musica[int(DUR * SR):] = 0
 
 # ------------------------------------------------ efectos
