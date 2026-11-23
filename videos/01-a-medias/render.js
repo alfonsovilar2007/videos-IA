@@ -9,12 +9,12 @@ const FPS = +(process.argv[2] || 30), NW = +(process.argv[3] || 3);
   const p0 = await abrir();
   const ev = await p0.evaluate(() => window.eventos()); fs.writeFileSync('tmp/eventos.json', JSON.stringify(ev));
   const total = Math.ceil(ev.total * FPS), desde = Math.floor((+(process.argv[4] || 0)) * FPS), hasta = Math.min(total, Math.ceil((+(process.argv[5] || 1e9)) * FPS));
-  const SEG = 60 * FPS; // tramos de 60 s
+  const SEG = (+(process.env.SEG_S || 60)) * FPS; // tramos (60 s por defecto)
   const tramos = []; for (let a = Math.floor(desde / SEG) * SEG; a < hasta; a += SEG) tramos.push([a, Math.min(a + SEG, total)]);
   let siguiente = 0; const t0 = Date.now();
   const worker = async (pg) => {
     while (siguiente < tramos.length) {
-      const [a, z] = tramos[siguiente++], out = `tmp/seg_${String(a / SEG).padStart(3, '0')}.mp4`;
+      const [a, z] = tramos[siguiente++], out = `tmp/${process.env.PREFIJO || 'seg'}_${String(a / SEG).padStart(3, '0')}.mp4`;
       if (fs.existsSync(out)) continue;
       const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-r', String(FPS), out + '.tmp.mp4'], { stdio: ['pipe', 'inherit', 'inherit'] });
       for (let f = a; f < z; f++) {

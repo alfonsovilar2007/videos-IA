@@ -60,70 +60,45 @@ def trueno():
     rumble = lp(rs.standard_normal(n), 180, 4) * (1 - np.exp(-t * 8)) * env_exp(n, 1.2) * 6
     return 0.4 * crack + rumble
 
-# ------------------------------------------------ música: beat trap motivacional con gancho melódico
-BPM = 84; BEAT = 60 / BPM; BAR = 4 * BEAT; S16 = BEAT / 4
-# Re menor: Dm  Bb  F  C
-ACORDES = [(50, [62, 65, 69]), (46, [62, 65, 70]), (53, [60, 65, 69]), (48, [60, 64, 67])]
-# gancho: 8 corcheas por compás (None = silencio), se repite cada 4 compases
-GANCHO = [[74, None, 77, None, 81, 79, 77, None],
-          [74, None, 77, None, 82, 81, 79, None],
-          [77, None, 81, None, 84, 81, 79, 77],
-          [79, None, 76, None, 72, None, 74, None]]
-INT = {"GANCHO": .5, "RE-GANCHO": .25, "REPASO": 1.0, "CIERRE": 1.0}
+# ------------------------------------------------ música motivacional de cine: piano + cuerdas + tambores
+BPM = 72; BEAT = 60 / BPM; BAR = 4 * BEAT
+PROG = [(57, [69, 72, 76]), (53, [69, 72, 77]), (48, [67, 72, 76]), (55, [67, 71, 74])]  # Am F C G
+ARP = [0, 1, 2, 1, 0, 1, 2, 1]
+INT = {"GANCHO": .45, "EL ENEMIGO": .55, "PROMESA": .7, "RE-GANCHO": .3, "REPASO": .95, "CIERRE": 1.0}
 secs = ev["secciones"]
 def intensidad(t):
-    v = .85
+    v = .7
     for s in secs:
-        if s["t"] - 0.5 <= t: v = INT.get(s["nombre"], 1.0 if "REGLA 7" in s["nombre"] else .85)
+        if s["t"] - 0.5 <= t: v = INT.get(s["nombre"], .9 if "REGLA 7" in s["nombre"] else .7)
     return v
-def pluck(f, d=0.55):
-    n = int(d * SR); x = np.arange(n) / SR; out = np.zeros(n)
-    for h in range(1, 9): out += np.sin(2 * np.pi * f * h * x) / h * np.exp(-x * (5 + 7 * h))
-    return out * (1 - np.exp(-x * 400))
-def b808(f, d=0.9):
-    n = int(d * SR); x = np.arange(n) / SR
-    fr = f * (1 + 1.5 * np.exp(-x * 40)); s = np.sin(2 * np.pi * np.cumsum(fr) / SR) * np.exp(-x * 2.6)
-    return np.tanh(s * 2.2) * 0.8
-def clap():
-    n = int(0.3 * SR); x = rs.standard_normal(n); e = np.zeros(n)
-    for k in (0, 0.011, 0.022): i = int(k * SR); e[i:] += np.exp(-np.arange(n - i) / (0.012 * SR))
-    e += np.exp(-np.arange(n) / (0.09 * SR)) * 0.5
-    return bp(x, 900, 5000) * e
-def hat_o(): n = int(0.35 * SR); return hp(rs.standard_normal(n), 6000) * env_exp(n, 0.12)
-
-mus = np.zeros(N); drums = np.zeros(N)
-P808 = [0, 6, 10]; nb = int(DUR / BAR) + 1
-PK, PH, PC, PHO = pluck, hat(), clap(), hat_o()
-cache_pl = {}
+def piano(m, d=2.2):
+    n = int(d * SR); x = np.arange(n) / SR; f = nota(m)
+    s = sum(np.sin(2 * np.pi * f * h * x * (1 + 0.0004 * h)) / h ** 1.3 * np.exp(-x * (1.4 + 0.9 * h)) for h in range(1, 7))
+    return s * (1 - np.exp(-x * 300))
+def cuerdas(ms, d):
+    n = int(d * SR); x = np.arange(n) / SR; s = np.zeros(n)
+    for m in ms:
+        for det in (-0.003, 0, 0.004):
+            f = nota(m) * (1 + det); s += 2 * ((x * f + 0.3 * np.sin(2 * np.pi * 5 * x) / f) % 1) - 1
+    return lp(s, 1400) * np.minimum(1, x / 1.2) * np.minimum(1, (d - x) / 0.8) * 0.02
+def tambor(f0=55, d=1.4):
+    n = int(d * SR); x = np.arange(n) / SR; fr = f0 * (1 + 1.2 * np.exp(-x * 18))
+    return np.sin(2 * np.pi * np.cumsum(fr) / SR) * np.exp(-x * 3) + 0.15 * lp(rs.standard_normal(n), 300) * np.exp(-x * 10)
+cache_p = {}
+def P(m, d=2.2):
+    if (m, d) not in cache_p: cache_p[(m, d)] = piano(m, d)
+    return cache_p[(m, d)]
+mus = np.zeros(N); drums = np.zeros(N); TB = tambor(); TB2 = tambor(50); TB3 = tambor(80, 0.6)
+nb = int(DUR / BAR) + 1
 for b in range(nb):
-    t0 = b * BAR; I = intensidad(t0 + 0.01)
-    raiz, notas = ACORDES[b % 4]
-    n = int(BAR * SR); tt = np.arange(n) / SR
-    pad = np.zeros(n)
-    for m in notas:
-        for det in (-0.004, 0.005): f = nota(m) * (1 + det); pad += 2 * ((tt * f) % 1) - 1
-    fade = np.minimum(1, np.minimum(tt / 0.2, (BAR - tt) / 0.2))
-    add(mus, t0, lp(pad, 700 + 900 * I) * 0.035 * fade)
-    # melodía gancho (siempre: es lo que engancha); octava extra en el cierre
-    for q, m in enumerate(GANCHO[b % 4]):
-        if m is None: continue
-        if m not in cache_pl: cache_pl[m] = pluck(nota(m))
-        add(mus, t0 + q * BEAT / 2, cache_pl[m], 0.16)
-        if I >= 1.0: add(mus, t0 + q * BEAT / 2, pluck(nota(m + 12), 0.35), 0.06)
-    if I < .4:  # parte tranquila: solo colchón, melodía y un bajo largo
-        add(mus, t0, np.sin(2 * np.pi * nota(raiz - 12) * tt) * 0.2 * fade); continue
-    for q in P808:
-        add(drums, t0 + q * S16, b808(nota(raiz - 12)), 0.55)
-        add(drums, t0 + q * S16, kick(), 0.6)
-    if I >= .6:
-        add(drums, t0 + 8 * S16, PC, 0.55)
-        for q in range(16):
-            if q == 14: add(drums, t0 + q * S16, PHO, 0.12); continue
-            add(drums, t0 + q * S16, PH, 0.16 if q % 2 == 0 else 0.1)
-        if b % 2 == 1:  # redoble de charles en el último tiempo
-            for r in range(6): add(drums, t0 + 12 * S16 + r * (BEAT / 6), PH, 0.12)
-    else:
-        for q in (4, 12): add(drums, t0 + q * S16, PC, 0.3)
+    t0 = b * BAR; I = intensidad(t0 + 0.01); raiz, ac = PROG[b % 4]
+    add(mus, t0, cuerdas([raiz, raiz + 12] + ac, BAR + 0.6), 0.6 + 1.2 * I)
+    for q in range(8): add(mus, t0 + q * BEAT / 2, P(ac[ARP[q]] + (12 if I >= .9 and q % 2 else 0)), 0.11)
+    add(mus, t0, P(raiz, 3.5), 0.12)
+    if I >= .5: add(drums, t0, TB, 0.3); add(drums, t0 + 2 * BEAT, TB, 0.22)
+    if I >= .85:
+        for q in range(4): add(drums, t0 + q * BEAT, TB2, 0.35)
+        add(drums, t0 + 3.5 * BEAT, TB3, 0.2)
 
 # riser + golpe en cada cambio de sección; golpe inicial
 for s in secs[1:]:
@@ -164,9 +139,9 @@ guardar("musica.wav", musica); guardar("sfx.wav", sfx)
 
 # ------------------------------------------------ mezcla con ffmpeg
 fc = (
-    "[0]highpass=f=90,equalizer=f=3000:t=q:w=1:g=3,equalizer=f=200:t=q:w=1:g=2,"
-    "acompressor=threshold=-20dB:ratio=4:attack=5:release=80:makeup=6dB,asplit=3[voz][sc1][sc2];"
-    "[1]volume=-12dB[m];[2]volume=-6dB[s];"
+    "[0]highpass=f=65,equalizer=f=160:t=q:w=1:g=2.5,equalizer=f=380:t=q:w=1.2:g=-2,equalizer=f=3500:t=q:w=1:g=2.5,highshelf=f=10000:g=1.5,deesser=i=0.4,"
+    "acompressor=threshold=-24dB:ratio=4:attack=4:release=90:makeup=5dB,asoftclip=type=atan:param=1.1,asplit=3[voz][sc1][sc2];"
+    "[1]volume=-18dB[m];[2]volume=-6dB[s];"
     "[m][sc1]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[md];"
     "[s][sc2]sidechaincompress=threshold=0.05:ratio=4:attack=10:release=250[sd];"
     "[voz][md][sd]amix=inputs=3:normalize=0,alimiter=limit=0.9,loudnorm=I=-14:TP=-1.5:LRA=11[o]"
