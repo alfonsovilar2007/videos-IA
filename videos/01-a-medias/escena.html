@@ -605,7 +605,7 @@ function renderAt(t) {
   if (t < 0.12) { g.fillStyle = `rgba(255,255,255,${1 - t / 0.12})`; g.fillRect(0, 0, W, H); }
   // fundido de entrada desde negro muy corto y cierre en negro al final
   if (t > T.total - 1.2) { g.fillStyle = `rgba(0,0,0,${clamp((t - (T.total - 1.2)) / 1.2, 0, 1)})`; g.fillRect(0, 0, W, H); }
-  subtitulos(g, t);
+  if (!window.SIN_SUBS) subtitulos(g, t);
 }
 window.renderAt = renderAt;
 window.planos = planos;
