@@ -12,6 +12,21 @@ Idioma: español de España.
 6. **Cierre que repite la frase del gancho** → bucle perfecto, la gente lo ve dos veces.
 - 30-37 s, ~3 palabras/s, un corte cada ~1,5 s, 3-4 escenarios, cambios de luz (día/noche) para marcar el paso del tiempo.
 
+## 0c. FORMATO "GUÍA PRÁCTICA / LO PEOR QUE PUEDES HACER" (reel viral del perro que se escapa, analizado tras el short 11)
+Transcripción completa en `referencias/reel_perro_escapa_transcripcion.txt`. 82 s, ~2,5 palabras/s, un solo narrador cercano en 2.ª persona ("tú").
+1. **Gancho (0-5 s)**: situación cotidiana + error común → "Si tu perro se te escapa, lo peor que puedes hacer es correr detrás de él." Imagen: el problema ya pasando (el perro huye, el dueño detrás).
+2. **Error 1 + consecuencia que escala (5-14 s)**: por qué empeora ("cree que es el mejor juego del mundo") → peligro (directo a la avenida, coche rojo).
+3. **Error 2 + consecuencia (14-24 s)**: "regañarlo cuando vuelve" → "la próxima vez ya no vuelve".
+4. **Solución en pasos cortos (24-45 s)**: verbos en imperativo (agáchate, voz alegre, aplaude, corre hacia el otro lado, sacude la bolsa) y el porqué de cada uno.
+5. **Re-gancho a mitad (45-55 s)**: "Lo que casi nadie sabe es que…" + truco contraintuitivo (no mirarle de frente, ponerse de lado).
+6. **Cierre del proceso (55-62 s)**: qué hacer cuando llega (no agarrar del collar, premio, caricia, correa).
+7. **Remate emocional/humor (62-70 s)**: "te mira como si el perdido fueras tú".
+8. **Resumen exprés (70-77 s)**: "No lo correteas ni lo regañas. Te agachas, lo llamas contento y corres para el otro lado", repitiendo los planos clave con una X roja en los errores.
+9. **Cierre que invita a guardar (77-82 s)**: "la próxima vez que se quede abierta la puerta de la calle, recuerda."
+**Visual**: dibujo plano tipo cómic (cel shading, colores pastel, contorno fino), casas rosas/azules/verdes, cámara cenital o en picado que sigue la acción, pocos cortes duros (~6 en 82 s; el ritmo lo dan la animación y los movimientos de cámara). Personaje sin cara (gorra roja), el perro muy expresivo.
+**Texto en pantalla**: solo la **palabra clave** de cada frase, arriba (y ≈ 3-5 %), en minúsculas gruesas con borde: **rojo = error**, **amarillo = lo que hay que hacer**, **morado = resumen**. Bocadillos de cómic pequeños ("¡CANELA!", "¡MAL HECHO!", "¡VAMOS A PASEAR!", "¿DÓNDE ANDABAS?"), flechas de trayectoria discontinuas rojas, X roja en lo incorrecto, "?" y "!" sobre el perro.
+**Por qué funciona**: utilidad (se guarda y se comparte), miedo real y cotidiano, enfoque "errores que todos cometemos", un truco que casi nadie sabe a mitad, final emotivo y resumen para recordar.
+
 ## 0. Flujo de trabajo
 1. Investigar el tema y comprobar con búsquedas cada fecha, nombre, cifra y lugar. Si no se confirma, no se usa.
 2. Entregar el guion **plano a plano en una tabla** (segundo, imagen, voz, personaje, texto en pantalla) y **ESPERAR el OK** antes de animar.
