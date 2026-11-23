@@ -5,3 +5,4 @@ __pycache__/
 *.wav
 videos/*/tmp/
 videos/*/salida/*.mp4
+videos/*/salida/*.m4a

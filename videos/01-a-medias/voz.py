@@ -6,8 +6,8 @@ import edge_tts
 AQUI = os.path.dirname(os.path.abspath(__file__)); TMP = f"{AQUI}/tmp"
 src = open(f"{AQUI}/../../guiones/01-guion.py").read().split("WPM =")[0]
 ns = {}; exec(src, ns); S = ns["S"]
-VOZ, RATE, PITCH = "es-ES-AlvaroNeural", "+8%", "-6Hz"
-INICIO, PAUSA, PAUSA_SECCION = 0.6, 0.7, 2.5
+VOZ, RATE, PITCH = "es-ES-AlvaroNeural", "+22%", "-6Hz"
+INICIO, PAUSA, PAUSA_SECCION = 0.6, 0.45, 2.0
 filas = [(si, nombre, voz, img, txt) for si,(nombre, fs) in enumerate(S) for (voz,img,txt) in fs]
 
 async def una(i, voz, sem):
