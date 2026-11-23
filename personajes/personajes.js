@@ -357,3 +357,24 @@ Object.assign(PRESETS, {
 });
 PRESETS.mendeleiev_serio = Object.assign({}, PRESETS.mendeleiev, { expr: 'neutral', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]] });
 PRESETS.lecoq_mira = Object.assign({}, PRESETS.lecoq, { expr: 'neutral', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]], objeto: '' });
+
+// ---------- Short "Si alguien se atraganta" (formato guía práctica) ----------
+const MELENA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-72,10 C-84,-70 -44,-104 4,-100 C50,-100 84,-66 74,10 C78,50 70,80 60,96 L40,96 C58,40 64,-20 44,-56 C14,-46 -26,-48 -58,-40 C-64,10 -60,70 -44,96 L-64,96 C-80,70 -80,40 -72,10Z" fill="#7a3f22"/></g>`;
+const VESTIDO = c => `<path d="M-52,-170 l-30,140 q82,22 164,0 l-30,-140z" fill="${c}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/><path d="M-36,-150 q36,10 72,0" fill="none" stroke="#ffffff" stroke-width="5" opacity=".6"/>`;
+Object.assign(PRESETS, {
+  amiga: { expr: 'eureka', pantalon: '#F2C14E', torso: '#F2C14E', manga: '#F2C14E',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: VESTIDO('#F2C14E'), cabeza: MELENA },
+});
+PRESETS.amiga_tose = Object.assign({}, PRESETS.amiga, { expr: 'preocupado', brazoD: 'M46,-250 q40,-10 10,-40', manos: [[-80, -136]], cabeza: PRESETS.amiga.cabeza + `<circle cx="6" cy="34" r="18" fill="${SKIN}" stroke="${INK}" stroke-width="6"/>` });
+PRESETS.amiga_ahoga = Object.assign({}, PRESETS.amiga, { expr: 'sorprendido', brazoI: 'M-46,-250 q-6,-20 22,-14', brazoD: 'M46,-250 q6,-20 -22,-14', manos: [[-24, -262], [24, -262]] });
+PRESETS.amiga_feliz = Object.assign({}, PRESETS.amiga, { expr: 'eureka', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+PRESETS.amiga_sola = Object.assign({}, PRESETS.amiga, { expr: 'preocupado', brazoI: 'M-46,-250 q20,50 40,40', brazoD: 'M46,-250 q-20,50 -40,40', manos: [[-6, -212], [6, -212]] });
+PRESETS.toni_golpe = Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoD: 'M46,-250 q60,-30 70,-110', manos: [[-90, -136], [116, -360]], objeto: '' });
+PRESETS.toni_anima = Object.assign({}, PRESETS.toni, { expr: 'sorprendido', brazoI: 'M-46,-250 q-50,-10 -66,-70', brazoD: 'M46,-250 q50,-10 66,-70', manos: [[-112, -320], [112, -320]], objeto: '' });
+PRESETS.toni_movil = Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoD: 'M46,-250 q40,-40 10,-110', manos: [[-90, -136], [56, -360]], objeto: `<g transform="translate(64,-380) rotate(15)"><rect x="-14" y="-32" width="28" height="56" rx="6" fill="#222" stroke="${INK}" stroke-width="4"/><rect x="-9" y="-24" width="18" height="36" fill="#6fb8ff"/></g>` });
+PRESETS.toni_feliz = Object.assign({}, PRESETS.toni, { expr: 'eureka', objeto: '' });
+// maniobra de compresiones: Toni detrás abrazando a la amiga, puño encima del ombligo
+PRESETS.heimlich = { svg: personaje(62, -4, 1, Object.assign({}, PRESETS.toni, { expr: 'preocupado', brazoI: 'M-46,-250 q0,0 0,0', brazoD: 'M46,-250 q0,0 0,0', manos: [], objeto: '' }))
+  + personaje(-6, 0, 1, Object.assign({}, PRESETS.amiga, { expr: 'sorprendido', brazoI: 'M-46,-250 q-30,40 -50,60', brazoD: 'M46,-250 q30,40 50,60', manos: [[-96, -190], [96, -190]] }))
+  + `<path d="M-40,-236 q20,40 40,46 M150,-236 q-60,40 -144,46" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="M-40,-236 q20,40 40,46 M150,-236 q-60,40 -144,46" fill="none" stroke="#FAFAF7" stroke-width="15" stroke-linecap="round"/><circle cx="0" cy="-192" r="20" fill="${SKIN}" stroke="${INK}" stroke-width="6"/><circle cx="12" cy="-186" r="16" fill="${SKIN}" stroke="${INK}" stroke-width="5"/>` };

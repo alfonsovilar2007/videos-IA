@@ -1,0 +1,13 @@
+narrador|Si alguien se atraganta y todavía tose, lo peor que puedes hacer es darle golpes en la espalda.
+narrador|Si tose, el aire todavía pasa. Y con los golpes, el trozo puede bajar más… y taparlo todo.
+narrador|Lo segundo: meterle los dedos en la boca. Empujas la comida hacia dentro sin verla.
+narrador|Primero, anímale a toser.
+toni[,,0.1]|¡Tose! ¡Tose fuerte!
+narrador|La tos es lo que mejor funciona. Pero si ya no puede toser, ni hablar, ni respirar… llama al ciento doce.
+narrador|Ponte a su lado, inclínale hacia delante y dale cinco golpes fuertes entre los omóplatos.
+narrador|Si no sale, ponte detrás, el puño encima del ombligo, y cinco compresiones hacia dentro y hacia arriba. Y vas alternando: cinco y cinco.
+narrador|Lo que casi nadie sabe es que, si estás solo, puedes hacértelo tú mismo contra el respaldo de una silla.
+narrador|Y si se desmaya, empieza la reanimación hasta que llegue la ambulancia.
+joven[,,0.1]|¡Uf… gracias! ¡Me has salvado!
+narrador|Así que no le golpeas mientras tose, ni le metes los dedos. Le animas a toser, y si no puede: cinco golpes y cinco compresiones.
+narrador|Y la próxima vez que estés comiendo con amigos… recuérdalo.
