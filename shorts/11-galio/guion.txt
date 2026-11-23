@@ -1,0 +1,9 @@
+narrador|Este metal se derrite en tu mano.
+toni[,,0.1]|¡Eh, eh, eh! ¡Que se me escapa!
+narrador|Es galio. Parece un metal normal, pero se funde a menos de treinta grados… y tu mano está más caliente que eso.
+narrador|¿El truco? Sus átomos van de dos en dos, y las parejas apenas se agarran entre sí. Con un poco de calor, se sueltan.
+narrador|Y si lo pones sobre aluminio, se cuela por dentro y lo deja tan frágil que se parte con las manos.
+toni[,,0.1]|¿Cómo que se ha roto?
+narrador|Lo más loco: en 1871, Mendeléiev predijo que este metal existía… sin haberlo visto jamás.
+narrador|Cuando lo descubrieron en Francia, le corrigió las medidas a su descubridor. Y tenía razón.
+narrador|Un metal que se derrite… en tu mano.

@@ -16,6 +16,7 @@ VOCES = {
     "roosevelt": ("es-ES-AlvaroNeural", "-4%", "-9Hz"),   # enérgico y rotundo, más grave que el narrador
     "marinero": ("es-ES-AlvaroNeural", "+18%", "+6Hz"),   # gritando, urgente
     "soldado":  ("es-ES-AlvaroNeural", "+16%", "+9Hz"),   # soldado joven, alarmado
+    "toni":     ("es-ES-AlvaroNeural", "+14%", "+10Hz"),  # Toni, la mascota: nervioso y gracioso
     "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
 # Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;

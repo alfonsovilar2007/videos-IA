@@ -336,3 +336,24 @@ PRESETS.buey = { svg: `<g stroke="${INK}" stroke-width="6" stroke-linejoin="roun
   <path d="M92,-200 q30,-10 40,20" fill="#8a6a4a"/>
   <rect x="70" y="-232" width="30" height="96" rx="8" fill="#6a4a2a"/>
 </g>` };
+
+// ---------- Short "El metal que se derrite en tu mano" (galio) ----------
+PRESETS.toni_manos = Object.assign({}, PRESETS.toni, { expr: 'sorprendido', brazoI: 'M-46,-250 q10,50 34,56', brazoD: 'M46,-250 q-10,50 -34,56', manos: [[-14, -194], [14, -194]], objeto: '' });
+PRESETS.toni_barra = Object.assign({}, PRESETS.toni, { expr: 'eureka', brazoI: 'M-46,-250 q-34,30 -50,24', brazoD: 'M46,-250 q34,30 50,24', manos: [[-96, -226], [96, -226]], objeto: '' });
+PRESETS.toni_piensa = Object.assign({}, PRESETS.toni, { expr: 'eureka', brazoD: 'M46,-250 q50,0 30,-90', manos: [[-90, -136], [76, -340]], objeto: '' });
+const PELO_MENDE = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-74,-6 C-110,-60 -96,-120 -40,-112 C-20,-140 30,-140 46,-112 C100,-120 112,-60 76,-6 C70,-50 50,-70 30,-74 C10,-60 -14,-60 -30,-74 C-50,-70 -70,-50 -74,-6Z" fill="#c9c4bc"/></g>`;
+const BARBAZA = `<path d="M-62,20 q62,30 124,0 q10,60 -20,120 q-20,40 -42,64 q-22,-24 -42,-64 q-30,-60 -20,-120z" fill="#bdb6ac" stroke="${INK}" stroke-width="5"/><path d="M-34,16 q17,-12 34,-2 q17,-10 34,2 q-16,12 -34,4 q-18,8 -34,-4z" fill="#a8a096" stroke="${INK}" stroke-width="3"/>`;
+const PELO_LECOQ = `<path d="M-68,-28 C-74,-82 -30,-100 4,-96 C40,-96 72,-76 68,-30 C40,-60 -10,-70 -30,-48 C-46,-60 -60,-50 -68,-28Z" fill="#3a2a1e" stroke="${INK}" stroke-width="5"/>`;
+const CARTA = `<g stroke="${INK}" stroke-width="4"><rect x="-34" y="-46" width="68" height="84" rx="3" fill="#F7F1E1"/><path d="M-24,-30 h48 M-24,-18 h40 M-24,-6 h48 M-24,6 h30 M-24,18 h44" stroke="#5a6a8a" stroke-width="3"/></g>`;
+Object.assign(PRESETS, {
+  mendeleiev: { expr: 'eureka', pantalon: '#2a2a30', torso: '#3a3530', manga: '#3a3530',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-20 90,-90', manos: [[-80, -136], [136, -340]],
+    detalle: `<path d="M-50,-268 l50,80 50,-80" fill="none" stroke="#22201c" stroke-width="8"/><path d="M-60,-160 l-8,110 q68,16 136,0 l-8,-110z" fill="#3a3530" stroke="${INK}" stroke-width="6"/>`,
+    cabeza: PELO_MENDE + BARBAZA },
+  lecoq: { expr: 'sorprendido', pantalon: '#2a2a34', torso: '#2f3346', manga: '#2f3346',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,10 50,-50', manos: [[-80, -136], [96, -300]],
+    detalle: `<path d="M-16,-266 l16,26 16,-26" fill="#FAFAF5" stroke="${INK}" stroke-width="4"/><path d="M-10,-246 l10,8 10,-8 -10,-8z" fill="#8E2A2A"/>`,
+    objeto: `<g transform="translate(96,-330)">${CARTA}</g>`, cabeza: PELO_LECOQ + BIGOTE('#3a2a1e') },
+});
+PRESETS.mendeleiev_serio = Object.assign({}, PRESETS.mendeleiev, { expr: 'neutral', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]] });
+PRESETS.lecoq_mira = Object.assign({}, PRESETS.lecoq, { expr: 'neutral', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]], objeto: '' });
