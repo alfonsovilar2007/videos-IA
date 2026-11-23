@@ -111,6 +111,14 @@ Referencia: youtube.com/shorts/i4hYq1oSXTg. Parecerse en la animación **sin per
 - Repasar cada punto; si falla, corregir y volver a renderizar.
 - Al terminar, **nota del 1 al 10** en gancho, voces, ritmo, calidad visual, subtítulos y final, y qué mejoraría.
 
+## 10b. NADA DE CHAPUZAS FÍSICAS (pedido tras el short 12: "meter al personaje debajo de tierra")
+- **Nunca hundir un personaje en el suelo** para fingir que está de rodillas o sentado: se dibuja la **pose de verdad** en `personajes.js` (de rodillas, sentado, tumbado de lado…).
+- **Nada de sprites tumbados en plano** (un dibujo plano tirado en el suelo queda raro): para tumbado se hace una pose dibujada de perfil o se encuadra para que no se note.
+- Nada atraviesa nada: personajes, mesas, sillas y objetos no se cruzan; los pies siempre apoyados en el suelo (ni flotando ni enterrados).
+- Cada acción la hace la pose correcta: si el guion dice "de rodillas haciendo la reanimación", el dibujo está de rodillas con las manos en el pecho, no un personaje genérico movido.
+- Todos los personajes que hablan o importan salen **enteros en cuadro**.
+- En la revisión, mirar **cada plano a tamaño completo** buscando estas chapuzas antes de renderizar; si hay alguna, se arregla antes de entregar.
+
 ## Herramientas
 - Voz: `tools/voz.py` + `tools/apretar_pausas.py`. Banda sonora: `tools/banda_sonora.py`. Render: `tools/render_film.js`. Personajes: `personajes/personajes.js` + `tools/sprite.js`.
 - Drive (si se pide): el conector solo admite ~3 MB; versión 1080p a dos pasadas `-preset veryslow -tune animation -b:v 540k` + AAC 64k.
