@@ -1,0 +1,716 @@
+[
+{
+"t0": 0.49,
+"t1": 0.751,
+"w": "Si",
+"quien": "narrador"
+},
+{
+"t0": 0.763,
+"t1": 1.058,
+"w": "pagas",
+"quien": "narrador"
+},
+{
+"t0": 1.07,
+"t1": 1.229,
+"w": "por",
+"quien": "narrador"
+},
+{
+"t0": 1.24,
+"t1": 1.433,
+"w": "cada",
+"quien": "narrador"
+},
+{
+"t0": 1.445,
+"t1": 1.66,
+"w": "rata",
+"quien": "narrador"
+},
+{
+"t0": 1.672,
+"t1": 2.058,
+"w": "muerta…",
+"quien": "narrador"
+},
+{
+"t0": 2.285,
+"t1": 2.729,
+"w": "acabarás",
+"quien": "narrador"
+},
+{
+"t0": 2.74,
+"t1": 2.888,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 2.899,
+"t1": 3.058,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 3.07,
+"t1": 3.604,
+"w": "ratas.",
+"quien": "narrador"
+},
+{
+"t0": 3.924,
+"t1": 4.367,
+"w": "Hanói,",
+"quien": "narrador"
+},
+{
+"t0": 4.605,
+"t1": 5.685,
+"w": "1902.",
+"quien": "narrador"
+},
+{
+"t0": 5.945,
+"t1": 6.218,
+"w": "Las",
+"quien": "narrador"
+},
+{
+"t0": 6.229,
+"t1": 6.831,
+"w": "alcantarillas",
+"quien": "narrador"
+},
+{
+"t0": 6.843,
+"t1": 7.104,
+"w": "están",
+"quien": "narrador"
+},
+{
+"t0": 7.115,
+"t1": 7.343,
+"w": "llenas",
+"quien": "narrador"
+},
+{
+"t0": 7.354,
+"t1": 7.422,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 7.434,
+"t1": 7.843,
+"w": "ratas,",
+"quien": "narrador"
+},
+{
+"t0": 8.07,
+"t1": 8.104,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 8.115,
+"t1": 8.263,
+"w": "los",
+"quien": "narrador"
+},
+{
+"t0": 8.275,
+"t1": 8.752,
+"w": "franceses",
+"quien": "narrador"
+},
+{
+"t0": 8.763,
+"t1": 9.184,
+"w": "contratan",
+"quien": "narrador"
+},
+{
+"t0": 9.195,
+"t1": 9.854,
+"w": "cazadores.",
+"quien": "narrador"
+},
+{
+"t0": 10.174,
+"t1": 10.379,
+"w": "En",
+"quien": "narrador"
+},
+{
+"t0": 10.39,
+"t1": 10.515,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 10.526,
+"t1": 10.754,
+"w": "solo",
+"quien": "narrador"
+},
+{
+"t0": 10.765,
+"t1": 10.97,
+"w": "día",
+"quien": "narrador"
+},
+{
+"t0": 10.981,
+"t1": 11.299,
+"w": "cazan",
+"quien": "narrador"
+},
+{
+"t0": 11.31,
+"t1": 11.481,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 11.492,
+"t1": 11.56,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 11.572,
+"t1": 11.822,
+"w": "veinte",
+"quien": "narrador"
+},
+{
+"t0": 11.833,
+"t1": 12.185,
+"w": "mil.",
+"quien": "narrador"
+},
+{
+"t0": 12.445,
+"t1": 12.707,
+"w": "Pero",
+"quien": "narrador"
+},
+{
+"t0": 12.718,
+"t1": 13.014,
+"w": "siguen",
+"quien": "narrador"
+},
+{
+"t0": 13.025,
+"t1": 13.605,
+"w": "saliendo.",
+"quien": "narrador"
+},
+{
+"t0": 13.925,
+"t1": 14.231,
+"w": "Así",
+"quien": "narrador"
+},
+{
+"t0": 14.243,
+"t1": 14.345,
+"w": "que",
+"quien": "narrador"
+},
+{
+"t0": 14.356,
+"t1": 14.459,
+"w": "lo",
+"quien": "narrador"
+},
+{
+"t0": 14.47,
+"t1": 14.675,
+"w": "abren",
+"quien": "narrador"
+},
+{
+"t0": 14.686,
+"t1": 14.743,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 14.754,
+"t1": 14.97,
+"w": "todo",
+"quien": "narrador"
+},
+{
+"t0": 14.981,
+"t1": 15.05,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 15.061,
+"t1": 15.39,
+"w": "mundo:",
+"quien": "narrador"
+},
+{
+"t0": 15.595,
+"t1": 15.709,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 15.72,
+"t1": 16.106,
+"w": "céntimo",
+"quien": "narrador"
+},
+{
+"t0": 16.118,
+"t1": 16.254,
+"w": "por",
+"quien": "narrador"
+},
+{
+"t0": 16.265,
+"t1": 16.459,
+"w": "cada",
+"quien": "narrador"
+},
+{
+"t0": 16.47,
+"t1": 16.663,
+"w": "cola",
+"quien": "narrador"
+},
+{
+"t0": 16.675,
+"t1": 16.754,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 16.765,
+"t1": 17.231,
+"w": "rata.",
+"quien": "narrador"
+},
+{
+"t0": 17.551,
+"t1": 17.87,
+"w": "¡Solo",
+"quien": "funcionario"
+},
+{
+"t0": 17.883,
+"t1": 17.998,
+"w": "la",
+"quien": "funcionario"
+},
+{
+"t0": 18.011,
+"t1": 18.431,
+"w": "cola!",
+"quien": "funcionario"
+},
+{
+"t0": 18.691,
+"t1": 18.998,
+"w": "¡Nada",
+"quien": "funcionario"
+},
+{
+"t0": 19.01,
+"t1": 19.112,
+"w": "de",
+"quien": "funcionario"
+},
+{
+"t0": 19.125,
+"t1": 19.482,
+"w": "ratas",
+"quien": "funcionario"
+},
+{
+"t0": 19.495,
+"t1": 19.597,
+"w": "en",
+"quien": "funcionario"
+},
+{
+"t0": 19.61,
+"t1": 19.699,
+"w": "mi",
+"quien": "funcionario"
+},
+{
+"t0": 19.712,
+"t1": 20.375,
+"w": "despacho!",
+"quien": "funcionario"
+},
+{
+"t0": 20.635,
+"t1": 21.078,
+"w": "Llegan",
+"quien": "narrador"
+},
+{
+"t0": 21.09,
+"t1": 21.374,
+"w": "colas",
+"quien": "narrador"
+},
+{
+"t0": 21.385,
+"t1": 21.419,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 21.431,
+"t1": 21.999,
+"w": "montones…",
+"quien": "narrador"
+},
+{
+"t0": 22.192,
+"t1": 22.362,
+"w": "pero",
+"quien": "narrador"
+},
+{
+"t0": 22.374,
+"t1": 22.51,
+"w": "por",
+"quien": "narrador"
+},
+{
+"t0": 22.521,
+"t1": 22.601,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 22.612,
+"t1": 22.851,
+"w": "calle",
+"quien": "narrador"
+},
+{
+"t0": 22.862,
+"t1": 23.249,
+"w": "empiezan",
+"quien": "narrador"
+},
+{
+"t0": 23.26,
+"t1": 23.306,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 23.317,
+"t1": 23.612,
+"w": "correr",
+"quien": "narrador"
+},
+{
+"t0": 23.624,
+"t1": 23.919,
+"w": "ratas",
+"quien": "narrador"
+},
+{
+"t0": 23.931,
+"t1": 24.101,
+"w": "sin",
+"quien": "narrador"
+},
+{
+"t0": 24.112,
+"t1": 24.544,
+"w": "cola.",
+"quien": "narrador"
+},
+{
+"t0": 24.864,
+"t1": 25.16,
+"w": "Les",
+"quien": "narrador"
+},
+{
+"t0": 25.171,
+"t1": 25.546,
+"w": "cortaban",
+"quien": "narrador"
+},
+{
+"t0": 25.557,
+"t1": 25.66,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 25.671,
+"t1": 25.898,
+"w": "cola",
+"quien": "narrador"
+},
+{
+"t0": 25.91,
+"t1": 25.944,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 25.955,
+"t1": 26.091,
+"w": "las",
+"quien": "narrador"
+},
+{
+"t0": 26.103,
+"t1": 26.637,
+"w": "soltaban,",
+"quien": "narrador"
+},
+{
+"t0": 26.819,
+"t1": 26.978,
+"w": "para",
+"quien": "narrador"
+},
+{
+"t0": 26.989,
+"t1": 27.08,
+"w": "que",
+"quien": "narrador"
+},
+{
+"t0": 27.091,
+"t1": 27.466,
+"w": "siguieran",
+"quien": "narrador"
+},
+{
+"t0": 27.478,
+"t1": 27.819,
+"w": "teniendo",
+"quien": "narrador"
+},
+{
+"t0": 27.83,
+"t1": 28.364,
+"w": "crías.",
+"quien": "narrador"
+},
+{
+"t0": 28.684,
+"t1": 28.832,
+"w": "Y",
+"quien": "narrador"
+},
+{
+"t0": 28.843,
+"t1": 28.877,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 28.889,
+"t1": 29.036,
+"w": "las",
+"quien": "narrador"
+},
+{
+"t0": 29.048,
+"t1": 29.48,
+"w": "afueras,",
+"quien": "narrador"
+},
+{
+"t0": 29.74,
+"t1": 29.831,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 29.842,
+"t1": 30.24,
+"w": "inspector",
+"quien": "narrador"
+},
+{
+"t0": 30.251,
+"t1": 30.615,
+"w": "encuentra",
+"quien": "narrador"
+},
+{
+"t0": 30.626,
+"t1": 31.251,
+"w": "granjas.",
+"quien": "narrador"
+},
+{
+"t0": 31.511,
+"t1": 31.716,
+"w": "De",
+"quien": "narrador"
+},
+{
+"t0": 31.727,
+"t1": 32.227,
+"w": "ratas.",
+"quien": "narrador"
+},
+{
+"t0": 32.547,
+"t1": 32.786,
+"w": "Se",
+"quien": "narrador"
+},
+{
+"t0": 32.797,
+"t1": 33.013,
+"w": "llama",
+"quien": "narrador"
+},
+{
+"t0": 33.024,
+"t1": 33.354,
+"w": "efecto",
+"quien": "narrador"
+},
+{
+"t0": 33.365,
+"t1": 33.683,
+"w": "cobra:",
+"quien": "narrador"
+},
+{
+"t0": 33.911,
+"t1": 34.013,
+"w": "si",
+"quien": "narrador"
+},
+{
+"t0": 34.024,
+"t1": 34.377,
+"w": "premias",
+"quien": "narrador"
+},
+{
+"t0": 34.388,
+"t1": 34.467,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 34.479,
+"t1": 34.888,
+"w": "resultado",
+"quien": "narrador"
+},
+{
+"t0": 34.899,
+"t1": 35.456,
+"w": "equivocado,",
+"quien": "narrador"
+},
+{
+"t0": 35.706,
+"t1": 35.786,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 35.797,
+"t1": 36.081,
+"w": "gente",
+"quien": "narrador"
+},
+{
+"t0": 36.092,
+"t1": 36.445,
+"w": "fabrica",
+"quien": "narrador"
+},
+{
+"t0": 36.456,
+"t1": 36.536,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 36.547,
+"t1": 37.104,
+"w": "problema.",
+"quien": "narrador"
+},
+{
+"t0": 37.424,
+"t1": 37.64,
+"w": "Por",
+"quien": "narrador"
+},
+{
+"t0": 37.651,
+"t1": 37.958,
+"w": "eso,",
+"quien": "narrador"
+},
+{
+"t0": 38.197,
+"t1": 38.322,
+"w": "en",
+"quien": "narrador"
+},
+{
+"t0": 38.333,
+"t1": 38.674,
+"w": "Hanói,",
+"quien": "narrador"
+},
+{
+"t0": 38.89,
+"t1": 39.015,
+"w": "las",
+"quien": "narrador"
+},
+{
+"t0": 39.026,
+"t1": 39.287,
+"w": "ratas",
+"quien": "narrador"
+},
+{
+"t0": 39.299,
+"t1": 39.458,
+"w": "sin",
+"quien": "narrador"
+},
+{
+"t0": 39.469,
+"t1": 39.753,
+"w": "cola…",
+"quien": "narrador"
+},
+{
+"t0": 39.958,
+"t1": 40.322,
+"w": "siguieron",
+"quien": "narrador"
+},
+{
+"t0": 40.333,
+"t1": 40.947,
+"w": "corriendo.",
+"quien": "narrador"
+}
+]

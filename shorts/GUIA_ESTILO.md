@@ -31,6 +31,14 @@ Transcripción completa en `referencias/reel_perro_escapa_transcripcion.txt`. 82
 Transcripción en `referencias/reel_serpiente_serrucho_transcripcion.txt`. 1) Empieza en plena fábula, sin presentar (animal + objeto). 2) Remate de la fábula en una frase ("No fue el serrucho, fue su reacción"). 3) Nombre del concepto ("efecto caballo salvaje", "indefensión aprendida") + fórmula corta. 4) "Nos pasa a todos": 2-3 ejemplos cotidianos. 5) Moraleja que vuelve a la imagen del principio ("acuérdate de la serpiente / del elefante").
 **Montaje**: animación en la mitad de arriba (atardecer naranja-morado, siluetas, sin cortes duros), mitad de abajo negra con **titular amarillo grande** (2-3 palabras, mayúsculas) + línea blanca pequeña; arriba subtítulo tipo **karaoke** con la palabra que suena resaltada en amarillo. Tono tranquilo. Máximo 40 s (pedido del dueño).
 
+## 0e. ESTILO PRINCIPAL = MODELO RICKS (elegido por el dueño) + "historia que escala"
+Referencia analizada: Ricks Clips "The Instinct That Makes You Crash" (transcripción en `referencias/ricks_target_fixation_transcripcion.txt`).
+1. Gancho absurdo/contraintuitivo en 1 frase ("Si plantas un árbol junto a una carretera vacía, los coches irán directos a él").
+2. Historia que **escala**: cada frase sube un escalón con un gag visual nuevo (carteles, números que cambian, objetos absurdos, personajes que reaccionan) y un remate irónico.
+3. Pregunta ("¿Cómo puede seguir pasando?") → **nombre del fenómeno** real → explicación en 2-3 frases.
+4. Cierre que vuelve a la imagen del principio (bucle).
+**Dopamina constante**: plano nuevo cada 1-2 s, empujón de cámara en cada palabra clave, pops de texto (+1¢, ?, ¡TRIS!), contadores que suben, objetos que saltan, temblor en cada golpe. Escenario 3D lo más realista posible, personajes de dibujo protagonistas. Para TikTok, hasta ~45 s.
+
 ## 0. Flujo de trabajo
 1. Investigar el tema y comprobar con búsquedas cada fecha, nombre, cifra y lugar. Si no se confirma, no se usa.
 2. Entregar el guion **plano a plano en una tabla** (segundo, imagen, voz, personaje, texto en pantalla) y **ESPERAR el OK** antes de animar.

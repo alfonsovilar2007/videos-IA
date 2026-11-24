@@ -437,3 +437,48 @@ PRESETS.toni_examen = Object.assign({}, PRESETS.toni, { expr: 'preocupado', braz
 PRESETS.toni_mira = Object.assign({}, PRESETS.toni, { expr: 'neutral', objeto: '', brazoD: 'M46,-250 q30,60 34,112', manos: [[-90, -136], [80, -136]] });
 PRESETS.toni_nino = Object.assign({}, PRESETS.toni, { expr: 'preocupado', objeto: '', brazoD: 'M46,-250 q30,60 34,112', manos: [[-90, -136], [80, -136]], torso: '#E9C46A', manga: '#E9C46A', detalle: '' });
 PRESETS.adulto_senala = Object.assign({}, PRESETS.directivo, { expr: 'preocupado', brazoD: 'M46,-250 q60,0 100,20', manos: [[-80, -136], [146, -230]] });
+
+// ---------- Short "Las ratas sin cola" (Hanói, 1902) ----------
+function rata({ cola = true, esc = 1, bebe = false, susto = false } = {}) {
+  const c = bebe ? '#e8a8a8' : '#8a7a70', c2 = bebe ? '#f2c0c0' : '#a89888';
+  let g = `<g transform="translate(-20,0) scale(${esc})" stroke="${INK}" stroke-linejoin="round" stroke-linecap="round">`;
+  g += `<ellipse cx="0" cy="2" rx="110" ry="9" fill="#000" opacity=".15" stroke="none"/>`;
+  if (cola) g += `<path d="M-80,-40 q-60,10 -80,-30 q-14,-30 -40,-20" fill="none" stroke="${INK}" stroke-width="13"/><path d="M-80,-40 q-60,10 -80,-30 q-14,-30 -40,-20" fill="none" stroke="#e8a0a0" stroke-width="7"/>`;
+  else g += `<path d="M-84,-42 l-14,-4" stroke="${INK}" stroke-width="13"/><path d="M-84,-42 l-14,-4" stroke="#e8a0a0" stroke-width="7"/><path d="M-100,-52 l-10,-8 M-104,-40 l-12,0" stroke="#E8322A" stroke-width="4"/>`;
+  for (const x of [-50, 40]) g += `<path d="M${x},-20 l-6,20 M${x + 18},-20 l6,20" stroke="${INK}" stroke-width="12"/><path d="M${x},-20 l-6,20 M${x + 18},-20 l6,20" stroke="#e8a0a0" stroke-width="6"/>`;
+  g += `<path d="M-90,-40 C-90,-100 20,-110 60,-70 C90,-60 120,-46 110,-26 C100,-14 60,-12 40,-14 L-60,-14 C-84,-14 -90,-24 -90,-40Z" fill="${c}" stroke-width="6"/>`;
+  g += `<ellipse cx="30" cy="-86" rx="22" ry="26" fill="${c2}" stroke-width="5"/><ellipse cx="30" cy="-84" rx="12" ry="15" fill="#e8a0a0" stroke="none"/>`;
+  g += `<circle cx="112" cy="-30" r="8" fill="#e86a7a" stroke-width="3"/>`;
+  g += susto ? `<ellipse cx="72" cy="-58" rx="9" ry="11" fill="#fff" stroke-width="3"/><circle cx="74" cy="-57" r="4" fill="${INK}" stroke="none"/>` : `<ellipse cx="74" cy="-58" rx="6" ry="8" fill="${INK}" stroke="none"/><circle cx="76" cy="-61" r="2.2" fill="#fff" stroke="none"/>`;
+  g += `<path d="M104,-36 l34,-10 M104,-30 l36,0 M104,-24 l32,8" stroke="${INK}" stroke-width="2.5"/>`;
+  return g + '</g>';
+}
+PRESETS.rata = { svg: rata() };
+PRESETS.rata_sin_cola = { svg: rata({ cola: false }) };
+PRESETS.rata_bebe = { svg: rata({ bebe: true, esc: .55 }) };
+PRESETS.rata_susto = { svg: rata({ susto: true }) };
+const NON_LA = c => `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-128,-26 L0,-150 L128,-26 Q0,-6 -128,-26Z" fill="${c}"/><path d="M-90,-42 L0,-128 M90,-42 L0,-128 M-40,-24 L0,-128 M40,-24 L0,-128" stroke="#b89a58" stroke-width="3" fill="none"/><path d="M-60,-24 q-10,60 0,110 M60,-24 q10,60 0,110" stroke="#6a5030" stroke-width="2" fill="none" opacity=".5"/></g>`;
+const QUEPIS = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-58,-44 L-52,-126 L52,-126 L58,-44 Z" fill="#2a3a6a"/><rect x="-60" y="-62" width="120" height="18" fill="#c99a2e"/><path d="M-52,-126 L52,-126" stroke="#c99a2e" stroke-width="6"/><path d="M-66,-44 q66,-14 132,0 q-10,22 -66,24 q-56,-2 -66,-24z" fill="#111"/></g>`;
+const SALACOT = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-104,-34 q104,-36 208,0 q-104,22 -208,0z" fill="#efe8d4"/><path d="M-66,-44 q0,-80 66,-82 q66,2 66,82 q-66,16 -132,0z" fill="#f4eedc"/><path d="M-66,-50 q66,14 132,0" stroke="#8a6a3a" stroke-width="8" fill="none"/></g>`;
+const BIGOTE_FR = `<path d="M-46,16 q22,-16 46,-4 q24,-12 46,4 q10,6 18,-6 q-4,22 -26,16 q-20,-2 -38,-6 q-18,4 -38,6 q-22,6 -26,-16 q8,12 18,6z" fill="#5a3a22" stroke="${INK}" stroke-width="3.5"/>`;
+const FAROL = `<g stroke="${INK}" stroke-width="4"><path d="M0,-40 v-20" /><rect x="-16" y="-40" width="32" height="44" rx="5" fill="#ffe08a"/><path d="M-16,-40 h32 M-16,4 h32" stroke-width="7"/></g>`;
+const COLA_MANO = `<path d="M0,0 q30,40 10,90 q-10,30 16,50" fill="none" stroke="${INK}" stroke-width="12" stroke-linecap="round"/><path d="M0,0 q30,40 10,90 q-10,30 16,50" fill="none" stroke="#e8a0a0" stroke-width="6" stroke-linecap="round"/>`;
+const TIJERAS = `<g stroke="${INK}" stroke-width="4"><path d="M0,0 l46,-22 M0,0 l46,22" stroke="#c8ccd2" stroke-width="9"/><circle cx="-10" cy="-10" r="10" fill="none" stroke="#E8322A" stroke-width="6"/><circle cx="-10" cy="10" r="10" fill="none" stroke="#E8322A" stroke-width="6"/></g>`;
+Object.assign(PRESETS, {
+  funcionario: { expr: 'preocupado', pantalon: '#efe9dc', torso: '#f6f1e6', manga: '#f6f1e6',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 70,-110', manos: [[-80, -136], [116, -360]],
+    detalle: `<g fill="#c99a2e" stroke="${INK}" stroke-width="2"><circle cx="0" cy="-236" r="5"/><circle cx="0" cy="-210" r="5"/><circle cx="0" cy="-184" r="5"/></g><path d="M-50,-262 h100" stroke="#c99a2e" stroke-width="5"/>`,
+    cabeza: QUEPIS + BIGOTE_FR },
+  inspector: { expr: 'sorprendido', pantalon: '#c8b48a', torso: '#d8c49a', manga: '#d8c49a',
+    brazoI: 'M-46,-250 q-60,-10 -70,-80', brazoD: 'M46,-250 q60,-10 70,-80', manos: [[-116, -330], [116, -330]],
+    detalle: `<path d="M-30,-250 v40 M30,-250 v40" stroke="#a8946a" stroke-width="6"/>`, cabeza: SALACOT + BIGOTE('#6a4a2a') },
+  cazador: { expr: 'eureka', pantalon: '#2a3448', torso: '#3a4a6a', manga: '#3a4a6a',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q50,-10 60,-70', manos: [[-80, -136], [106, -320]],
+    objeto: `<g transform="translate(106,-320)">${FAROL}</g>`, cabeza: NON_LA('#e6cf8a') },
+});
+PRESETS.cazador_cola = Object.assign({}, PRESETS.cazador, { objeto: `<g transform="translate(106,-330)">${COLA_MANO}</g>`, brazoD: 'M46,-250 q50,-10 60,-80' });
+PRESETS.vecina_cola = Object.assign({}, PRESETS.cazador, { torso: '#5a8ac8', manga: '#5a8ac8', pantalon: '#2a2a34', expr: 'eureka', detalle: `<path d="M-50,-170 l-8,120 q58,16 116,0 l-8,-120z" fill="#5a8ac8" stroke="${INK}" stroke-width="6"/>`, objeto: `<g transform="translate(106,-330)">${COLA_MANO}</g>`, brazoD: 'M46,-250 q50,-10 60,-80', cabeza: NON_LA('#ecd89a') });
+PRESETS.cazador_tijeras = Object.assign({}, PRESETS.cazador, { expr: 'eureka', brazoD: 'M46,-250 q60,10 80,-20', manos: [[-80, -136], [126, -270]], objeto: `<g transform="translate(126,-270)">${TIJERAS}</g>` });
+PRESETS.granjero = Object.assign({}, PRESETS.cazador, { expr: 'eureka', torso: '#6a5a3a', manga: '#6a5a3a', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]], objeto: '', cabeza: NON_LA('#d8c07a') });
+PRESETS.funcionario_nariz = Object.assign({}, PRESETS.funcionario, { brazoD: 'M46,-250 q40,-20 10,-40', manos: [[-80, -136]], cabeza: QUEPIS + `<circle cx="6" cy="10" r="18" fill="${SKIN}" stroke="${INK}" stroke-width="6"/>` + BIGOTE_FR });
+PRESETS.cobra = { svg: `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="0" cy="2" rx="110" ry="10" fill="#000" opacity=".15" stroke="none"/><path d="M-100,-10 q60,-30 120,-6 q60,20 40,-40" fill="none" stroke="${INK}" stroke-width="40"/><path d="M-100,-10 q60,-30 120,-6 q60,20 40,-40" fill="none" stroke="#7aa63a" stroke-width="30"/><path d="M60,-56 q-20,-80 0,-150" fill="none" stroke="${INK}" stroke-width="44"/><path d="M60,-56 q-20,-80 0,-150" fill="none" stroke="#7aa63a" stroke-width="34"/><path d="M0,-200 q-60,-10 -60,-80 q20,-60 60,-60 q40,0 60,60 q0,70 -60,80z" fill="#8ab84a"/><path d="M0,-210 q-30,-10 -34,-60 q14,-30 34,-30 q20,0 34,30 q-4,50 -34,60z" fill="#e8d08a"/><ellipse cx="0" cy="-300" rx="40" ry="34" fill="#8ab84a"/><ellipse cx="-16" cy="-306" rx="8" ry="10" fill="#fff"/><circle cx="-14" cy="-305" r="5" fill="${INK}" stroke="none"/><ellipse cx="16" cy="-306" rx="8" ry="10" fill="#fff"/><circle cx="18" cy="-305" r="5" fill="${INK}" stroke="none"/><path d="M0,-270 v20 l-8,10 M0,-250 l8,10" stroke="#E8322A" stroke-width="4" fill="none"/></g>` };

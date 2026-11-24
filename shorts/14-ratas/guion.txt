@@ -1,0 +1,10 @@
+narrador|Si pagas por cada rata muerta… acabarás con más ratas.
+narrador|Hanói, 1902. Las alcantarillas están llenas de ratas, y los franceses contratan cazadores.
+narrador|En un solo día cazan más de veinte mil. Pero siguen saliendo.
+narrador|Así que lo abren a todo el mundo: un céntimo por cada cola de rata.
+funcionario[,,0.1]|¡Solo la cola! ¡Nada de ratas en mi despacho!
+narrador|Llegan colas a montones… pero por la calle empiezan a correr ratas sin cola.
+narrador|Les cortaban la cola y las soltaban, para que siguieran teniendo crías.
+narrador|Y a las afueras, un inspector encuentra granjas. De ratas.
+narrador|Se llama efecto cobra: si premias el resultado equivocado, la gente fabrica el problema.
+narrador|Por eso, en Hanói, las ratas sin cola… siguieron corriendo.
