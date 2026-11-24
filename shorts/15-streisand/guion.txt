@@ -1,0 +1,10 @@
+narrador|Si intentas borrar una foto de internet… la verá todo el mundo.
+narrador|California, 2003. Un fotógrafo sobrevuela la costa en helicóptero y saca doce mil fotos de los acantilados, para estudiar la erosión.
+narrador|En una sale, pequeñita, la mansión de Barbra Streisand.
+narrador|Esa foto la habían descargado seis veces. Seis.
+narrador|Pero ella demanda al fotógrafo, y le pide cincuenta millones de dólares.
+abogado[,,0.1]|¡Exigimos que esa foto desaparezca!
+narrador|La noticia sale en todos los periódicos… y cientos de miles de personas entran a ver la casa.
+narrador|Pierde el juicio, y encima le toca pagar los abogados del fotógrafo.
+narrador|Se llama efecto Streisand: cuanto más intentas esconder algo, más gente quiere verlo.
+narrador|Y aquella foto que nadie había visto… hoy es una de las más famosas de internet.

@@ -18,6 +18,7 @@ VOCES = {
     "soldado":  ("es-ES-AlvaroNeural", "+16%", "+9Hz"),   # soldado joven, alarmado
     "toni":     ("es-ES-AlvaroNeural", "+14%", "+10Hz"),  # Toni, la mascota: nervioso y gracioso
     "funcionario": ("es-ES-AlvaroNeural", "-2%", "-12Hz"),  # funcionario francés, estirado
+    "abogado":  ("es-ES-AlvaroNeural", "+6%", "-8Hz"),    # abogado enfadado y rotundo
     "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
 # Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;

@@ -1,0 +1,416 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>El efecto Streisand</title>
+<!-- Modelo Ricks (guía 0e): gancho, historia que escala, nombre del fenómeno, bucle. Dopamina constante. -->
+<style>
+  @font-face{font-family:Mont;src:url(/fuentes/montserrat-latin-900-normal.woff2);font-weight:900}
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  #lienzo{position:absolute;inset:0;transform-origin:50% 50%}
+  canvas{display:block}
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 62%,rgba(0,0,0,.35) 100%)}
+  #grano{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay}
+  #flash{position:absolute;inset:0;background:#fff8e8;opacity:0}
+  .txt{position:absolute;left:40px;right:40px;text-align:center;font-family:Mont,"DejaVu Sans",sans-serif;font-weight:900;color:#fff;paint-order:stroke;white-space:nowrap}
+  #gancho{top:230px;font-size:86px;line-height:1.02;letter-spacing:-1.5px;-webkit-text-stroke:16px #000;text-shadow:0 10px 0 rgba(0,0,0,.5);opacity:0;white-space:normal}
+  #contador{position:absolute;left:0;right:0;top:520px;text-align:center;font:900 170px Mont,sans-serif;color:#FFD93B;-webkit-text-stroke:20px #000;paint-order:stroke;text-shadow:0 14px 0 rgba(0,0,0,.5);opacity:0}
+  #contador small{display:block;font-size:76px;color:#fff;margin-top:-6px}
+  .pop{position:absolute;font:900 90px Mont,sans-serif;color:#FFD93B;-webkit-text-stroke:12px #000;paint-order:stroke;transform:translate(-50%,-50%);white-space:nowrap}
+  .sello{position:absolute;left:50%;top:760px;font:900 150px Mont,sans-serif;color:#E8322A;border:16px solid #E8322A;border-radius:24px;padding:0 30px;transform:translate(-50%,-50%) rotate(-14deg);background:rgba(255,255,255,.85)}
+  #sub{top:1530px;font-size:66px;line-height:1.1;letter-spacing:-.5px;-webkit-text-stroke:11px #000;text-shadow:0 6px 0 rgba(0,0,0,.5)}
+  #sub b{color:#FFD93B}
+  #sub.personaje{font-style:italic}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="lienzo"></div>
+<div id="vineta"></div>
+<div id="grano"></div>
+<div id="gancho" class="txt">QUISO BORRAR<br>UNA FOTO…<br><span style="color:#FFD93B">Y SE HIZO FAMOSA</span></div>
+<div id="contador"></div>
+<div id="pops"></div>
+<div id="sub" class="txt"></div>
+<div id="flash"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { Pass, FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { BokehShader } from 'three/addons/shaders/BokehShader.js';
+
+THREE.Cache.enabled = true;
+const W = 1080, H = 1920;
+let semilla = 2003;
+const rnd = () => { semilla |= 0; semilla = semilla + 0x6D2B79F5 | 0; let t = Math.imul(semilla ^ semilla >>> 15, 1 | semilla); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const suave = k => { k = clamp(k); return k * k * (3 - 2 * k); };
+const salida = k => 1 - Math.pow(1 - clamp(k), 3);
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const hash2 = (x, z) => { const h = Math.sin(x * 127.1 + z * 311.7) * 43758.5453; return h - Math.floor(h); };
+const vruido = (x, z) => { const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf); return lerp(lerp(hash2(xi, zi), hash2(xi + 1, zi), u), lerp(hash2(xi, zi + 1), hash2(xi + 1, zi + 1), u), v); };
+const fbm = (x, z) => { let s = 0, a = .5, f = 1; for (let i = 0; i < 5; i++) { s += a * vruido(x * f, z * f); f *= 2.03; a *= .5; } return s; };
+
+await document.fonts.load('900 66px Mont');
+const PAL = await (await fetch('voz_ritmo.json')).json();
+const T = i => PAL[i].t0;
+const DURACION = PAL[PAL.length - 1].t1 + .45;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('lienzo').appendChild(renderer.domElement);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const ESTUDIO = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+
+function canvasTex(w, h, dibujo, rx = 1, ry = 1, color = true) { const c = document.createElement('canvas'); c.width = w; c.height = h; dibujo(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); if (color) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData.canvas = c; return t; }
+const texRadial = c => canvasTex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+const BRILLO = texRadial('rgba(255,255,255,1)');
+function texRelieve(w, h, dibujo, rx, ry) { const s0 = semilla; const col = canvasTex(w, h, g => dibujo(g, w, h, true), rx, ry); const s1 = semilla; semilla = s0; const bump = canvasTex(w, h, g => dibujo(g, w, h, false), rx, ry, false); semilla = s1; return { col, bump }; }
+const texNube = () => canvasTex(256, 256, (g, w, h) => { for (let i = 0; i < 40; i++) { const a = rnd() * Math.PI * 2, r = Math.pow(rnd(), .7) * 70, x = 128 + Math.cos(a) * r * 1.3, y = 140 + Math.sin(a) * r * .6, s = 26 + rnd() * 46; const gr = g.createRadialGradient(x, y - s * .3, 0, x, y, s); const l = 255 - Math.max(0, y - 120) * .6; gr.addColorStop(0, `rgba(${l},${l},${l + 4},${.45 + rnd() * .2})`); gr.addColorStop(1, `rgba(${l},${l},${l},0)`); g.fillStyle = gr; g.fillRect(0, 0, w, h); } });
+const NUBES = [texNube(), texNube(), texNube()];
+const texTexto = (txt, w = 512, h = 160, color = '#fff', fuente = '900 110px Mont', borde = '#000') => canvasTex(w, h, (g) => { g.font = fuente; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; if (borde) { g.lineWidth = 18; g.strokeStyle = borde; g.strokeText(txt, w / 2, h / 2 + 6); } g.fillStyle = color; g.fillText(txt, w / 2, h / 2 + 6); });
+
+const CARGAS = []; const cargador = new THREE.TextureLoader(); const texturas = {};
+const spriteTex = n => { if (texturas[n]) return texturas[n]; let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return texturas[n] = t; };
+function personaje(padre, nombre, alto, { rim = '#fff4dc', brillo = .06, tono = .9 } = {}) {
+  const t = spriteTex(nombre), g = new THREE.Group();
+  const geo = new THREE.PlaneGeometry(alto * 400 / 640, alto); geo.translate(0, alto / 2, 0);
+  const p = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: brillo, side: THREE.DoubleSide }));
+  p.material.color.setScalar(tono); p.castShadow = true; p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  const r = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, color: rim, transparent: true, opacity: .55, alphaTest: .5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+  r.scale.set(1.045, 1.02, 1); r.position.set(0, -alto * .01, -.03);
+  g.add(r, p); padre.add(g); g.userData.alto = alto; return g;
+}
+let CAMARA = null;
+const mirar = p => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(CAMARA.position.x - w.x, CAMARA.position.z - w.z); };
+class PaseDOF extends Pass {
+  constructor() { super(); this.rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType }); this.matProf = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, blending: THREE.NoBlending }); const u = THREE.UniformsUtils.clone(BokehShader.uniforms); this.mat = new THREE.ShaderMaterial({ defines: Object.assign({}, BokehShader.defines), uniforms: u, vertexShader: BokehShader.vertexShader, fragmentShader: BokehShader.fragmentShader }); this.u = u; this.quad = new FullScreenQuad(this.mat); this.copia = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D t; varying vec2 vUv; void main(){ gl_FragColor=texture2D(t,vUv); }' }); this.apertura = 0; this.maxBlur = .012; }
+  render(renderer, writeBuffer, readBuffer) {
+    if (!this.apertura) { this.copia.uniforms.t.value = readBuffer.texture; this.quad.material = this.copia; renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.quad.render(renderer); this.quad.material = this.mat; return; }
+    const g = [];
+    this.escena.traverse(o => { if (o.isPoints || o.isSprite || o.isLine) { if (o.visible) { g.push([o, 'v']); o.visible = false; } return; } if (o.isMesh) { const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && (m.blending === THREE.AdditiveBlending || m.depthWrite === false || m.userData.sinProf)) { if (o.visible) { g.push([o, 'v']); o.visible = false; } return; } g.push([o, o.material]); o.material = o.customDepthMaterial || this.matProf; } });
+    const f = this.escena.background, n = this.escena.fog; this.escena.background = null; this.escena.fog = null;
+    renderer.setRenderTarget(this.rt); renderer.setClearColor(0xffffff, 1); renderer.clear(); renderer.render(this.escena, this.cam);
+    this.escena.background = f; this.escena.fog = n; renderer.setClearColor(0x000000, 1);
+    for (const [o, x] of g) { if (x === 'v') o.visible = true; else o.material = x; }
+    this.u.focus.value = this.foco; this.u.tColor.value = readBuffer.texture; this.u.tDepth.value = this.rt.texture; this.u.aspect.value = W / H; this.u.aperture.value = this.apertura; this.u.maxblur.value = this.maxBlur; this.u.nearClip.value = this.cam.near; this.u.farClip.value = this.cam.far;
+    renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.quad.render(renderer);
+  }
+}
+
+// ---------- cielo soleado con nubes ----------
+const SOL = v3(.5, .7, .5).normalize();
+function crearCielo() {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.SphereGeometry(900, 48, 24), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { sol: { value: SOL } },
+    vertexShader: 'varying vec3 p; void main(){ p = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+    fragmentShader: 'uniform vec3 sol; varying vec3 p; void main(){ vec3 d = normalize(p); float k = clamp(d.y*1.6+.02,0.,1.); vec3 c = mix(vec3(.72,.86,.97), vec3(.13,.42,.86), pow(k,.55)); if (d.y < 0.) c = vec3(.72,.86,.97); float s = max(dot(d, sol), 0.); c += vec3(1.,.9,.7) * (pow(s, 1200.)*6. + pow(s, 14.)*.3); gl_FragColor = vec4(c,1.); }' }));
+  m.material.userData.sinProf = true; m.renderOrder = -2; g.add(m);
+  for (let i = 0; i < 40; i++) { const a = rnd() * Math.PI * 2, el = .05 + rnd() * .35, r = 600; const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: NUBES[i % 3], transparent: true, depthWrite: false, fog: false, opacity: .95 })); s.position.set(Math.cos(a) * Math.cos(el) * r, Math.sin(el) * r, Math.sin(a) * Math.cos(el) * r); const t = 90 + rnd() * 140; s.scale.set(t * 1.6, t * .8, 1); s.renderOrder = -1; g.add(s); }
+  return g;
+}
+const ENTORNO = (() => { const s = new THREE.Scene(); const c = crearCielo(); c.scale.setScalar(.1); s.add(c); s.add(new THREE.HemisphereLight('#9cc8ff', '#5a7a3a', 1)); return pmrem.fromScene(s, .02).texture; })();
+
+// ---------- el cubo de galio que se funde (cubo → gota redondeada → charco) ----------
+function crearGalio(tam = .1) {
+  const geo = new THREE.BoxGeometry(1, 1, 1, 14, 14, 14), base = geo.attributes.position.array.slice();
+  const m = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ color: '#a9b2bc', metalness: 1, roughness: .1, clearcoat: 1, envMap: ESTUDIO, envMapIntensity: .75 }));
+  m.castShadow = true; m.scale.setScalar(tam);
+  const p = geo.attributes.position, s = v3(), c = v3();
+  m.userData.fundir = (k, t) => { const a = clamp(k * 2.2), b = suave((k - .25) / .75); for (let i = 0; i < p.count; i++) { c.set(base[i * 3], base[i * 3 + 1], base[i * 3 + 2]); s.copy(c).normalize().multiplyScalar(.64); const cubo = v3(c.x, c.y + .5, c.z), esf = v3(s.x, s.y + .64, s.z), charco = v3(s.x * 2.5, (s.y + .64) * .17, s.z * 2.5); const q = cubo.lerp(esf, a * .7).lerp(charco, b); q.y += Math.sin(q.x * 9 + t * 5) * Math.sin(q.z * 8 - t * 4) * .025 * b; p.setXYZ(i, q.x, q.y, q.z); } p.needsUpdate = true; geo.computeVertexNormals(); };
+  m.userData.fundir(0, 0); return m;
+}
+
+// ---------- utilidades ----------
+const caja = (padre, w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; padre.add(o); return o; };
+const O = { brillo: 0, tono: .82, rim: '#ffe8c0' };
+function sol(e, int = 3.2, tam = 40) { const s = new THREE.DirectionalLight('#fff0d4', int); s.position.copy(SOL).multiplyScalar(60); s.castShadow = true; s.shadow.mapSize.set(4096, 4096); s.shadow.bias = -.0003; s.shadow.normalBias = .05; const c = s.shadow.camera; c.left = c.bottom = -tam; c.right = c.top = tam; c.far = 200; e.add(s, s.target); return s; }
+// la foto famosa, dibujada: acantilado, mar y la mansión pequeñita
+const FOTO = canvasTex(640, 420, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#9cc8ec'); gr.addColorStop(.35, '#d8ecf8'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = '#2a6a8a'; g.beginPath(); g.moveTo(330, h); g.lineTo(w, 150); g.lineTo(w, h); g.fill(); g.fillStyle = '#c8a878'; g.beginPath(); g.moveTo(0, 170); g.lineTo(380, 150); g.lineTo(330, h); g.lineTo(0, h); g.fill(); g.fillStyle = '#6a8a3a'; g.beginPath(); g.moveTo(0, 130); g.lineTo(400, 110); g.lineTo(380, 160); g.lineTo(0, 180); g.fill(); g.fillStyle = '#8a6a4a'; g.beginPath(); g.moveTo(380, 150); g.lineTo(410, 112); g.lineTo(450, 300); g.lineTo(330, h); g.fill(); g.fillStyle = '#ffffff'; for (let i = 0; i < 14; i++) g.fillRect(420 + i * 14, 230 + i * 12, 20, 3); g.fillStyle = '#f6f2ea'; g.fillRect(200, 92, 50, 24); g.fillStyle = '#c0542e'; g.fillRect(196, 86, 58, 8); g.fillStyle = '#4ab0e8'; g.fillRect(256, 108, 22, 9); g.fillStyle = '#3a6a2a'; for (const x of [150, 290, 330]) { g.beginPath(); g.arc(x, 100, 12, 0, 7); g.fill(); } g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.beginPath(); g.arc(226, 104, 40, 0, 7); g.stroke(); g.fillStyle = 'rgba(0,0,0,.5)'; g.font = 'bold 18px DejaVu Sans'; g.fillText('Image 3850', 16, h - 16); });
+
+// =================== ESCENARIO 1: LA COSTA DE CALIFORNIA ===================
+function crearCosta() {
+  const e = new THREE.Scene(); e.environment = ENTORNO; e.environmentIntensity = .8;
+  const cielo = crearCielo(); e.add(cielo); e.fog = new THREE.FogExp2('#cfe2f2', .0022);
+  sol(e, 3.3, 60); e.add(new THREE.HemisphereLight('#b0d0f8', '#a08a5a', 1.0));
+  // acantilado: meseta (x<0), pared, playa y mar
+  const alt = (x, z) => { const borde = 2 * Math.sin(z * .05) + 3 * Math.sin(z * .013); const d = x - borde; if (d < -1) return 14 + (fbm(x / 20, z / 20) - .5) * 3 + Math.max(0, -d - 40) * .15; if (d < 6) return lerp(14, .8, suave((d + 1) / 7)) + (fbm(x / 3, z / 3) - .5) * 2.2 * (1 - Math.abs(d - 2.5) / 3.5); return Math.max(-2, .8 - (d - 6) * .12); };
+  const N = 260, geo = new THREE.PlaneGeometry(240, 240, N, N); geo.rotateX(-Math.PI / 2); const pos = geo.attributes.position; for (let i = 0; i < pos.count; i++) pos.setY(i, alt(pos.getX(i) - 40, pos.getZ(i)));
+  geo.translate(-40, 0, 0); geo.computeVertexNormals();
+  const col = new Float32Array(pos.count * 3), cc = new THREE.Color(), n = geo.attributes.normal;
+  for (let i = 0; i < pos.count; i++) { const y = pos.getY(i), x = pos.getX(i), z = pos.getZ(i), pend = 1 - n.getY(i); if (y > 13) cc.set('#6a9a3a').lerp(new THREE.Color('#c0a060'), clamp(fbm(x / 8, z / 8) * 1.4 - .4)); else cc.set('#a8865a'); cc.lerp(new THREE.Color('#8a6a4a'), clamp((pend - .3) * 3)); if (y < 1.6) cc.set('#e8d4a8'); col.set([cc.r, cc.g, cc.b], i * 3); }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const roca = texRelieve(256, 256, (g, w, h, c) => { g.fillStyle = c ? '#ffffff' : '#808080'; g.fillRect(0, 0, w, h); for (let i = 0; i < 1500; i++) { g.fillStyle = c ? `rgba(${rnd() < .5 ? '60,40,20' : '255,250,230'},${rnd() * .2})` : `rgba(${rnd() < .5 ? 40 : 220},0,0,.5)`; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 2 + rnd() * 10, 1 + rnd() * 4, rnd() * 3, 0, 7); g.fill(); } }, 40, 40);
+  const tierra = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, map: roca.col, bumpMap: roca.bump, bumpScale: 2, roughness: .95 })); tierra.receiveShadow = true; tierra.castShadow = true; e.add(tierra);
+  // mar con oleaje
+  const texOlas = (() => { const Nn = 256, a = new Float32Array(Nn * Nn); for (let y = 0; y < Nn; y++) for (let x = 0; x < Nn; x++) { let s = 0; for (let k = 0; k < 6; k++) { const f = 2 + k * 3, p = rnd() * 6.28, d = rnd() * 6.28; s += Math.sin((x * Math.cos(d) + y * Math.sin(d)) / Nn * Math.PI * 2 * f + p) / (k + 1.5); } a[y * Nn + x] = s; } return canvasTex(Nn, Nn, g => { const img = g.createImageData(Nn, Nn); for (let y = 0; y < Nn; y++) for (let x = 0; x < Nn; x++) { const dx = a[y * Nn + (x + 1) % Nn] - a[y * Nn + (x - 1 + Nn) % Nn], dy = a[((y + 1) % Nn) * Nn + x] - a[((y - 1 + Nn) % Nn) * Nn + x]; const v = v3(-dx * 2, -dy * 2, 1).normalize(), i = (y * Nn + x) * 4; img.data[i] = (v.x * .5 + .5) * 255; img.data[i + 1] = (v.y * .5 + .5) * 255; img.data[i + 2] = (v.z * .5 + .5) * 255; img.data[i + 3] = 255; } g.putImageData(img, 0, 0); }, 120, 120, false); })();
+  const mar = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshStandardMaterial({ color: '#1f6a8c', roughness: .1, normalMap: texOlas, normalScale: new THREE.Vector2(.4, .4), envMapIntensity: 1.5 })); mar.rotation.x = -Math.PI / 2; mar.position.set(400, .25, 0); e.add(mar);
+  const espuma = [...Array(40)].map((_, i) => { const s = new THREE.Mesh(new THREE.PlaneGeometry(10, 1.4), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, depthWrite: false })); s.rotation.x = -Math.PI / 2; s.rotation.z = Math.PI / 2; s.userData = { z: -100 + i * 5 + rnd() * 3, f: rnd() }; e.add(s); return s; });
+  // mansión moderna en lo alto + otras casas
+  const blanco = new THREE.MeshStandardMaterial({ color: '#f6f2ea', roughness: .6 }), vidrio = new THREE.MeshPhysicalMaterial({ color: '#8ab8d8', metalness: .2, roughness: .05, envMapIntensity: 2 });
+  const mansion = new THREE.Group(); mansion.position.set(-9, 14, -6); e.add(mansion);
+  caja(mansion, 10, 3.2, 7, blanco, 0, 1.6, 0); caja(mansion, 7, 3, 5, blanco, -1, 4.6, -.5); caja(mansion, 10.2, .25, 7.2, new THREE.MeshStandardMaterial({ color: '#c0542e' }), 0, 3.3, 0); caja(mansion, 7.2, .25, 5.2, new THREE.MeshStandardMaterial({ color: '#c0542e' }), -1, 6.2, -.5);
+  for (let i = 0; i < 4; i++) { const v = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2), vidrio); v.position.set(5.02, 1.6, -2.4 + i * 1.6); v.rotation.y = Math.PI / 2; mansion.add(v); const v2 = v.clone(); v2.position.set(2.52, 4.6, -2.3 + i * 1.2); v2.scale.set(.6, .8, 1); mansion.add(v2); }
+  const piscina = caja(mansion, 3, .2, 5, new THREE.MeshStandardMaterial({ color: '#3ab0e8', roughness: .05, metalness: .1, emissive: '#1a6a8a', emissiveIntensity: .2 }), 7, .1, 0);
+  const palmera = (x, z, s = 1) => { const g = new THREE.Group(); g.position.set(x, alt(x - 40 + 40, z), z); g.scale.setScalar(s); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.15, .25, 7, 8).translate(0, 3.5, 0), new THREE.MeshStandardMaterial({ color: '#8a6a4a' })); tr.rotation.z = .1; g.add(tr); for (let i = 0; i < 8; i++) { const h = new THREE.Mesh(new THREE.PlaneGeometry(.6, 3.2).translate(0, 1.6, 0), new THREE.MeshStandardMaterial({ color: '#3f8a2e', side: THREE.DoubleSide })); h.position.set(.35, 7, 0); h.rotation.set(1.1, i / 8 * 6.28, 0, 'YXZ'); g.add(h); } g.traverse(o => { if (o.isMesh) o.castShadow = true; }); e.add(g); };
+  for (const [x, z] of [[-4, -12], [-4.5, 2], [-15, -14], [-16, 3], [-8, -30], [-6, 18], [-12, 30]]) palmera(x, z, .9 + rnd() * .4);
+  for (const [x, z] of [[-14, -40], [-18, 20], [-12, 34], [-20, -60]]) { const c = new THREE.Group(); c.position.set(x, alt(x, z), z); e.add(c); caja(c, 7, 3.4, 6, new THREE.MeshStandardMaterial({ color: ['#f2e2c6', '#e8d4b0', '#f6efe2'][Math.floor(rnd() * 3)] }), 0, 1.7, 0); caja(c, 7.4, .3, 6.4, new THREE.MeshStandardMaterial({ color: '#c0542e' }), 0, 3.5, 0); }
+  // piedras que caen (erosión)
+  const piedras = [...Array(12)].map(() => { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.25 + rnd() * .3, 0), new THREE.MeshStandardMaterial({ color: '#8a6a4a' })); m.userData = { z: (rnd() - .5) * 8, f: rnd(), v: rnd() }; m.castShadow = true; e.add(m); return m; });
+  // helicóptero
+  const heli = new THREE.Group(); e.add(heli);
+  { const rojo = new THREE.MeshPhysicalMaterial({ color: '#c8302a', metalness: .3, roughness: .3, clearcoat: 1 }); const cuerpo = new THREE.Mesh(new THREE.CapsuleGeometry(1.1, 2.4, 8, 16), rojo); cuerpo.rotation.z = Math.PI / 2; heli.add(cuerpo); const cab = new THREE.Mesh(new THREE.SphereGeometry(1.15, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), vidrio); cab.rotation.z = -Math.PI / 2; cab.position.x = 1.5; heli.add(cab); const cola = new THREE.Mesh(new THREE.CylinderGeometry(.18, .35, 4.4, 10), rojo); cola.rotation.z = Math.PI / 2; cola.position.set(-3.6, .3, 0); heli.add(cola); const aleta = caja(heli, .6, 1.2, .1, rojo, -5.6, .9, 0); const rotorC = new THREE.Group(); rotorC.position.set(-5.7, .9, .15); heli.add(rotorC); for (let i = 0; i < 2; i++) { const p = caja(rotorC, .1, 1.4, .05, new THREE.MeshStandardMaterial({ color: '#222' }), 0, 0, 0); p.rotation.z = i * Math.PI / 2; } heli.userData.rotorC = rotorC; for (const s of [-1, 1]) { caja(heli, 3.4, .1, .1, new THREE.MeshStandardMaterial({ color: '#333' }), .2, -1.45, s * .8); for (const x of [-.6, 1]) caja(heli, .08, .5, .08, new THREE.MeshStandardMaterial({ color: '#333' }), x, -1.2, s * .8); } const mastil = caja(heli, .15, .5, .15, new THREE.MeshStandardMaterial({ color: '#333' }), 0, 1.3, 0); const rotor = new THREE.Group(); rotor.position.y = 1.55; heli.add(rotor); for (let i = 0; i < 2; i++) { const p = caja(rotor, 9, .06, .3, new THREE.MeshStandardMaterial({ color: '#1a1a1a' }), 0, 0, 0); p.rotation.y = i * Math.PI / 2; } heli.userData.rotor = rotor; const puerta = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.6), new THREE.MeshBasicMaterial({ color: '#1a1414' })); puerta.position.set(.2, -.1, 1.12); heli.add(puerta); }
+  const fotografo = personaje(heli, 'fotografo', 1.75, O); fotografo.position.set(.2, -1.05, 1.16); caja(heli, 1.5, .75, .06, new THREE.MeshPhysicalMaterial({ color: '#c8302a', metalness: .3, roughness: .3, clearcoat: 1 }), .2, -.85, 1.22);
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: BRILLO, color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); heli.add(flash);
+  const P = { cantante: personaje(e, 'cantante', 1.8, O), cantante_furiosa: personaje(e, 'cantante_furiosa', 1.8, O) };
+  const mirones = ['lector', 'vecina', 'estudiante', 'vecino1', 'lectora', 'abogado', 'fotografo_feliz', 'vecina', 'estudiante', 'lector'].map(n => personaje(e, n, 1.8, O));
+  const letrero = new THREE.Group(); e.add(letrero);
+  { caja(letrero, 9, 2.4, .25, new THREE.MeshStandardMaterial({ color: '#6a3a1e', roughness: .6 }), 0, 0, 0); const tt = texTexto('EFECTO STREISAND', 1600, 280, '#FFD93B', '900 128px Mont', '#1a0e06'); const txt = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 1.5), new THREE.MeshStandardMaterial({ map: tt, transparent: true, emissive: '#ffffff', emissiveMap: tt, emissiveIntensity: .3 })); txt.position.z = .14; letrero.add(txt); }
+  const cam = new THREE.PerspectiveCamera(42, W / H, .1, 3000);
+  return {
+    escena: e, cam, mansion, heli, alt,
+    preparar({ tiempo: t, heliPos = null, flashK = -1, piedrasK = 0, ver = {}, mironesK = -1, letreroK = -1 }) {
+      CAMARA = cam; cielo.position.copy(cam.position); texOlas.offset.set(t * .01, t * .006);
+      espuma.forEach(s => { const u = s.userData, ph = (t * .25 + u.f) % 1; const bx = 6 + 2 * Math.sin(u.z * .05) + 3 * Math.sin(u.z * .013) - 40 + 40; s.position.set(bx + 6 - ph * 3, .3, u.z); s.material.opacity = Math.sin(ph * Math.PI) * .8; s.scale.set(1, .6 + ph, 1); });
+      heli.visible = !!heliPos; if (heliPos) { heli.position.copy(heliPos); heli.rotation.set(0, 0, Math.sin(t * 1.3) * .03 + .05); heli.position.y += Math.sin(t * 2) * .2; heli.userData.rotor.rotation.y = t * 40; heli.userData.rotorC.rotation.z = t * 50; mirar(fotografo); }
+      flash.visible = flashK >= 0; if (flash.visible) { const ph = (flashK % .45) / .45; flash.position.set(.5, .1, 1.5); flash.scale.setScalar(ph < .25 ? 4 * (1 - ph * 4) + .01 : .01); }
+      piedras.forEach(p => { const u = p.userData, ph = (t * (.5 + u.v * .3) + u.f) % 1; p.visible = piedrasK > 0; const bx = 2 * Math.sin(u.z * .05) + 3 * Math.sin(u.z * .013); p.position.set(bx + .5 + ph * 3, 13.5 - ph * ph * 13, u.z); p.rotation.set(ph * 8, ph * 5, 0); });
+      for (const k in P) P[k].visible = false; for (const k in ver) { P[k].visible = true; P[k].position.copy(ver[k]); mirar(P[k]); }
+      mirones.forEach((p, i) => { p.visible = mironesK >= 0 && i < Math.ceil(mironesK * 10); if (!p.visible) return; p.position.set(5.5 + (i % 3) * 1.1, alt(5.5 + (i % 3) * 1.1, 0) + Math.abs(Math.sin(t * 7 + i)) * .05, -10 + i * 1.9); mirar(p); });
+      letrero.visible = letreroK >= 0; if (letreroK >= 0) { const k = letreroK; const y = k < .3 ? lerp(30, 20.5, salida(k / .3)) : 20.5 + Math.sin((k - .3) * 30) * .25 * Math.exp(-(k - .3) * 6); letrero.position.set(-2, y, -6); letrero.rotation.y = Math.PI / 2; letrero.rotation.x = Math.sin(t * 3) * .03; }
+    },
+  };
+}
+
+// =================== ESCENARIO 2: EL JUZGADO ===================
+function crearJuzgado() {
+  const e = new THREE.Scene(); e.environment = ENTORNO; e.environmentIntensity = .4;
+  const madera = texRelieve(256, 256, (g, w, h, c) => { g.fillStyle = c ? '#7a4a28' : '#808080'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 32) { g.fillStyle = c ? 'rgba(40,20,8,.5)' : '#303030'; g.fillRect(x, 0, 3, h); } for (let i = 0; i < 200; i++) { g.fillStyle = c ? `rgba(${rnd() < .5 ? '50,25,10' : '160,110,60'},.2)` : `rgba(${rnd() < .5 ? 60 : 200},0,0,.4)`; g.fillRect(rnd() * w, rnd() * h, 2, 30 + rnd() * 60); } }, 4, 2);
+  const mMad = new THREE.MeshStandardMaterial({ map: madera.col, bumpMap: madera.bump, bumpScale: 1, roughness: .5 });
+  caja(e, 14, 6, .3, mMad, 0, 3, -5); caja(e, .3, 6, 12, mMad, -7, 3, 0); caja(e, .3, 6, 12, mMad, 7, 3, 0);
+  caja(e, 14, .1, 12, new THREE.MeshStandardMaterial({ color: '#6a2a2a', roughness: .9 }), 0, -.05, 0);
+  caja(e, 4.4, 1.6, 1.4, mMad, 0, .8, -3.4); caja(e, 4.4, .9, 1.4, mMad, 0, .45, -4.3); caja(e, 4.6, .12, 1.6, mMad, 0, 1.66, -3.4);
+  const escudo = new THREE.Mesh(new THREE.CircleGeometry(.9, 40), new THREE.MeshStandardMaterial({ color: '#c99a2e', metalness: .9, roughness: .3 })); escudo.position.set(0, 4.3, -4.83); e.add(escudo);
+  for (const x of [-2.6, 2.6]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.4, 10, 4), new THREE.MeshStandardMaterial({ color: x < 0 ? '#2a4a8a' : '#c8302a', side: THREE.DoubleSide })); b.position.set(x, 3.8, -4.8); e.add(b); }
+  for (const x of [-2.8, 2.8]) { caja(e, 2.2, .9, .6, mMad, x, .45, -.6); }
+  const sl = new THREE.DirectionalLight('#fff0d0', 2.6); sl.position.set(4, 8, 6); sl.castShadow = true; sl.shadow.mapSize.set(2048, 2048); const sc = sl.shadow.camera; sc.left = sc.bottom = -8; sc.right = sc.top = 8; e.add(sl);
+  e.add(new THREE.HemisphereLight('#fff0dc', '#5a3a2a', 1.2));
+  const N = ['juez', 'abogado', 'cantante', 'cantante_furiosa', 'fotografo', 'fotografo_feliz'];
+  const P = {}; N.forEach(n => P[n] = personaje(e, n, 1.8, O));
+  const bolsa = new THREE.Mesh(new THREE.SphereGeometry(.35, 16, 12), new THREE.MeshStandardMaterial({ color: '#c8a868', roughness: .9 })); bolsa.scale.set(1, 1.2, 1); e.add(bolsa);
+  const dolar = new THREE.Mesh(new THREE.PlaneGeometry(.4, .4), new THREE.MeshBasicMaterial({ map: texTexto('$', 160, 160, '#2a8a3a', '900 140px Mont', null), transparent: true })); bolsa.add(dolar); dolar.position.z = .36;
+  const cam = new THREE.PerspectiveCamera(42, W / H, .05, 200);
+  return {
+    escena: e, cam,
+    preparar({ tiempo: t, ver = {}, mazo = -1, bolsaK = -1 }) {
+      CAMARA = cam;
+      for (const k in P) P[k].visible = false;
+      for (const k in ver) { P[k].visible = true; P[k].position.copy(ver[k]); if (k === 'juez' && mazo >= 0) P[k].position.y += Math.max(0, Math.sin(mazo * 12)) * .06; mirar(P[k]); }
+      bolsa.visible = bolsaK >= 0; if (bolsaK >= 0) { const k = salida(bolsaK); bolsa.position.set(lerp(-.6, .55, k), 1.0 + Math.sin(k * Math.PI) * .7, .5); bolsa.rotation.z = k * 6; }
+    },
+  };
+}
+
+// =================== ESCENARIO 3: LA CALLE CON PERIÓDICOS Y EL MONITOR DE 2003 ===================
+const pantallaTex = canvasTex(1024, 768, () => {});
+function dibujarPantalla(visitas, cursor = 0, estrellas = 0) {
+  const g = pantallaTex.userData.canvas.getContext('2d'), w = 1024, h = 768;
+  g.fillStyle = '#d4d0c8'; g.fillRect(0, 0, w, h); g.fillStyle = '#0a246a'; g.fillRect(0, 0, w, 44); g.fillStyle = '#fff'; g.font = 'bold 26px DejaVu Sans'; g.fillText('California Coastal Records Project - Image 3850', 16, 30);
+  g.fillStyle = '#ffffff'; g.fillRect(16, 60, w - 32, h - 76); g.drawImage(FOTO.userData.canvas, 60, 90, 560, 368);
+  g.fillStyle = '#1a1a1a'; g.font = 'bold 34px DejaVu Sans'; g.fillText('Visitas:', 660, 150); g.fillStyle = visitas > 1000 ? '#c0302a' : '#1a1a1a'; g.font = '900 64px DejaVu Sans'; g.fillText(visitas.toLocaleString('es-ES'), 660, 230);
+  g.fillStyle = '#1a1a1a'; g.font = '26px DejaVu Sans'; g.fillText('Descargar imagen', 660, 320); g.strokeStyle = '#0a246a'; g.lineWidth = 3; g.strokeRect(652, 290, 260, 46);
+  g.font = '24px DejaVu Sans'; g.fillStyle = '#555'; g.fillText('Comentarios: ' + Math.floor(estrellas).toLocaleString('es-ES'), 60, 520);
+  if (cursor) { g.fillStyle = '#ffffff'; g.strokeStyle = '#000'; g.lineWidth = 3; const x = 700 + cursor * 60, y = 330; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 44); g.lineTo(x + 12, y + 32); g.lineTo(x + 30, y + 30); g.closePath(); g.fill(); g.stroke(); }
+  pantallaTex.needsUpdate = true;
+}
+function crearCiudad() {
+  const e = new THREE.Scene(); e.environment = ENTORNO; e.environmentIntensity = .8;
+  const cielo = crearCielo(); e.add(cielo); e.fog = new THREE.FogExp2('#cfe2f2', .006);
+  sol(e, 3, 20); e.add(new THREE.HemisphereLight('#b0d0f8', '#8a8070', 1.0));
+  const suelo = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#b8b0a0', roughness: .9 })); suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; e.add(suelo);
+  const asf = new THREE.Mesh(new THREE.PlaneGeometry(10, 200), new THREE.MeshStandardMaterial({ color: '#3a3a3e', roughness: .9 })); asf.rotation.x = -Math.PI / 2; asf.position.set(8, .01, 0); e.add(asf);
+  for (let z = -60; z < 20; z += 2.5) { const l = new THREE.Mesh(new THREE.PlaneGeometry(.15, 1.2), new THREE.MeshBasicMaterial({ color: '#f2e8a0' })); l.rotation.x = -Math.PI / 2; l.position.set(8, .02, z); e.add(l); }
+  const colores = ['#e8b8a0', '#a8c8d8', '#f2e2c6', '#c8d8a8', '#d8a8b8'];
+  for (let i = 0; i < 12; i++) { const h = 8 + rnd() * 10; const b = caja(e, 8, h, 8, new THREE.MeshStandardMaterial({ map: canvasTex(256, 256, (g, w, hh) => { g.fillStyle = colores[i % 5]; g.fillRect(0, 0, w, hh); g.fillStyle = '#2a3a4a'; for (let y = 20; y < hh; y += 48) for (let x = 16; x < w; x += 56) g.fillRect(x, y, 34, 30); }, 1, Math.ceil(h / 8)), roughness: .8 }), -7, h / 2, 10 - i * 8.2); }
+  // quiosco
+  const kiosco = new THREE.Group(); kiosco.position.set(-1.5, 0, -4); e.add(kiosco);
+  caja(kiosco, 2.6, 2.2, 1.6, new THREE.MeshStandardMaterial({ color: '#2a6a4a' }), 0, 1.1, 0); caja(kiosco, 3, .2, 2, new THREE.MeshStandardMaterial({ color: '#1a4a34' }), 0, 2.3, 0);
+  const portada = canvasTex(512, 640, (g, w, h) => { g.fillStyle = '#f4f1e8'; g.fillRect(0, 0, w, h); g.fillStyle = '#111'; g.font = '900 54px DejaVu Serif'; g.textAlign = 'center'; g.fillText('THE DAILY NEWS', w / 2, 70); g.fillRect(20, 86, w - 40, 6); g.font = '900 62px DejaVu Sans'; g.fillText('STREISAND', w / 2, 170); g.fillText('DEMANDA', w / 2, 236); g.fillText('POR UNA FOTO', w / 2, 302); g.drawImage(FOTO.userData.canvas, 40, 330, 432, 284); });
+  for (let i = 0; i < 6; i++) { const p = new THREE.Mesh(new THREE.PlaneGeometry(.42, .52), new THREE.MeshStandardMaterial({ map: portada })); p.position.set(-1.2 + (i % 3) * .48, 1.3 + Math.floor(i / 3) * .58, .81); kiosco.add(p); }
+  const periodico = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3), new THREE.MeshStandardMaterial({ map: portada, side: THREE.DoubleSide, roughness: .8 })); e.add(periodico);
+  // mesa con el monitor de tubo de 2003
+  const despacho = new THREE.Group(); despacho.position.set(2, 0, -14); e.add(despacho);
+  caja(despacho, 2.4, .08, 1.2, new THREE.MeshStandardMaterial({ color: '#c8b08a' }), 0, .9, 0);
+  const crt = caja(despacho, 1.5, 1.3, 1.3, new THREE.MeshStandardMaterial({ color: '#e2dccc', roughness: .5 }), 0, 1.6, -.1);
+  const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(1.28, .96), new THREE.MeshBasicMaterial({ map: pantallaTex })); pantalla.position.set(0, 1.62, .56); despacho.add(pantalla);
+  const N = ['lector', 'lectora', 'vecina', 'estudiante', 'vecino1', 'abogado'];
+  const gente = [...Array(12)].map((_, i) => personaje(e, ['lector', 'lectora'][i % 2], 1.8, O));
+  const cam = new THREE.PerspectiveCamera(42, W / H, .05, 2000);
+  return {
+    escena: e, cam, pantalla, despacho,
+    preparar({ tiempo: t, periodicoK = -1, genteN = 0, visitas = 6, cursor = 0, comentarios = 0 }) {
+      CAMARA = cam; cielo.position.copy(cam.position);
+      periodico.visible = periodicoK >= 0; if (periodicoK >= 0) { const k = salida(periodicoK * 1.3); periodico.position.copy(cam.position).add(cam.getWorldDirection(v3()).multiplyScalar(lerp(14, 3.6, k))); periodico.lookAt(cam.position); periodico.rotateZ((1 - k) * 12); }
+      gente.forEach((p, i) => { p.visible = i < genteN; if (!p.visible) return; p.position.set(-3.5 + (i % 4) * 1.5 + (Math.floor(i / 4) % 2) * .6, Math.abs(Math.sin(t * 5 + i)) * .03, -1.2 - Math.floor(i / 4) * 1.8); mirar(p); });
+      dibujarPantalla(Math.floor(visitas), cursor, comentarios);
+    },
+  };
+}
+
+const costa = crearCosta(), juzgado = crearJuzgado(), ciudad = crearCiudad();
+const comp = new EffectComposer(renderer, new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType }));
+const rp = new RenderPass(costa.escena, costa.cam); comp.addPass(rp);
+const dof = new PaseDOF(); comp.addPass(dof);
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .22, .5, .96); comp.addPass(bloom); comp.addPass(new OutputPass());
+comp.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null } }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(.299,.587,.114)); c.rgb = mix(vec3(l), c.rgb, 1.22); c.rgb = (c.rgb - .5) * 1.06 + .5; gl_FragColor = c; }' }));
+window.DBG = { costa, juzgado, ciudad, THREE };
+
+// =================== PLANOS ===================
+const ESC = { costa, juzgado, ciudad };
+const C = (c, pos, mira, fov = 42) => { c.fov = fov; c.position.copy(pos); c.lookAt(mira); c.updateMatrixWorld(); };
+let FOCO = null;
+const MAN = costa.mansion.position;
+const PANT = () => ciudad.pantalla.getWorldPosition(v3());
+const disparo = (t, a, b) => (t - a) / (b - a);
+const PLANOS = [
+  { desde: 0, nombre: 'GANCHO: el monitor de 2003 con la foto; el contador de visitas se dispara', esc: 'ciudad', f(k, t) {
+      ciudad.preparar({ tiempo: t, visitas: 6 + Math.pow(k, 3) * 420000, cursor: 1 - k });
+      const p = PANT(); C(ciudad.cam, p.clone().add(v3(lerp(.25, .05, k), .1, lerp(2.6, 1.6, k))), p, 40); FOCO = p.clone();
+    } },
+  { desde: 12, nombre: 'California, 2003: la costa, los acantilados y el helicóptero pasando', esc: 'costa', f(k, t) {
+      costa.preparar({ tiempo: t, heliPos: v3(lerp(20, 12, k), 30, lerp(30, 10, k)) });
+      C(costa.cam, v3(lerp(55, 48, k), lerp(36, 32, k), lerp(70, 60, k)), v3(0, 10, -6), 50);
+    } },
+  { desde: 14, nombre: 'Un fotógrafo sobrevuela la costa en helicóptero: plano cercano con el fotógrafo en la puerta', esc: 'costa', f(k, t) {
+      const h = v3(14, 30, lerp(8, 2, k)); costa.preparar({ tiempo: t, heliPos: h });
+      C(costa.cam, h.clone().add(v3(lerp(4, 3, k), 1.2, lerp(9, 8, k))), h.clone().add(v3(0, -.3, 0)), 40); FOCO = h.clone();
+    } },
+  { desde: 21, nombre: 'y saca 12.000 fotos: flashes y contador', esc: 'costa', f(k, t) {
+      const h = v3(14, 30, lerp(2, -6, k)); costa.preparar({ tiempo: t, heliPos: h, flashK: t });
+      C(costa.cam, h.clone().add(v3(5, 2.5, 6)), h.clone().add(v3(-4, -3, -2)), 44);
+    } },
+  { desde: 29, nombre: 'para estudiar la erosión: piedras cayendo del acantilado', esc: 'costa', f(k, t) {
+      costa.preparar({ tiempo: t, piedrasK: 1 });
+      C(costa.cam, v3(lerp(18, 16, k), lerp(6, 7, k), lerp(14, 10, k)), v3(1, 8, 0), 44);
+    } },
+  { desde: 33, nombre: 'En una sale, pequeñita: vista amplia y lupa hacia la mansión', esc: 'costa', f(k, t) {
+      costa.preparar({ tiempo: t, heliPos: v3(30, 34, -20) });
+      const p = MAN.clone().add(v3(0, 3, 0)); C(costa.cam, p.clone().add(v3(lerp(60, 30, suave(k)), lerp(30, 14, suave(k)), lerp(30, 14, suave(k)))), p, 46);
+    } },
+  { desde: 37, nombre: 'la mansión de Barbra Streisand: ella en la terraza junto a la piscina', esc: 'costa', f(k, t) {
+      const c = MAN.clone().add(v3(6.4, .2, 1.6)); costa.preparar({ tiempo: t, ver: { cantante: c } });
+      C(costa.cam, c.clone().add(v3(lerp(5, 4.2, k), 1.6, lerp(2.4, 1.8, k))), c.clone().add(v3(-1, 1.2, -.5)), 42); FOCO = c.clone().add(v3(0, 1.1, 0));
+    } },
+  { desde: 42, nombre: 'Esa foto la habían descargado seis veces: el monitor marca 6', esc: 'ciudad', f(k, t) {
+      ciudad.preparar({ tiempo: t, visitas: 6 });
+      const p = PANT(); C(ciudad.cam, p.clone().add(v3(lerp(.3, .1, k), .05, lerp(1.9, 1.4, k))), p.clone().add(v3(.25, .1, 0)), 40); FOCO = p.clone();
+    } },
+  { desde: 49, nombre: 'Seis.: zoom brutal al número', esc: 'ciudad', f(k, t) {
+      ciudad.preparar({ tiempo: t, visitas: 6 });
+      const p = PANT().add(v3(.42, .13, 0)); C(ciudad.cam, p.clone().add(v3(0, 0, lerp(.7, .45, k))), p, 40);
+    } },
+  { desde: 50, nombre: 'Pero ella demanda al fotógrafo: juzgado, ella furiosa con su abogado', esc: 'juzgado', f(k, t) {
+      juzgado.preparar({ tiempo: t, ver: { juez: v3(0, .9, -4.3), cantante_furiosa: v3(-1.1, 0, .6), abogado: v3(-.25, 0, .9), fotografo: v3(1.1, 0, .5) } });
+      C(juzgado.cam, v3(lerp(.3, 0, k), 2.0, lerp(7.5, 6.6, k)), v3(0, 1.5, -1), 46);
+    } },
+  { desde: 55, nombre: 'y le pide 50 millones de dólares (pop dorado)', esc: 'juzgado', f(k, t) {
+      juzgado.preparar({ tiempo: t, ver: { cantante_furiosa: v3(-.3, 0, .2), abogado: v3(.9, 0, .5) } });
+      C(juzgado.cam, v3(lerp(-.6, -.4, k), 1.3, lerp(3.2, 2.7, k)), v3(-.1, 1.2, .2), 42); FOCO = v3(-.3, 1.2, .2);
+    } },
+  { desde: 62, nombre: 'ABOGADO: "¡Exigimos que esa foto desaparezca!"', esc: 'juzgado', f(k, t) {
+      juzgado.preparar({ tiempo: t, ver: { abogado: v3(0, 0, .5), juez: v3(0, .9, -4.3) } });
+      C(juzgado.cam, v3(lerp(.5, .35, k), 1.25, lerp(2.4, 2.0, k)), v3(.15, 1.15, .5), 40); FOCO = v3(0, 1.15, .5);
+    } },
+  { desde: 67, nombre: 'La noticia sale en todos los periódicos: el periódico gira hacia la cámara', esc: 'ciudad', f(k, t) {
+      C(ciudad.cam, v3(1.5, 1.7, 4), v3(-1, 1.4, -4), 44); ciudad.preparar({ tiempo: t, periodicoK: k, genteN: 4 });
+    } },
+  { desde: 74, nombre: 'y cientos de miles de personas: gente leyendo y el contador volando', esc: 'ciudad', f(k, t) {
+      const fase = t < T(80);
+      if (fase) { C(ciudad.cam, v3(lerp(1.2, .8, k), 1.6, lerp(5.6, 4.8, k)), v3(-1.5, 1.2, -3), 44); ciudad.preparar({ tiempo: t, genteN: Math.min(12, 4 + Math.floor((t - T(74)) * 9)) }); }
+      else { ciudad.preparar({ tiempo: t, visitas: 6 + Math.pow(clamp((t - T(80)) / 1.6), 2) * 420000, comentarios: (t - T(80)) * 8000 }); const p = PANT(); C(ciudad.cam, p.clone().add(v3(.1, .05, 1.5)), p, 40); FOCO = p.clone(); }
+    } },
+  { desde: 85, nombre: 'Pierde el juicio: mazazo y sello PERDIDO', esc: 'juzgado', f(k, t) {
+      juzgado.preparar({ tiempo: t, mazo: t - T(85), ver: { juez: v3(0, .9, -4.3), cantante_furiosa: v3(-1.0, 0, -1.2) } });
+      C(juzgado.cam, v3(0, 2.1, lerp(2.6, 2.2, k)), v3(0, 2.0, -4.0), 44);
+    } },
+  { desde: 88, nombre: 'y le toca pagar los abogados del fotógrafo: la bolsa de dinero vuela hacia él', esc: 'juzgado', f(k, t) {
+      juzgado.preparar({ tiempo: t, bolsaK: clamp((t - T(91)) / 1.2), ver: { cantante_furiosa: v3(-.75, 0, .2), fotografo_feliz: v3(.75, 0, .2) } });
+      C(juzgado.cam, v3(lerp(.2, 0, k), 1.4, lerp(4.8, 4.3, k)), v3(0, 1.1, .2), 44);
+    } },
+  { desde: 97, nombre: 'Se llama EFECTO STREISAND: cae el letrero sobre el acantilado', esc: 'costa', f(k, t) {
+      costa.preparar({ tiempo: t, letreroK: k });
+      C(costa.cam, v3(lerp(22, 20, k), lerp(20, 21, k), lerp(-6, -6, k)), v3(-2, 19, -6), 46);
+    } },
+  { desde: 101, nombre: 'cuanto más intentas esconder algo, más gente quiere verlo: la playa se llena de mirones', esc: 'costa', f(k, t) {
+      costa.preparar({ tiempo: t, mironesK: clamp(k * 1.4), ver: { cantante_furiosa: MAN.clone().add(v3(6.4, .2, 1.6)) } });
+      C(costa.cam, v3(lerp(19, 17, k), lerp(3, 3.6, k), lerp(9, 7, k)), v3(1, 7.5, -3), 48);
+    } },
+  { desde: 110, nombre: 'BUCLE: la foto más famosa de internet, vuelve al monitor del principio', esc: 'ciudad', f(k, t) {
+      ciudad.preparar({ tiempo: t, visitas: 6, cursor: k });
+      const p = PANT(); C(ciudad.cam, p.clone().add(v3(lerp(.05, .25, k), .1, lerp(1.2, 2.6, suave(k)))), p, 40); FOCO = p.clone();
+    } },
+];
+PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
+PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
+const BARRIDOS = new Set([12, 42, 50, 67, 85, 97, 110]);
+
+// =================== SUBTÍTULOS ===================
+const SALTAR = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+const NUM = { doce: '12.000', seis: '6', 'Seis.': '6.', cincuenta: '50' };
+const unidades = []; for (let i = 0; i < PAL.length; i++) { if (SALTAR.has(i)) continue; const w = PAL[i].w; if (w === 'doce' && PAL[i + 1]?.w.startsWith('mil')) { unidades.push({ ...PAL[i], w: '12.000', t1: PAL[i + 1].t1, i }); i++; continue; } if (w === 'seis') { unidades.push({ ...PAL[i], w: '6', i }); continue; } if (w === 'Seis.') { unidades.push({ ...PAL[i], w: '6.', i }); continue; } if (w === 'cincuenta') { unidades.push({ ...PAL[i], w: '50', i }); continue; } unidades.push({ ...PAL[i], i }); }
+const finFrase = w => /[.,:;…!?]$/.test(w);
+const frases = []; let f0 = [];
+unidades.forEach((u, j) => { f0.push(u); const sig = unidades[j + 1]; if (finFrase(u.w) || !sig || sig.quien !== u.quien || sig.i !== u.i + 1) { frases.push(f0); f0 = []; } });
+const MAXC = 19, bloques = [];
+frases.forEach(fr => { let b = []; const largo = x => x.map(u => u.w).join(' ').length; fr.forEach(u => { if (b.length && (b.length >= 4 || largo([...b, u]) > MAXC)) { bloques.push(b); b = []; } b.push(u); }); if (b.length) { const ult = bloques[bloques.length - 1]; if (b.length === 1 && ult && fr.includes(ult[0]) && largo([...ult, ...b]) <= MAXC + 4) ult.push(...b); else bloques.push(b); } });
+const CLAVE = new Set(['California', '2003', 'fotógrafo', 'helicóptero', '12.000', 'fotos', 'erosión', 'pequeñita', 'mansión', 'Barbra', 'Streisand', '6', 'demanda', '50', 'millones', 'dólares', 'desaparezca', 'periódicos', 'cientos', 'miles', 'casa', 'Pierde', 'juicio', 'pagar', 'abogados', 'efecto', 'esconder', 'verlo', 'famosas', 'internet']);
+const marcar = w => w.split(' ').map(p => CLAVE.has(p.replace(/[^\wáéíóúñü0-9.]/gi, '').replace(/\.$/, '')) ? `<b>${p}</b>` : p).join(' ');
+const FIN_GANCHO = T(12) - .06;
+
+// =================== EDICIÓN (dopamina) ===================
+const $ = id => document.getElementById(id);
+const golpes = [[0, 40], [T(49), 26], [T(58), 14], [T(62), 10], [T(85) + .1, 24], [T(97) + .3, 22]];
+const POPS = [[T(21), T(29) - .1, 'CLIC', 300, 640], [T(23), T(29) - .1, 'CLIC', 760, 520], [T(58), T(62) - .1, '$50.000.000', 540, 720], [T(77), T(80), 'WOW', 300, 600], [T(84) - .3, T(85), '!!!', 540, 560], [T(91), T(97) - .2, '+$$$', 780, 700], [T(104), T(110) - .1, '?!', 300, 620], [T(106), T(110) - .1, 'WOW', 780, 560]];
+const granoCanvas = document.createElement('canvas'); granoCanvas.width = granoCanvas.height = 256;
+{ const g = granoCanvas.getContext('2d'), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = rnd() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); }
+$('grano').style.backgroundImage = `url(${granoCanvas.toDataURL()})`;
+function edicion(t) {
+  const g = $('gancho'); const kg = t / .18; g.style.opacity = t < FIN_GANCHO ? 1 : 0; g.style.transform = `scale(${lerp(1.35, 1, salida(kg)) * (1 + Math.sin(clamp((t - T(8)) / .25) * Math.PI) * .06)})`;
+  const sub = $('sub');
+  const b = bloques.find((bl, i) => bl[0].t0 - .05 <= t && t < Math.min(bl[bl.length - 1].t1 + .35, (bloques[i + 1]?.[0].t0 ?? DURACION) - .05));
+  if (b) { sub.innerHTML = marcar(b.map(u => u.w.replace('…', '...')).join(' ')); sub.className = 'txt' + (b[0].quien !== 'narrador' ? ' personaje' : ''); const k = clamp((t - b[0].t0) / .1); sub.style.transform = `scale(${lerp(1.22, 1, salida(k))})`; sub.style.opacity = 1; } else sub.style.opacity = 0;
+  const ct = $('contador'); const c0 = T(21), c1 = T(29) - .1;
+  if (t >= c0 && t < c1) { const k = salida((t - c0) / (T(28) - c0)); ct.innerHTML = Math.floor(12000 * k).toLocaleString('es-ES') + '<small>FOTOS</small>'; ct.style.opacity = 1; } else if (t >= T(49) && t < T(50) - .05) { ct.innerHTML = '6<small>DESCARGAS</small>'; ct.style.opacity = 1; ct.style.transform = `scale(${lerp(1.6, 1, salida((t - T(49)) * 6))})`; } else ct.style.opacity = 0;
+  const pz = $('pops'); pz.innerHTML = '';
+  for (const [a, bb, txt, x, y] of POPS) { if (t < a || t >= bb) continue; const k = (t - a); const d = document.createElement('div'); d.className = 'pop'; d.textContent = txt; d.style.left = x + 'px'; d.style.top = (y - k * 50) + 'px'; d.style.opacity = clamp((bb - t) / .3); d.style.transform = `translate(-50%,-50%) scale(${lerp(.3, 1, salida(k * 5))}) rotate(${Math.sin(x) * 10}deg)`; pz.appendChild(d); }
+  if (t >= T(85) + .15 && t < T(88) - .06) { const d = document.createElement('div'); d.className = 'sello'; d.textContent = 'PERDIDO'; d.style.transform = `translate(-50%,-50%) rotate(-14deg) scale(${lerp(2.2, 1, salida((t - T(85) - .15) * 6))})`; pz.appendChild(d); }
+  $('flash').style.opacity = [[0, .9, .3], [T(85) + .1, .4, .15], [T(97) + .3, .5, .2]].reduce((a, [ti, f, d]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / d) : 0), 0);
+  let escala = 1, barrido = 0; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .25) { escala = Math.max(escala, lerp(1.1, 1, salida(d / .25))); if (BARRIDOS.has(p.desde) && d < .18) barrido = 1 - d / .18; } }
+  for (const i of [13, 20, 25, 32, 36, 41, 48, 52, 61, 66, 73, 79, 87, 96, 100, 109, 125]) { const d = t - T(i); if (d >= 0 && d < .3) escala = Math.max(escala, lerp(1.06, 1, salida(d / .3))); }
+  barrido = Math.max(barrido, clamp((t - (DURACION - .2)) / .2));
+  let sx = 0, sy = 0; for (const [gp, fuerza] of golpes) { const d = t - gp; if (d >= 0 && d < .6) { const a = Math.pow(1 - d / .6, 2) * fuerza; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
+  sx += barrido * barrido * 280;
+  const lz = $('lienzo'); lz.style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.04})`; lz.style.filter = barrido > 0 ? `blur(${(barrido * 10).toFixed(1)}px)` : 'none';
+  $('grano').style.backgroundPosition = `${Math.floor(t * 30 * 97) % 256}px ${Math.floor(t * 30 * 53) % 256}px`;
+}
+
+window.DURACION = DURACION;
+window.PLANOS = PLANOS.map(p => ({ nombre: p.nombre, t0: p.t0, t1: p.t1, esc: p.esc, desde: p.desde }));
+window.renderAt = (t) => {
+  const p = PLANOS.find(p => t >= p.t0 && t < p.t1) || PLANOS[PLANOS.length - 1];
+  const k = clamp((t - p.t0) / (p.t1 - p.t0));
+  const s = ESC[p.esc]; FOCO = null; p.f(k, t); p.f(k, t);
+  s.cam.aspect = W / H; s.cam.updateProjectionMatrix(); s.cam.updateMatrixWorld();
+  rp.scene = s.escena; rp.camera = s.cam; dof.escena = s.escena; dof.cam = s.cam;
+  if (FOCO) { dof.foco = -FOCO.clone().applyMatrix4(s.cam.matrixWorldInverse).z; dof.apertura = .003; } else dof.apertura = 0;
+  renderer.toneMappingExposure = 1.0;
+  if (window.ANTES) window.ANTES(t);
+  comp.render(); edicion(t);
+};
+await Promise.all(CARGAS);
+window.LISTO = true;
+</script>
+</body></html>
