@@ -286,7 +286,7 @@ const PLANOS = [
     } },
   { desde: 87, nombre: 'Pero el almirante británico se niega a disparar', f(k, t) {
       pr({ tiempo: t, nBarcos: 5, ver: { almirante: v3(0, 0, -17) } }); const G = ALTO_TIERRA(0, -17);
-      C(v3(lerp(.8, .4, k), G + lerp(.6, 1.0, k), lerp(-13.4, -14, k)), v3(0, G + .9, -17), 44); FOCO = v3(0, G + .9, -17);
+      C(v3(lerp(.8, .4, k), G + lerp(1.9, 1.7, k), lerp(-13.2, -13.8, k)), v3(0, G + .6, -17), 46); FOCO = v3(0, G + .9, -17);
     } },
   { desde: 95, nombre: 'ALMIRANTE: No pienso meter a dos naciones en una guerra… por un cerdo', f(k, t) {
       pr({ tiempo: t, nBarcos: 5, ver: { almirante_no: v3(0, 0, -17) } }); const G = ALTO_TIERRA(0, -17);
@@ -322,7 +322,7 @@ const POPS = [[T(5), T(11) - .1, '?!', 760, 820], [T(24), T(25) - .1, '¡PUM!', 
 const granoCanvas = document.createElement('canvas'); granoCanvas.width = granoCanvas.height = 256;
 { const g = granoCanvas.getContext('2d'), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = rnd() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); }
 $('grano').style.backgroundImage = `url(${granoCanvas.toDataURL()})`;
-function contador(t, a, b, hasta, etiqueta, fin, pre = '') { if (t < a || t >= b) return null; const k = salida((t - a) / (fin - a)); return pre + Math.floor(hasta * k).toLocaleString('es-ES') + `<small>${etiqueta}</small>`; }
+function contador(t, a, b, hasta, etiqueta, fin, pre = '') { if (t < a || t >= b) return null; const k = salida((t - a) / (fin - a)); return pre + String(Math.floor(hasta * k)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + `<small>${etiqueta}</small>`; }
 const fijo = (t, a, b, txt) => t >= a && t < b ? txt : null;
 function edicion(t) {
   const g = $('gancho'); const kg = t / .18; g.style.opacity = t < FIN_GANCHO ? 1 : 0; g.style.transform = `scale(${lerp(1.35, 1, salida(kg)) * (1 + Math.sin(clamp((t - T(8)) / .25) * Math.PI) * .06)})`;

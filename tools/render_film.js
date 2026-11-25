@@ -16,7 +16,7 @@ srv.listen(0, async () => {
     await p.goto(url); await p.waitForFunction('window.LISTO === true', null, { timeout: 300000 });
     return { b, p };
   };
-  const foto = async (p, t, archivo) => { await p.evaluate(t => window.renderAt(t), t); await p.screenshot({ path: archivo, type: 'jpeg', quality: 96 }); };
+  const foto = async (p, t, archivo) => { await p.evaluate(t => window.renderAt(t), t); await p.screenshot({ path: archivo, type: 'jpeg', quality: 96, timeout: 180000 }); };
   if (a3 === '--tiempos') {
     const { b, p } = await abrir();
     for (const t of a4.split(',').map(Number)) await foto(p, t, path.join(salida, `t_${t.toFixed(2)}.jpg`));
