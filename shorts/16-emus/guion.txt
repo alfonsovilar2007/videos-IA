@@ -1,0 +1,9 @@
+narrador|Australia le declaró la guerra a los emús… y perdió.
+narrador|1932. Unos veinte mil emús arrasan los campos de trigo, y los granjeros piden ayuda al ejército.
+narrador|Llega el mayor Meredith con dos ametralladoras y diez mil balas.
+meredith[,,0.1]|Esto será cuestión de días.
+narrador|Pero los emús se separan en grupitos y salen corriendo en todas direcciones. Y a las pocas ráfagas, una ametralladora se atasca.
+narrador|Montan la otra en un camión… pero en el campo, los emús corren más que el camión.
+narrador|Al final gastan casi diez mil balas para menos de mil emús. Diez balas por pájaro.
+narrador|Meredith acabó diciendo que los emús aguantaban las ametralladoras como tanques.
+narrador|Y los campos de trigo… siguieron llenos de emús.

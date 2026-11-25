@@ -513,3 +513,45 @@ PRESETS.cantante_furiosa = Object.assign({}, PRESETS.cantante, { expr: 'sorprend
 PRESETS.fotografo_feliz = Object.assign({}, PRESETS.fotografo, { cabeza: PELO.replace('#3A2A22', '#8a6a3a') + CASCOS, brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]], objeto: `<g transform="translate(0,-170)">${CAMARA_FOTO}</g>` });
 PRESETS.lector = Object.assign({}, PRESETS.vecino1 || PRESETS.toni, { expr: 'sorprendido', brazoI: 'M-46,-250 q20,30 20,40', brazoD: 'M46,-250 q-20,30 -20,40', manos: [[-30, -216], [30, -216]], objeto: `<g transform="translate(0,-236)">${PERIODICO}</g>` });
 PRESETS.lectora = Object.assign({}, PRESETS.amiga, { expr: 'sorprendido', brazoI: 'M-46,-250 q20,30 20,40', brazoD: 'M46,-250 q-20,30 -20,40', manos: [[-30, -216], [30, -216]], objeto: `<g transform="translate(0,-236)">${PERIODICO}</g>` });
+
+// ---------- Short "La guerra de los emús" (Australia, 1932) ----------
+function emu({ corre = false, burla = false, esc = 1 } = {}) {
+  const P = (d, w, c) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 7}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  let g = `<g transform="scale(${esc})" stroke-linejoin="round">`;
+  g += `<ellipse cx="0" cy="2" rx="90" ry="10" fill="#000" opacity=".15"/>`;
+  const piernas = corre ? [`M-20,-170 l-40,70 l-30,90`, `M10,-170 l40,60 l50,70`] : [`M-20,-170 l-6,80 l-14,86`, `M14,-170 l6,80 l14,86`];
+  piernas.forEach((d, i) => g += P(d, 12, i ? '#7a8088' : '#8a9098'));
+  for (const d of piernas) { const fin = d.split(' ').reduce((a, s) => s, ''); }
+  const pies = corre ? [[-90, -4], [100, -6]] : [[-40, -4], [40, -4]];
+  pies.forEach(([x, y]) => g += `<path d="M${x - 16},${y} l16,-8 l18,6 M${x},${y - 8} l2,10" fill="none" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>`);
+  g += `<ellipse cx="-10" cy="-215" rx="105" ry="72" fill="#5a4636" stroke="${INK}" stroke-width="7"/>`;
+  for (let i = 0; i < 26; i++) { const a = Math.PI * (.05 + i / 26 * .95), r = 80; g += `<path d="M${-10 + Math.cos(a) * r * .9},${-215 + Math.sin(a) * 50} q${-12 - (i % 3) * 4},18 ${-24 - (i % 4) * 4},30" fill="none" stroke="#3a2a20" stroke-width="5" stroke-linecap="round"/>`; }
+  g += `<path d="M-115,-230 q-30,10 -36,40" fill="none" stroke="#3a2a20" stroke-width="10" stroke-linecap="round"/>`;
+  const cuello = corre ? 'M70,-250 q50,-50 70,-130' : 'M70,-250 q20,-80 10,-160';
+  g += P(cuello, 22, '#6a8aa8');
+  const [hx, hy] = corre ? [140, -380] : [80, -410];
+  g += `<ellipse cx="${hx}" cy="${hy}" rx="34" ry="26" fill="#3a3a44" stroke="${INK}" stroke-width="6"/>`;
+  g += burla ? `<path d="M${hx + 26},${hy - 4} l40,-8 l-38,10 l40,10 l-42,-2z" fill="#6a5a48" stroke="${INK}" stroke-width="4"/><path d="M${hx + 30},${hy + 4} q20,10 30,30" fill="none" stroke="#e86a7a" stroke-width="8" stroke-linecap="round"/>` : `<path d="M${hx + 26},${hy - 6} l42,4 l-42,8z" fill="#6a5a48" stroke="${INK}" stroke-width="4"/>`;
+  g += `<circle cx="${hx + 8}" cy="${hy - 6}" r="9" fill="#e8582a" stroke="${INK}" stroke-width="3"/><circle cx="${hx + 10}" cy="${hy - 7}" r="4" fill="${INK}"/>`;
+  if (burla) g += `<path d="M${hx - 6},${hy - 22} l20,6" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+  return g + '</g>';
+}
+PRESETS.emu = { svg: emu() };
+PRESETS.emu_corre = { svg: emu({ corre: true }) };
+PRESETS.emu_burla = { svg: emu({ corre: true, burla: true }) };
+const SOMBRERO_AUS = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-110,-40 q110,-26 220,0 q-110,22 -220,0z" fill="#8a7450"/><path d="M-66,-48 q0,-60 66,-62 q66,2 66,62 q-66,12 -132,0z" fill="#9a8458"/><path d="M-66,-56 q66,10 132,0" stroke="#5a4a30" stroke-width="10" fill="none"/><path d="M40,-46 q50,-60 70,-20 q-30,0 -70,20z" fill="#9a8458"/><circle cx="62" cy="-56" r="9" fill="#c99a2e"/></g>`;
+const SOMBRERO_GRANJA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-116,-36 q116,-26 232,0 q-116,20 -232,0z" fill="#d8c08a"/><path d="M-64,-44 q0,-56 64,-58 q64,2 64,58 q-64,12 -128,0z" fill="#e2cc96"/><path d="M-64,-52 q64,10 128,0" stroke="#8a5a2a" stroke-width="8" fill="none"/></g>`;
+Object.assign(PRESETS, {
+  meredith: { expr: 'eureka', pantalon: '#7a6a48', torso: '#8a7a54', manga: '#8a7a54',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]],
+    detalle: `<path d="M-50,-262 l50,40 50,-40" fill="none" stroke="#6a5a3a" stroke-width="6"/><g fill="#c99a2e" stroke="${INK}" stroke-width="2"><circle cx="0" cy="-200" r="5"/><circle cx="0" cy="-176" r="5"/></g><path d="M-50,-160 h100" stroke="#5a3a20" stroke-width="12"/><rect x="-36" y="-250" width="20" height="10" fill="#c0302a"/>`,
+    cabeza: SOMBRERO_AUS + BIGOTE_FR },
+  soldado_aus: { expr: 'preocupado', pantalon: '#7a6a48', torso: '#8a7a54', manga: '#8a7a54',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: `<path d="M-50,-160 h100" stroke="#5a3a20" stroke-width="12"/>`, cabeza: SOMBRERO_AUS },
+  granjero_aus: { expr: 'preocupado', pantalon: '#3a5a8a', torso: '#c8a868', manga: '#c8a868',
+    brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]],
+    detalle: `<path d="M-40,-262 v110 M40,-262 v110" stroke="#3a5a8a" stroke-width="12"/><rect x="-44" y="-180" width="88" height="40" fill="#3a5a8a" stroke="${INK}" stroke-width="4"/>`, cabeza: SOMBRERO_GRANJA + BIGOTE('#8a6a3a') },
+});
+PRESETS.meredith_susto = Object.assign({}, PRESETS.meredith, { expr: 'sorprendido', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+PRESETS.soldado_susto = Object.assign({}, PRESETS.soldado_aus, { expr: 'sorprendido', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });

@@ -1,0 +1,336 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>La guerra de los emús</title>
+<!-- Modelo Ricks (guía 0e): gancho absurdo, historia que escala, nombre del fenómeno, cierre que vuelve al principio. Dopamina constante. -->
+<style>
+  @font-face{font-family:Mont;src:url(/fuentes/montserrat-latin-900-normal.woff2);font-weight:900}
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+  #lienzo{position:absolute;inset:0;transform-origin:50% 50%}
+  canvas{display:block}
+  #vineta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 62%,rgba(0,0,0,.35) 100%)}
+  #grano{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay}
+  #flash{position:absolute;inset:0;background:#fff8e8;opacity:0}
+  .txt{position:absolute;left:40px;right:40px;text-align:center;font-family:Mont,"DejaVu Sans",sans-serif;font-weight:900;color:#fff;paint-order:stroke;white-space:nowrap}
+  #gancho{top:230px;font-size:92px;line-height:1.02;letter-spacing:-1.5px;-webkit-text-stroke:16px #000;text-shadow:0 10px 0 rgba(0,0,0,.5);opacity:0;white-space:normal}
+  #contador{position:absolute;left:0;right:0;top:520px;text-align:center;font:900 190px Mont,sans-serif;color:#FFD93B;-webkit-text-stroke:20px #000;paint-order:stroke;text-shadow:0 14px 0 rgba(0,0,0,.5);opacity:0}
+  #contador small{display:block;font-size:80px;color:#fff;margin-top:-10px}
+  .pop{position:absolute;font:900 86px Mont,sans-serif;color:#FFD93B;-webkit-text-stroke:12px #000;paint-order:stroke;transform:translate(-50%,-50%)}
+  #sub{top:1530px;font-size:66px;line-height:1.1;letter-spacing:-.5px;-webkit-text-stroke:11px #000;text-shadow:0 6px 0 rgba(0,0,0,.5)}
+  #sub b{color:#FFD93B}
+  #sub.personaje{font-style:italic}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<div id="lienzo"></div>
+<div id="vineta"></div>
+<div id="grano"></div>
+<div id="gancho" class="txt">GUERRA CONTRA<br>LOS EMÚS…<br><span style="color:#FFD93B">Y PERDIERON</span></div>
+<div id="contador"></div>
+<div id="pops"></div>
+<div id="sub" class="txt"></div>
+<div id="flash"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { Pass, FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { BokehShader } from 'three/addons/shaders/BokehShader.js';
+
+THREE.Cache.enabled = true;
+const W = 1080, H = 1920;
+let semilla = 1932;
+const rnd = () => { semilla |= 0; semilla = semilla + 0x6D2B79F5 | 0; let t = Math.imul(semilla ^ semilla >>> 15, 1 | semilla); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const suave = k => { k = clamp(k); return k * k * (3 - 2 * k); };
+const salida = k => 1 - Math.pow(1 - clamp(k), 3);
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const hash2 = (x, z) => { const h = Math.sin(x * 127.1 + z * 311.7) * 43758.5453; return h - Math.floor(h); };
+const vruido = (x, z) => { const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf); return lerp(lerp(hash2(xi, zi), hash2(xi + 1, zi), u), lerp(hash2(xi, zi + 1), hash2(xi + 1, zi + 1), u), v); };
+const fbm = (x, z) => { let s = 0, a = .5, f = 1; for (let i = 0; i < 5; i++) { s += a * vruido(x * f, z * f); f *= 2.03; a *= .5; } return s; };
+
+await document.fonts.load('900 66px Mont');
+const PAL = await (await fetch('voz_ritmo.json')).json();
+const T = i => PAL[i].t0;
+const DURACION = PAL[PAL.length - 1].t1 + .45;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('lienzo').appendChild(renderer.domElement);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const ESTUDIO = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+
+function canvasTex(w, h, dibujo, rx = 1, ry = 1, color = true) { const c = document.createElement('canvas'); c.width = w; c.height = h; dibujo(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); if (color) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData.canvas = c; return t; }
+const texRadial = c => canvasTex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+const BRILLO = texRadial('rgba(255,255,255,1)');
+function texRelieve(w, h, dibujo, rx, ry) { const s0 = semilla; const col = canvasTex(w, h, g => dibujo(g, w, h, true), rx, ry); const s1 = semilla; semilla = s0; const bump = canvasTex(w, h, g => dibujo(g, w, h, false), rx, ry, false); semilla = s1; return { col, bump }; }
+const texNube = () => canvasTex(256, 256, (g, w, h) => { for (let i = 0; i < 40; i++) { const a = rnd() * Math.PI * 2, r = Math.pow(rnd(), .7) * 70, x = 128 + Math.cos(a) * r * 1.3, y = 140 + Math.sin(a) * r * .6, s = 26 + rnd() * 46; const gr = g.createRadialGradient(x, y - s * .3, 0, x, y, s); const l = 255 - Math.max(0, y - 120) * .6; gr.addColorStop(0, `rgba(${l},${l},${l + 4},${.45 + rnd() * .2})`); gr.addColorStop(1, `rgba(${l},${l},${l},0)`); g.fillStyle = gr; g.fillRect(0, 0, w, h); } });
+const NUBES = [texNube(), texNube(), texNube()];
+const texTexto = (txt, w = 512, h = 160, color = '#fff', fuente = '900 110px Mont', borde = '#000') => canvasTex(w, h, (g) => { g.font = fuente; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; if (borde) { g.lineWidth = 18; g.strokeStyle = borde; g.strokeText(txt, w / 2, h / 2 + 6); } g.fillStyle = color; g.fillText(txt, w / 2, h / 2 + 6); });
+
+const CARGAS = []; const cargador = new THREE.TextureLoader(); const texturas = {};
+const spriteTex = n => { if (texturas[n]) return texturas[n]; let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return texturas[n] = t; };
+function personaje(padre, nombre, alto, { rim = '#fff4dc', brillo = .06, tono = .9 } = {}) {
+  const t = spriteTex(nombre), g = new THREE.Group();
+  const geo = new THREE.PlaneGeometry(alto * 400 / 640, alto); geo.translate(0, alto / 2, 0);
+  const p = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: brillo, side: THREE.DoubleSide }));
+  p.material.color.setScalar(tono); p.castShadow = true; p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  const r = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, color: rim, transparent: true, opacity: .55, alphaTest: .5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+  r.scale.set(1.045, 1.02, 1); r.position.set(0, -alto * .01, -.03);
+  g.add(r, p); padre.add(g); g.userData.alto = alto; return g;
+}
+let CAMARA = null;
+const mirar = p => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(CAMARA.position.x - w.x, CAMARA.position.z - w.z); };
+class PaseDOF extends Pass {
+  constructor() { super(); this.rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType }); this.matProf = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, blending: THREE.NoBlending }); const u = THREE.UniformsUtils.clone(BokehShader.uniforms); this.mat = new THREE.ShaderMaterial({ defines: Object.assign({}, BokehShader.defines), uniforms: u, vertexShader: BokehShader.vertexShader, fragmentShader: BokehShader.fragmentShader }); this.u = u; this.quad = new FullScreenQuad(this.mat); this.copia = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D t; varying vec2 vUv; void main(){ gl_FragColor=texture2D(t,vUv); }' }); this.apertura = 0; this.maxBlur = .012; }
+  render(renderer, writeBuffer, readBuffer) {
+    if (!this.apertura) { this.copia.uniforms.t.value = readBuffer.texture; this.quad.material = this.copia; renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.quad.render(renderer); this.quad.material = this.mat; return; }
+    const g = [];
+    this.escena.traverse(o => { if (o.isPoints || o.isSprite || o.isLine) { if (o.visible) { g.push([o, 'v']); o.visible = false; } return; } if (o.isMesh) { const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && (m.blending === THREE.AdditiveBlending || m.depthWrite === false || m.userData.sinProf)) { if (o.visible) { g.push([o, 'v']); o.visible = false; } return; } g.push([o, o.material]); o.material = o.customDepthMaterial || this.matProf; } });
+    const f = this.escena.background, n = this.escena.fog; this.escena.background = null; this.escena.fog = null;
+    renderer.setRenderTarget(this.rt); renderer.setClearColor(0xffffff, 1); renderer.clear(); renderer.render(this.escena, this.cam);
+    this.escena.background = f; this.escena.fog = n; renderer.setClearColor(0x000000, 1);
+    for (const [o, x] of g) { if (x === 'v') o.visible = true; else o.material = x; }
+    this.u.focus.value = this.foco; this.u.tColor.value = readBuffer.texture; this.u.tDepth.value = this.rt.texture; this.u.aspect.value = W / H; this.u.aperture.value = this.apertura; this.u.maxblur.value = this.maxBlur; this.u.nearClip.value = this.cam.near; this.u.farClip.value = this.cam.far;
+    renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.quad.render(renderer);
+  }
+}
+
+// ---------- cielo soleado con nubes ----------
+const SOL = v3(.5, .7, .5).normalize();
+function crearCielo() {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.SphereGeometry(900, 48, 24), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { sol: { value: SOL } },
+    vertexShader: 'varying vec3 p; void main(){ p = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+    fragmentShader: 'uniform vec3 sol; varying vec3 p; void main(){ vec3 d = normalize(p); float k = clamp(d.y*1.6+.02,0.,1.); vec3 c = mix(vec3(.72,.86,.97), vec3(.13,.42,.86), pow(k,.55)); if (d.y < 0.) c = vec3(.72,.86,.97); float s = max(dot(d, sol), 0.); c += vec3(1.,.9,.7) * (pow(s, 1200.)*6. + pow(s, 14.)*.3); gl_FragColor = vec4(c,1.); }' }));
+  m.material.userData.sinProf = true; m.renderOrder = -2; g.add(m);
+  for (let i = 0; i < 40; i++) { const a = rnd() * Math.PI * 2, el = .05 + rnd() * .35, r = 600; const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: NUBES[i % 3], transparent: true, depthWrite: false, fog: false, opacity: .95 })); s.position.set(Math.cos(a) * Math.cos(el) * r, Math.sin(el) * r, Math.sin(a) * Math.cos(el) * r); const t = 90 + rnd() * 140; s.scale.set(t * 1.6, t * .8, 1); s.renderOrder = -1; g.add(s); }
+  return g;
+}
+const ENTORNO = (() => { const s = new THREE.Scene(); const c = crearCielo(); c.scale.setScalar(.1); s.add(c); s.add(new THREE.HemisphereLight('#9cc8ff', '#5a7a3a', 1)); return pmrem.fromScene(s, .02).texture; })();
+
+// ---------- el cubo de galio que se funde (cubo → gota redondeada → charco) ----------
+function crearGalio(tam = .1) {
+  const geo = new THREE.BoxGeometry(1, 1, 1, 14, 14, 14), base = geo.attributes.position.array.slice();
+  const m = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ color: '#a9b2bc', metalness: 1, roughness: .1, clearcoat: 1, envMap: ESTUDIO, envMapIntensity: .75 }));
+  m.castShadow = true; m.scale.setScalar(tam);
+  const p = geo.attributes.position, s = v3(), c = v3();
+  m.userData.fundir = (k, t) => { const a = clamp(k * 2.2), b = suave((k - .25) / .75); for (let i = 0; i < p.count; i++) { c.set(base[i * 3], base[i * 3 + 1], base[i * 3 + 2]); s.copy(c).normalize().multiplyScalar(.64); const cubo = v3(c.x, c.y + .5, c.z), esf = v3(s.x, s.y + .64, s.z), charco = v3(s.x * 2.5, (s.y + .64) * .17, s.z * 2.5); const q = cubo.lerp(esf, a * .7).lerp(charco, b); q.y += Math.sin(q.x * 9 + t * 5) * Math.sin(q.z * 8 - t * 4) * .025 * b; p.setXYZ(i, q.x, q.y, q.z); } p.needsUpdate = true; geo.computeVertexNormals(); };
+  m.userData.fundir(0, 0); return m;
+}
+
+// ---------- utilidades ----------
+const caja = (padre, w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; padre.add(o); return o; };
+const O = { brillo: 0, tono: .82, rim: '#ffe8c0' };
+function enjambre(e, n, nombres, alto = 2.2) { return [...Array(n)].map((_, i) => { const p = personaje(e, nombres[i % nombres.length], alto, O); p.userData.f = rnd(); p.userData.l = (rnd() - .5); p.userData.v = .8 + rnd() * .6; return p; }); }
+function mover(lista, t, { activo = 0, de, a, ancho = 2, ciclo = 1.4, n = lista.length, radial = false }) {
+  lista.forEach((r, i) => { r.visible = i < n && activo > 0; if (!r.visible) return; const u = r.userData; const ph = ((t * u.v / ciclo + u.f) % 1); let p, dir;
+    if (radial) { const ang = u.f * 6.28; dir = v3(Math.cos(ang), 0, Math.sin(ang)); p = de.clone().addScaledVector(dir, ph * ancho); }
+    else { p = de.clone().lerp(a, ph); const lado = v3(-(a.z - de.z), 0, a.x - de.x).normalize(); p.addScaledVector(lado, u.l * ancho); dir = a.clone().sub(de); }
+    p.y = Math.abs(Math.sin(t * 12 + i)) * .08; r.position.copy(p); mirar(r); const dp = dir.clone().transformDirection(CAMARA.matrixWorldInverse); r.scale.x = dp.x < 0 ? -1 : 1; });
+}
+
+// =================== ESCENARIO: CAMPOS DE TRIGO DE AUSTRALIA, 1932 ===================
+function crearCampo() {
+  const e = new THREE.Scene(); e.environment = ENTORNO; e.environmentIntensity = .8;
+  const cielo = crearCielo(); e.add(cielo); e.fog = new THREE.FogExp2('#d8e8f4', .004);
+  const sl = new THREE.DirectionalLight('#fff0d4', 3.3); sl.position.copy(SOL).multiplyScalar(60); sl.castShadow = true; sl.shadow.mapSize.set(4096, 4096); sl.shadow.bias = -.0003; sl.shadow.normalBias = .05; const sc = sl.shadow.camera; sc.left = sc.bottom = -30; sc.right = sc.top = 30; sc.far = 200; e.add(sl, sl.target);
+  e.add(new THREE.HemisphereLight('#b0d0f8', '#b07850', 1.0));
+  const tierra = texRelieve(256, 256, (g, w, h, c) => { g.fillStyle = c ? '#b8643a' : '#808080'; g.fillRect(0, 0, w, h); for (let i = 0; i < 4000; i++) { g.fillStyle = c ? `rgba(${rnd() < .5 ? '90,40,20' : '230,150,100'},${rnd() * .3})` : `rgba(${rnd() < .5 ? 40 : 220},0,0,.5)`; g.beginPath(); g.arc(rnd() * w, rnd() * h, 1 + rnd() * 3, 0, 7); g.fill(); } }, 60, 60);
+  const suelo = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ map: tierra.col, bumpMap: tierra.bump, bumpScale: 1.5, roughness: .95 })); suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; e.add(suelo);
+  // trigo dorado en parcelas (espigas instanciadas que se mecen)
+  const uT = { value: 0 }; const NW = 60000;
+  const espiga = new THREE.CylinderGeometry(.012, .016, 1, 4).translate(0, .5, 0); const cab = new THREE.SphereGeometry(.035, 6, 5).scale(1, 2.4, 1).translate(0, 1.02, 0);
+  const geoE = (() => { const g = new THREE.BufferGeometry(); const a = espiga.toNonIndexed(), b = cab.toNonIndexed(); const pos = new Float32Array(a.attributes.position.count * 3 + b.attributes.position.count * 3); pos.set(a.attributes.position.array, 0); pos.set(b.attributes.position.array, a.attributes.position.array.length); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.computeVertexNormals(); return g; })();
+  const mTrigo = new THREE.MeshStandardMaterial({ color: '#e2b84a', roughness: .8 }); mTrigo.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n float fx = instanceMatrix[3].x, fz = instanceMatrix[3].z; transformed.x += sin(uT*2. + fx*.4 + fz*.3) * .08 * position.y * position.y;'); };
+  const trigo = new THREE.InstancedMesh(geoE, mTrigo, NW); const libre = (x, z) => !(Math.abs(x) < 6 && z > -40) && !(Math.hypot(x - 14, z + 22) < 9);
+  { const mm = new THREE.Matrix4(), q = new THREE.Quaternion(), cc = new THREE.Color(); let k = 0; while (k < NW) { const x = (rnd() - .5) * 90, z = 12 - rnd() * 110; if (!libre(x, z)) continue; const s = .7 + rnd() * .5; q.setFromEuler(new THREE.Euler((rnd() - .5) * .3, rnd() * 6, (rnd() - .5) * .3)); mm.compose(v3(x, 0, z), q, v3(1, s, 1)); trigo.setMatrixAt(k, mm); cc.setHSL(.11 + rnd() * .03, .6, .5 + rnd() * .15); trigo.setColorAt(k, cc); k++; } }
+  trigo.receiveShadow = true; e.add(trigo);
+  // valla de alambre
+  const mPoste = new THREE.MeshStandardMaterial({ color: '#7a5a3a', roughness: .9 }); for (let z = 10; z > -80; z -= 3.5) for (const x of [-6.2, 6.2]) caja(e, .12, 1.2, .12, mPoste, x, .6, z);
+  for (const x of [-6.2, 6.2]) for (const y of [.5, .9]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 90, 4), new THREE.MeshStandardMaterial({ color: '#888', metalness: .8 })); w.rotation.x = Math.PI / 2; w.position.set(x, y, -35); e.add(w); }
+  // granja con tejado de chapa y molino
+  const granja = new THREE.Group(); granja.position.set(14, 0, -22); e.add(granja);
+  caja(granja, 7, 3, 5, new THREE.MeshStandardMaterial({ color: '#e8dcc0', roughness: .9 }), 0, 1.5, 0);
+  { const chapa = canvasTex(128, 128, (g, w, h) => { for (let x = 0; x < w; x += 8) { g.fillStyle = x % 16 ? '#a8aeb4' : '#8a9096'; g.fillRect(x, 0, 8, h); } }, 4, 1); const tri = new THREE.Shape(); tri.moveTo(-4, 0); tri.lineTo(4, 0); tri.lineTo(0, 2); const tj = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 5.6, bevelEnabled: false }).translate(0, 0, -2.8), new THREE.MeshStandardMaterial({ map: chapa, metalness: .6, roughness: .4 })); tj.position.y = 3; tj.castShadow = true; granja.add(tj); caja(granja, 7.6, .1, 1.6, new THREE.MeshStandardMaterial({ map: chapa, metalness: .6 }), 0, 2.6, 3.2); for (const x of [-3.4, 3.4]) caja(granja, .12, 2.6, .12, mPoste, x, 1.3, 3.9); }
+  const molino = new THREE.Group(); molino.position.set(20, 0, -16); e.add(molino);
+  for (const [x, z] of [[-.8, -.8], [.8, -.8], [-.8, .8], [.8, .8]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 9, 5), new THREE.MeshStandardMaterial({ color: '#888', metalness: .7 })); p.position.set(x * .6, 4.5, z * .6); p.rotation.set(-z * .08, 0, x * .08); molino.add(p); }
+  const aspas = new THREE.Group(); aspas.position.set(0, 9.2, .5); molino.add(aspas); for (let i = 0; i < 16; i++) { const a = new THREE.Mesh(new THREE.BoxGeometry(.22, 1.6, .02), new THREE.MeshStandardMaterial({ color: '#c8ccd0', metalness: .6 })); a.position.y = .9; const g2 = new THREE.Group(); g2.rotation.z = i / 16 * 6.28; g2.add(a); a.rotation.y = .5; aspas.add(g2); }
+  const cola = caja(molino, .05, .8, 1.4, new THREE.MeshStandardMaterial({ color: '#c0302a' }), 0, 9.2, -1);
+  // eucaliptos
+  for (const [x, z, s] of [[-14, -30, 1.4], [-20, -10, 1.2], [26, -40, 1.6], [-30, -55, 1.8], [8, -70, 1.6]]) { const g2 = new THREE.Group(); g2.position.set(x, 0, z); g2.scale.setScalar(s); e.add(g2); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.18, .32, 6, 8).translate(0, 3, 0), new THREE.MeshStandardMaterial({ color: '#e8e2d8', roughness: .7 })); tr.castShadow = true; g2.add(tr); for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.9 + rnd() * .5, 1), new THREE.MeshStandardMaterial({ color: new THREE.Color('#6a8a5a').offsetHSL(0, 0, (rnd() - .5) * .1), roughness: .9 })); b.position.set((rnd() - .5) * 3, 5.6 + rnd() * 1.6, (rnd() - .5) * 3); b.scale.y = .7; b.castShadow = true; g2.add(b); } }
+  // el camión del ejército con la ametralladora Lewis
+  const khaki = new THREE.MeshStandardMaterial({ color: '#6a6a48', roughness: .7 }), negro = new THREE.MeshStandardMaterial({ color: '#1e1e20', roughness: .5, metalness: .5 });
+  const camion = new THREE.Group(); e.add(camion);
+  caja(camion, 1.9, 1.0, 1.6, khaki, 0, 1.2, 1.9); caja(camion, 1.9, 1.3, 1.2, khaki, 0, 1.75, .6); caja(camion, 2, .15, 3.2, khaki, 0, .95, -1.4); for (const s of [-1, 1]) caja(camion, .08, .5, 3.2, khaki, s * .98, 1.25, -1.4); caja(camion, 1.9, .5, .08, khaki, 0, 1.25, -3);
+  const ventanilla = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .6), new THREE.MeshStandardMaterial({ color: '#2a3a4a', roughness: .1, metalness: .4 })); ventanilla.position.set(0, 2, 1.21); camion.add(ventanilla);
+  const ruedas = []; for (const [x, z] of [[-1, 1.8], [1, 1.8], [-1, -1.8], [1, -1.8]]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .3, 20), negro); r.rotation.z = Math.PI / 2; r.position.set(x, .45, z); camion.add(r); ruedas.push(r); }
+  const lewis = (padre) => { const g2 = new THREE.Group(); padre.add(g2); const cano = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 1.3, 14), negro); cano.rotation.x = Math.PI / 2; cano.position.z = .5; g2.add(cano); const boca = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, .3, 8), negro); boca.rotation.x = Math.PI / 2; boca.position.z = 1.25; g2.add(boca); const tambor = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .08, 24), negro); tambor.position.set(0, .13, .1); g2.add(tambor); const culata = caja(g2, .08, .16, .5, new THREE.MeshStandardMaterial({ color: '#6a4a2a' }), 0, -.04, -.35); for (const [a, b] of [[-.25, .4], [.25, .4]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .8, 5), negro); p.position.set(a, -.38, b); p.rotation.set(.3, 0, -a); g2.add(p); } const fog = new THREE.Sprite(new THREE.SpriteMaterial({ map: BRILLO, color: '#ffcf70', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); fog.position.z = 1.45; g2.add(fog); const humo = new THREE.Sprite(new THREE.SpriteMaterial({ map: BRILLO, color: '#8a8a8a', transparent: true, depthWrite: false })); humo.position.set(0, .2, .3); g2.add(humo); g2.userData = { fog, humo }; g2.traverse(o => { if (o.isMesh) o.castShadow = true; }); return g2; };
+  const armaCamion = lewis(camion); armaCamion.position.set(0, 1.9, -1.2);
+  const armaSuelo = lewis(e); armaSuelo.position.set(-1.2, .78, 2);
+  const casquillos = [...Array(40)].map(() => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .06, 6), new THREE.MeshStandardMaterial({ color: '#d8a83a', metalness: 1, roughness: .3 })); m.userData = { f: rnd(), v: v3(.5 + rnd(), 1 + rnd(), (rnd() - .5)) }; e.add(m); return m; });
+  const pilaCasq = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .015, .06, 6), new THREE.MeshStandardMaterial({ color: '#d8a83a', metalness: 1, roughness: .3 }), 1500); { const mm = new THREE.Matrix4(); for (let i = 0; i < 1500; i++) { const a = rnd() * 6.28, r = Math.pow(rnd(), .6) * 1.4; mm.compose(v3(-.5 + Math.cos(a) * r, Math.max(0, (1.4 - r) * .35 * rnd()), 2.6 + Math.sin(a) * r), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, rnd() * 6, rnd() * 3)), v3(1, 1, 1)); pilaCasq.setMatrixAt(i, mm); } } e.add(pilaCasq);
+  const polvo = [...Array(30)].map(() => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: BRILLO, color: '#d8a070', transparent: true, depthWrite: false })); s.userData = { f: rnd(), a: rnd() * 6.28 }; e.add(s); return s; });
+  const emus = enjambre(e, 60, ['emu_corre', 'emu_corre', 'emu_burla', 'emu']);
+  const N = ['meredith', 'meredith_susto', 'soldado_aus', 'soldado_susto', 'granjero_aus', 'emu', 'emu_burla'];
+  const P = {}; N.forEach(n => P[n] = personaje(e, n, n.startsWith('emu') ? 2.2 : 1.8, O));
+  const tanques = [...Array(5)].map(() => personaje(e, 'emu', 2.2, O));
+  const cam = new THREE.PerspectiveCamera(42, W / H, .1, 2000);
+  return {
+    escena: e, cam, camion,
+    preparar({ tiempo: t, ver = {}, emusK = null, camionPos = null, fuego = { suelo: -1, camion: -1 }, atasco = -1, casquillosOn = false, pila = false, fila = -1 }) {
+      CAMARA = cam; cielo.position.copy(cam.position); uT.value = t; aspas.rotation.z = t * 3;
+      for (const k in P) { P[k].visible = false; P[k].scale.x = 1; }
+      for (const k in ver) { const v = ver[k], p = P[k]; p.visible = true; p.position.copy(v.pos || v); if (v.salto) p.position.y += Math.abs(Math.sin(t * 9)) * .1; mirar(p); if (v.izq) p.scale.x = -1; }
+      mover(emus, t, emusK || { activo: 0 });
+      camion.visible = !!camionPos; if (camionPos) { camion.position.copy(camionPos); camion.position.y = Math.abs(Math.sin(t * 13)) * .06; camion.rotation.set(Math.sin(t * 11) * .02, 0, Math.sin(t * 9) * .03); ruedas.forEach(r => r.rotation.x = t * 12); }
+      for (const [arma, f] of [[armaSuelo, fuego.suelo], [armaCamion, fuego.camion]]) { const u = arma.userData; const on = f >= 0; u.fog.visible = on && Math.sin(t * 60) > 0; u.fog.scale.setScalar(.6 + Math.random() * 0); arma.rotation.y = on ? Math.sin(t * 2) * .25 : 0; u.humo.visible = false; }
+      armaSuelo.visible = fuego.suelo !== -2;
+      if (atasco >= 0) { const u = armaSuelo.userData; u.fog.visible = false; u.humo.visible = true; u.humo.scale.setScalar(.4 + atasco * 1.6); u.humo.material.opacity = clamp(1 - atasco / 1.5) * .8; u.humo.position.set(0, .2 + atasco * .5, .3); }
+      casquillos.forEach((c, i) => { c.visible = casquillosOn; if (!c.visible) return; const u = c.userData, ph = (t * 2.5 + u.f) % 1; c.position.copy(armaSuelo.position).add(v3(u.v.x * ph * .8, .1 + u.v.y * ph - 2.2 * ph * ph, u.v.z * ph)); c.rotation.set(ph * 20, ph * 10, 0); });
+      pilaCasq.visible = pila;
+      polvo.forEach(s => { const u = s.userData; s.visible = !!camionPos; if (!s.visible) return; const ph = (t * 1.2 + u.f) % 1; s.position.copy(camion.position).add(v3(Math.cos(u.a) * .8, .3 + ph * 1.2, -3.4 - ph * 3)); s.scale.setScalar(.6 + ph * 2); s.material.opacity = (1 - ph) * .5; });
+      tanques.forEach((p, i) => { p.visible = fila >= 0; if (!p.visible) return; p.position.set(-4 + i * 2, Math.abs(Math.sin(t * 6 + i)) * .05, -2 - Math.abs(i - 2) * .6); mirar(p); p.scale.x = -1; });
+    },
+  };
+}
+
+const campo = crearCampo();
+const comp = new EffectComposer(renderer, new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType }));
+const rp = new RenderPass(campo.escena, campo.cam); comp.addPass(rp);
+const dof = new PaseDOF(); comp.addPass(dof);
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .25, .5, .95); comp.addPass(bloom); comp.addPass(new OutputPass());
+comp.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null } }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(.299,.587,.114)); c.rgb = mix(vec3(l), c.rgb, 1.22); c.rgb = (c.rgb - .5) * 1.06 + .5; gl_FragColor = c; }' }));
+window.DBG = { campo, THREE };
+
+// =================== PLANOS ===================
+const C = (pos, mira, fov = 42) => { const c = campo.cam; c.fov = fov; c.position.copy(pos); c.lookAt(mira); c.updateMatrixWorld(); };
+let FOCO = null;
+const SOLD = v3(-1.2, 0, 1.35);
+const ESTAMPIDA = { activo: 1, de: v3(-12, 0, -5), a: v3(12, 0, -1), ancho: 5, ciclo: 2.2 };
+const PLANOS = [
+  { desde: 0, nombre: 'GANCHO: soldados disparando y los emús pasando de largo, uno se burla', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, ver: { soldado_aus: SOLD, emu_burla: { pos: v3(2.6, 0, -1.2) } }, fuego: { suelo: t }, casquillosOn: true, emusK: ESTAMPIDA });
+      C(v3(lerp(-3.8, -3.3, k), 1.5, lerp(7.2, 6.4, k)), v3(-.2, 1.0, 1), 46); FOCO = v3(-1.2, 1, 2.4);
+    } },
+  { desde: 10, nombre: '1932: veinte mil emús arrasan los campos de trigo (vista aérea)', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, emusK: { activo: 1, de: v3(-30, 0, -50), a: v3(20, 0, 0), ancho: 40, ciclo: 4 } });
+      C(v3(lerp(-18, -14, k), lerp(22, 18, k), lerp(26, 22, k)), v3(0, 0, -20), 50);
+    } },
+  { desde: 20, nombre: 'y los granjeros piden ayuda al ejército (el granjero desesperado)', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, ver: { granjero_aus: { pos: v3(9.2, 0, -17.6), salto: true } }, emusK: { activo: 1, de: v3(4, 0, -26), a: v3(20, 0, -26), ancho: 4, ciclo: 2.2, n: 12 } });
+      C(v3(lerp(8.2, 8.4, k), 1.4, lerp(-13.2, -13.8, k)), v3(9.2, 1.2, -17.6), 44); FOCO = v3(9.2, 1.2, -17.6);
+    } },
+  { desde: 27, nombre: 'Llega el mayor Meredith con dos ametralladoras y diez mil balas: contrapicado heroico', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, ver: { meredith: v3(1.4, 0, 3.2) }, camionPos: v3(-1.2, 0, lerp(-2, -1, k)) });
+      C(v3(lerp(2.6, 2.3, k), .55, lerp(6.4, 5.6, k)), v3(.4, 1.6, 1), 46); FOCO = v3(1.4, 1.2, 3.2);
+    } },
+  { desde: 38, nombre: 'MEREDITH: "Esto será cuestión de días."', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, ver: { meredith: v3(1.4, 0, 3.2) } });
+      C(v3(lerp(1.8, 1.6, k), 1.25, lerp(5.2, 4.7, k)), v3(1.4, 1.12, 3.2), 40); FOCO = v3(1.4, 1.1, 3.2);
+    } },
+  { desde: 43, nombre: 'los emús se separan en grupitos y salen corriendo en todas direcciones', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, emusK: { activo: 1, de: v3(0, 0, -6), radial: true, ancho: 14, ciclo: 2.4 } });
+      C(v3(0, lerp(9, 11, k), lerp(6, 4, k)), v3(0, 0, -6), 50);
+    } },
+  { desde: 56, nombre: 'a las pocas ráfagas, una ametralladora se atasca (¡CLAC! y humo)', esc: 'campo', f(k, t) {
+      const ta = T(62) + .3, at = t - ta;
+      campo.preparar({ tiempo: t, ver: { [at > 0 ? 'soldado_susto' : 'soldado_aus']: SOLD }, fuego: { suelo: at > 0 ? -1 : t }, atasco: at > 0 ? at : -1, casquillosOn: at <= 0 });
+      C(v3(lerp(1.0, .8, k), 1.4, lerp(5.6, 5.0, k)), v3(-.9, .95, 2.2), 42); FOCO = v3(-1.1, .9, 2.2);
+    } },
+  { desde: 65, nombre: 'Montan la otra en un camión: el camión arranca dando botes', esc: 'campo', f(k, t) {
+      const z = lerp(4, -6, k); campo.preparar({ tiempo: t, camionPos: v3(0, 0, z), fuego: { suelo: -2, camion: t } });
+      C(v3(lerp(7, 6.2, k), 2.6, z + 6), v3(0, 1.3, z), 46);
+    } },
+  { desde: 71, nombre: 'pero en el campo, los emús corren más que el camión: lo adelantan', esc: 'campo', f(k, t) {
+      const z = -10 - (t - T(71)) * 4; campo.preparar({ tiempo: t, camionPos: v3(0, 0, z), fuego: { suelo: -2, camion: t }, emusK: { activo: 1, de: v3(-1, 0, z + 6), a: v3(-1, 0, z - 22), ancho: 6, ciclo: 1.1, n: 18 } });
+      C(v3(-6, 1.8, z + 2), v3(0, 1.2, z - 4), 46);
+    } },
+  { desde: 82, nombre: 'gastan casi diez mil balas: montaña de casquillos y contador', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, pila: true, ver: { soldado_susto: SOLD } });
+      C(v3(lerp(.6, .3, k), lerp(1.4, 1.1, k), lerp(5.2, 4.5, k)), v3(-.5, .3, 2.6), 42); FOCO = v3(-.5, .2, 2.6);
+    } },
+  { desde: 94, nombre: 'Diez balas por pájaro: un emú solo, tan tranquilo', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, ver: { emu: v3(0, 0, 0) } });
+      C(v3(lerp(.6, .3, k), 1.8, lerp(4.5, 3.6, k)), v3(.2, 1.7, 0), 40); FOCO = v3(.2, 1.7, 0);
+    } },
+  { desde: 98, nombre: 'Meredith: los emús aguantan las ametralladoras como tanques (fila de emús avanzando)', esc: 'campo', f(k, t) {
+      const fase = t < T(104);
+      campo.preparar({ tiempo: t, ver: fase ? { meredith_susto: v3(0, 0, 2) } : {}, fila: fase ? -1 : 1 });
+      if (fase) C(v3(.3, 1.2, lerp(5, 4.3, k)), v3(0, 1.1, 2), 42); else C(v3(0, .6, lerp(7, 5.5, k)), v3(0, 1.4, -2), 48);
+    } },
+  { desde: 109, nombre: 'BUCLE: los campos de trigo siguieron llenos de emús, vuelve el soldado del principio', esc: 'campo', f(k, t) {
+      campo.preparar({ tiempo: t, ver: { soldado_aus: SOLD }, emusK: ESTAMPIDA });
+      C(v3(lerp(-1, -3.2, suave(k)), lerp(6, 1.3, suave(k)), lerp(12, 6.2, suave(k))), v3(.2, 1.1, 0), 46);
+    } },
+];
+PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
+PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
+const BARRIDOS = new Set([10, 43, 65, 82, 109]);
+
+// =================== SUBTÍTULOS ===================
+const SALTAR = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+const unidades = []; for (let i = 0; i < PAL.length; i++) { if (SALTAR.has(i)) continue; const w = PAL[i].w, s = PAL[i + 1]?.w;
+  if ((w === 'veinte' || w === 'diez') && s?.startsWith('mil')) { unidades.push({ ...PAL[i], w: w === 'veinte' ? '20.000' : '10.000' + (s.endsWith('.') ? '.' : ''), t1: PAL[i + 1].t1, i }); i++; continue; }
+  if (w === 'dos' && s === 'ametralladoras') { unidades.push({ ...PAL[i], w: '2', i }); continue; }
+  if (w === 'mil' && PAL[i - 1]?.w === 'de') { unidades.push({ ...PAL[i], w: '1.000', i }); continue; }
+  if (w === 'Diez') { unidades.push({ ...PAL[i], w: '10', i }); continue; }
+  unidades.push({ ...PAL[i], i }); }
+const finFrase = w => /[.,:;…!?]$/.test(w);
+const frases = []; let f0 = [];
+unidades.forEach((u, j) => { f0.push(u); const sig = unidades[j + 1]; if (finFrase(u.w) || !sig || sig.quien !== u.quien || sig.i !== u.i + 1) { frases.push(f0); f0 = []; } });
+const MAXC = 19, bloques = [];
+frases.forEach(fr => { let b = []; const largo = x => x.map(u => u.w).join(' ').length; fr.forEach(u => { if (b.length && (b.length >= 4 || largo([...b, u]) > MAXC)) { bloques.push(b); b = []; } b.push(u); }); if (b.length) { const ult = bloques[bloques.length - 1]; if (b.length === 1 && ult && fr.includes(ult[0]) && largo([...ult, ...b]) <= MAXC + 4) ult.push(...b); else bloques.push(b); } });
+const CLAVE = new Set(['1932', '20.000', 'emús', 'trigo', 'ejército', 'Meredith', '2', 'ametralladoras', '10.000', 'balas', 'días', 'grupitos', 'direcciones', 'atasca', 'camión', 'corren', '1.000', '10', 'pájaro', 'tanques', 'llenos']);
+const marcar = w => w.split(' ').map(p => CLAVE.has(p.replace(/[^\wáéíóúñü0-9.]/gi, '').replace(/\.$/, '')) ? `<b>${p}</b>` : p).join(' ');
+const FIN_GANCHO = T(10) - .06;
+
+// =================== EDICIÓN (dopamina) ===================
+const $ = id => document.getElementById(id);
+const golpes = [[0, 40], [T(62) + .3, 22], [T(94), 18], [T(107), 14]];
+const POPS = [[0, T(10) - .1, '¡RATATATÁ!', 540, 640], [T(32), T(34) + .4, 'x2', 300, 700], [T(64), T(65) - .06, '¡CLAC!', 540, 700], [T(76), T(82) - .1, '¡ZAS!', 760, 620], [T(78), T(82) - .1, '?!', 300, 560], [T(104), T(109) - .1, 'COMO TANQUES', 540, 520]];
+const granoCanvas = document.createElement('canvas'); granoCanvas.width = granoCanvas.height = 256;
+{ const g = granoCanvas.getContext('2d'), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = rnd() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); }
+$('grano').style.backgroundImage = `url(${granoCanvas.toDataURL()})`;
+function contador(t, a, b, hasta, etiqueta, fin) { if (t < a || t >= b) return null; const k = salida((t - a) / (fin - a)); return Math.floor(hasta * k).toLocaleString('es-ES') + `<small>${etiqueta}</small>`; }
+function edicion(t) {
+  const g = $('gancho'); const kg = t / .18; g.style.opacity = t < FIN_GANCHO ? 1 : 0; g.style.transform = `scale(${lerp(1.35, 1, salida(kg)) * (1 + Math.sin(clamp((t - T(8)) / .25) * Math.PI) * .06)})`;
+  const sub = $('sub');
+  const b = bloques.find((bl, i) => bl[0].t0 - .05 <= t && t < Math.min(bl[bl.length - 1].t1 + .35, (bloques[i + 1]?.[0].t0 ?? DURACION) - .05));
+  if (b) { sub.innerHTML = marcar(b.map(u => u.w.replace('…', '...')).join(' ')); sub.className = 'txt' + (b[0].quien !== 'narrador' ? ' personaje' : ''); const k = clamp((t - b[0].t0) / .1); sub.style.transform = `scale(${lerp(1.22, 1, salida(k))})`; sub.style.opacity = 1; } else sub.style.opacity = 0;
+  const ct = $('contador'); const txt = contador(t, T(11), T(20) - .1, 20000, 'EMÚS', T(17)) || contador(t, T(35), T(38) - .1, 10000, 'BALAS', T(37)) || contador(t, T(84), T(94) - .1, 9860, 'BALAS', T(90)) || (t >= T(94) && t < T(98) - .06 ? '10<small>BALAS POR EMÚ</small>' : null);
+  if (txt) { ct.innerHTML = txt; ct.style.opacity = 1; ct.style.top = t > T(80) && t < T(94) ? '420px' : '520px'; } else ct.style.opacity = 0;
+  const pz = $('pops'); pz.innerHTML = '';
+  for (const [a, bb, tx, x, y] of POPS) { if (t < a || t >= bb) continue; const k = (t - a); const d = document.createElement('div'); d.className = 'pop'; d.textContent = tx; d.style.left = x + 'px'; d.style.top = (y - k * 40) + 'px'; d.style.opacity = clamp((bb - t) / .3); d.style.transform = `translate(-50%,-50%) scale(${lerp(.3, 1, salida(k * 5)) * (tx.startsWith('¡RATA') ? 1 + Math.sin(t * 40) * .04 : 1)}) rotate(${Math.sin(x) * 8}deg)`; pz.appendChild(d); }
+  $('flash').style.opacity = [[0, .9, .3], [T(62) + .3, .3, .15]].reduce((a, [ti, f, d]) => Math.max(a, t >= ti ? f * clamp(1 - (t - ti) / d) : 0), 0);
+  let escala = 1, barrido = 0; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .25) { escala = Math.max(escala, lerp(1.1, 1, salida(d / .25))); if (BARRIDOS.has(p.desde) && d < .18) barrido = 1 - d / .18; } }
+  for (const i of [13, 19, 26, 30, 33, 37, 49, 55, 64, 70, 78, 81, 88, 93, 97, 108, 117]) { const d = t - T(i); if (d >= 0 && d < .3) escala = Math.max(escala, lerp(1.06, 1, salida(d / .3))); }
+  barrido = Math.max(barrido, clamp((t - (DURACION - .2)) / .2));
+  let sx = 0, sy = 0; for (const [gp, fuerza] of golpes) { const d = t - gp; if (d >= 0 && d < .6) { const a = Math.pow(1 - d / .6, 2) * fuerza; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
+  if (t < T(10) || (t > T(56) && t < T(62) + .3)) { sx += Math.sin(t * 70) * 4; sy += Math.cos(t * 63) * 3; }
+  sx += barrido * barrido * 280;
+  const lz = $('lienzo'); lz.style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.04})`; lz.style.filter = barrido > 0 ? `blur(${(barrido * 10).toFixed(1)}px)` : 'none';
+  $('grano').style.backgroundPosition = `${Math.floor(t * 30 * 97) % 256}px ${Math.floor(t * 30 * 53) % 256}px`;
+}
+
+window.DURACION = DURACION;
+window.PLANOS = PLANOS.map(p => ({ nombre: p.nombre, t0: p.t0, t1: p.t1, desde: p.desde }));
+window.renderAt = (t) => {
+  const p = PLANOS.find(p => t >= p.t0 && t < p.t1) || PLANOS[PLANOS.length - 1];
+  const k = clamp((t - p.t0) / (p.t1 - p.t0));
+  FOCO = null; p.f(k, t); p.f(k, t);
+  const c = campo.cam; c.aspect = W / H; c.updateProjectionMatrix(); c.updateMatrixWorld();
+  rp.scene = campo.escena; rp.camera = c; dof.escena = campo.escena; dof.cam = c;
+  if (FOCO) { dof.foco = -FOCO.clone().applyMatrix4(c.matrixWorldInverse).z; dof.apertura = .003; } else dof.apertura = 0;
+  renderer.toneMappingExposure = 1.0;
+  if (window.ANTES) window.ANTES(t);
+  comp.render(); edicion(t);
+};
+await Promise.all(CARGAS);
+window.LISTO = true;
+</script>
+</body></html>
