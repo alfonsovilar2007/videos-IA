@@ -1,0 +1,710 @@
+[
+{
+"t0": 0.49,
+"t1": 0.979,
+"w": "Estados",
+"quien": "narrador"
+},
+{
+"t0": 0.99,
+"t1": 1.354,
+"w": "Unidos",
+"quien": "narrador"
+},
+{
+"t0": 1.365,
+"t1": 1.41,
+"w": "e",
+"quien": "narrador"
+},
+{
+"t0": 1.422,
+"t1": 1.922,
+"w": "Inglaterra",
+"quien": "narrador"
+},
+{
+"t0": 1.933,
+"t1": 2.229,
+"w": "casi",
+"quien": "narrador"
+},
+{
+"t0": 2.24,
+"t1": 2.479,
+"w": "entran",
+"quien": "narrador"
+},
+{
+"t0": 2.49,
+"t1": 2.592,
+"w": "en",
+"quien": "narrador"
+},
+{
+"t0": 2.604,
+"t1": 2.911,
+"w": "guerra…",
+"quien": "narrador"
+},
+{
+"t0": 3.115,
+"t1": 3.251,
+"w": "por",
+"quien": "narrador"
+},
+{
+"t0": 3.263,
+"t1": 3.388,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 3.399,
+"t1": 3.876,
+"w": "cerdo.",
+"quien": "narrador"
+},
+{
+"t0": 4.196,
+"t1": 5.73,
+"w": "1859.",
+"quien": "narrador"
+},
+{
+"t0": 5.844,
+"t1": 5.935,
+"w": "Un",
+"quien": "narrador"
+},
+{
+"t0": 5.946,
+"t1": 6.367,
+"w": "granjero",
+"quien": "narrador"
+},
+{
+"t0": 6.378,
+"t1": 6.867,
+"w": "americano",
+"quien": "narrador"
+},
+{
+"t0": 6.878,
+"t1": 7.128,
+"w": "pilla",
+"quien": "narrador"
+},
+{
+"t0": 7.14,
+"t1": 7.185,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 7.196,
+"t1": 7.333,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 7.344,
+"t1": 7.583,
+"w": "cerdo",
+"quien": "narrador"
+},
+{
+"t0": 7.594,
+"t1": 8.117,
+"w": "comiéndose",
+"quien": "narrador"
+},
+{
+"t0": 8.128,
+"t1": 8.287,
+"w": "sus",
+"quien": "narrador"
+},
+{
+"t0": 8.299,
+"t1": 8.776,
+"w": "patatas…",
+"quien": "narrador"
+},
+{
+"t0": 8.981,
+"t1": 9.015,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 9.026,
+"t1": 9.117,
+"w": "le",
+"quien": "narrador"
+},
+{
+"t0": 9.128,
+"t1": 9.719,
+"w": "dispara.",
+"quien": "narrador"
+},
+{
+"t0": 10.039,
+"t1": 10.278,
+"w": "Pero",
+"quien": "narrador"
+},
+{
+"t0": 10.289,
+"t1": 10.391,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 10.403,
+"t1": 10.698,
+"w": "cerdo",
+"quien": "narrador"
+},
+{
+"t0": 10.71,
+"t1": 10.823,
+"w": "era",
+"quien": "narrador"
+},
+{
+"t0": 10.835,
+"t1": 10.937,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 10.948,
+"t1": 11.051,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 11.062,
+"t1": 11.766,
+"w": "británico.",
+"quien": "narrador"
+},
+{
+"t0": 12.026,
+"t1": 12.22,
+"w": "El",
+"quien": "narrador"
+},
+{
+"t0": 12.231,
+"t1": 12.663,
+"w": "granjero",
+"quien": "narrador"
+},
+{
+"t0": 12.674,
+"t1": 13.026,
+"w": "ofrece",
+"quien": "narrador"
+},
+{
+"t0": 13.038,
+"t1": 13.265,
+"w": "diez",
+"quien": "narrador"
+},
+{
+"t0": 13.276,
+"t1": 13.867,
+"w": "dólares.",
+"quien": "narrador"
+},
+{
+"t0": 14.127,
+"t1": 14.32,
+"w": "El",
+"quien": "narrador"
+},
+{
+"t0": 14.332,
+"t1": 14.798,
+"w": "británico",
+"quien": "narrador"
+},
+{
+"t0": 14.809,
+"t1": 15.036,
+"w": "pide",
+"quien": "narrador"
+},
+{
+"t0": 15.048,
+"t1": 15.457,
+"w": "cien.",
+"quien": "narrador"
+},
+{
+"t0": 15.777,
+"t1": 16.007,
+"w": "¿¡Cien",
+"quien": "granjero"
+},
+{
+"t0": 16.018,
+"t1": 16.391,
+"w": "dólares",
+"quien": "granjero"
+},
+{
+"t0": 16.402,
+"t1": 16.544,
+"w": "por",
+"quien": "granjero"
+},
+{
+"t0": 16.555,
+"t1": 16.676,
+"w": "un",
+"quien": "granjero"
+},
+{
+"t0": 16.687,
+"t1": 17.071,
+"w": "cerdo!?",
+"quien": "granjero"
+},
+{
+"t0": 17.331,
+"t1": 17.853,
+"w": "Amenazan",
+"quien": "narrador"
+},
+{
+"t0": 17.865,
+"t1": 18.001,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 18.013,
+"t1": 18.581,
+"w": "arrestarlo,",
+"quien": "narrador"
+},
+{
+"t0": 18.808,
+"t1": 18.853,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 18.865,
+"t1": 19.228,
+"w": "Estados",
+"quien": "narrador"
+},
+{
+"t0": 19.24,
+"t1": 19.569,
+"w": "Unidos",
+"quien": "narrador"
+},
+{
+"t0": 19.581,
+"t1": 19.853,
+"w": "manda",
+"quien": "narrador"
+},
+{
+"t0": 19.865,
+"t1": 20.274,
+"w": "sesenta",
+"quien": "narrador"
+},
+{
+"t0": 20.285,
+"t1": 20.922,
+"w": "soldados.",
+"quien": "narrador"
+},
+{
+"t0": 21.242,
+"t1": 21.833,
+"w": "Inglaterra",
+"quien": "narrador"
+},
+{
+"t0": 21.844,
+"t1": 22.287,
+"w": "responde",
+"quien": "narrador"
+},
+{
+"t0": 22.299,
+"t1": 22.48,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 22.492,
+"t1": 22.708,
+"w": "tres",
+"quien": "narrador"
+},
+{
+"t0": 22.719,
+"t1": 22.98,
+"w": "buques",
+"quien": "narrador"
+},
+{
+"t0": 22.992,
+"t1": 23.06,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 23.071,
+"t1": 23.537,
+"w": "guerra.",
+"quien": "narrador"
+},
+{
+"t0": 23.797,
+"t1": 23.934,
+"w": "Y",
+"quien": "narrador"
+},
+{
+"t0": 23.945,
+"t1": 24.059,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 24.07,
+"t1": 24.365,
+"w": "cosa",
+"quien": "narrador"
+},
+{
+"t0": 24.377,
+"t1": 24.695,
+"w": "sube…",
+"quien": "narrador"
+},
+{
+"t0": 24.934,
+"t1": 24.968,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 24.979,
+"t1": 25.456,
+"w": "sube.",
+"quien": "narrador"
+},
+{
+"t0": 25.776,
+"t1": 25.981,
+"w": "Al",
+"quien": "narrador"
+},
+{
+"t0": 25.992,
+"t1": 26.333,
+"w": "final,",
+"quien": "narrador"
+},
+{
+"t0": 26.593,
+"t1": 27.15,
+"w": "cuatrocientos",
+"quien": "narrador"
+},
+{
+"t0": 27.161,
+"t1": 27.525,
+"w": "sesenta",
+"quien": "narrador"
+},
+{
+"t0": 27.536,
+"t1": 27.604,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 27.616,
+"t1": 27.729,
+"w": "un",
+"quien": "narrador"
+},
+{
+"t0": 27.741,
+"t1": 28.195,
+"w": "soldados",
+"quien": "narrador"
+},
+{
+"t0": 28.207,
+"t1": 28.366,
+"w": "con",
+"quien": "narrador"
+},
+{
+"t0": 28.377,
+"t1": 28.764,
+"w": "catorce",
+"quien": "narrador"
+},
+{
+"t0": 28.775,
+"t1": 29.218,
+"w": "cañones,",
+"quien": "narrador"
+},
+{
+"t0": 29.4,
+"t1": 29.661,
+"w": "contra",
+"quien": "narrador"
+},
+{
+"t0": 29.673,
+"t1": 29.945,
+"w": "cinco",
+"quien": "narrador"
+},
+{
+"t0": 29.957,
+"t1": 30.286,
+"w": "buques",
+"quien": "narrador"
+},
+{
+"t0": 30.298,
+"t1": 30.343,
+"w": "y",
+"quien": "narrador"
+},
+{
+"t0": 30.354,
+"t1": 30.525,
+"w": "más",
+"quien": "narrador"
+},
+{
+"t0": 30.536,
+"t1": 30.604,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 30.616,
+"t1": 30.775,
+"w": "dos",
+"quien": "narrador"
+},
+{
+"t0": 30.786,
+"t1": 30.934,
+"w": "mil",
+"quien": "narrador"
+},
+{
+"t0": 30.945,
+"t1": 31.445,
+"w": "hombres.",
+"quien": "narrador"
+},
+{
+"t0": 31.765,
+"t1": 31.993,
+"w": "Pero",
+"quien": "narrador"
+},
+{
+"t0": 32.004,
+"t1": 32.072,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 32.083,
+"t1": 32.515,
+"w": "almirante",
+"quien": "narrador"
+},
+{
+"t0": 32.527,
+"t1": 33.004,
+"w": "británico",
+"quien": "narrador"
+},
+{
+"t0": 33.015,
+"t1": 33.152,
+"w": "se",
+"quien": "narrador"
+},
+{
+"t0": 33.163,
+"t1": 33.413,
+"w": "niega",
+"quien": "narrador"
+},
+{
+"t0": 33.424,
+"t1": 33.447,
+"w": "a",
+"quien": "narrador"
+},
+{
+"t0": 33.458,
+"t1": 34.027,
+"w": "disparar.",
+"quien": "narrador"
+},
+{
+"t0": 34.347,
+"t1": 34.632,
+"w": "No",
+"quien": "almirante"
+},
+{
+"t0": 34.646,
+"t1": 35.012,
+"w": "pienso",
+"quien": "almirante"
+},
+{
+"t0": 35.026,
+"t1": 35.339,
+"w": "meter",
+"quien": "almirante"
+},
+{
+"t0": 35.352,
+"t1": 35.393,
+"w": "a",
+"quien": "almirante"
+},
+{
+"t0": 35.406,
+"t1": 35.583,
+"w": "dos",
+"quien": "almirante"
+},
+{
+"t0": 35.597,
+"t1": 36.127,
+"w": "naciones",
+"quien": "almirante"
+},
+{
+"t0": 36.14,
+"t1": 36.249,
+"w": "en",
+"quien": "almirante"
+},
+{
+"t0": 36.262,
+"t1": 36.425,
+"w": "una",
+"quien": "almirante"
+},
+{
+"t0": 36.439,
+"t1": 36.806,
+"w": "guerra…",
+"quien": "almirante"
+},
+{
+"t0": 37.023,
+"t1": 37.186,
+"w": "por",
+"quien": "almirante"
+},
+{
+"t0": 37.2,
+"t1": 37.336,
+"w": "un",
+"quien": "almirante"
+},
+{
+"t0": 37.349,
+"t1": 37.906,
+"w": "cerdo.",
+"quien": "almirante"
+},
+{
+"t0": 38.166,
+"t1": 38.291,
+"w": "Y",
+"quien": "narrador"
+},
+{
+"t0": 38.303,
+"t1": 38.416,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 38.428,
+"t1": 38.689,
+"w": "única",
+"quien": "narrador"
+},
+{
+"t0": 38.701,
+"t1": 38.939,
+"w": "baja",
+"quien": "narrador"
+},
+{
+"t0": 38.951,
+"t1": 39.053,
+"w": "de",
+"quien": "narrador"
+},
+{
+"t0": 39.064,
+"t1": 39.246,
+"w": "toda",
+"quien": "narrador"
+},
+{
+"t0": 39.257,
+"t1": 39.348,
+"w": "la",
+"quien": "narrador"
+},
+{
+"t0": 39.36,
+"t1": 39.689,
+"w": "guerra…",
+"quien": "narrador"
+},
+{
+"t0": 39.928,
+"t1": 40.098,
+"w": "fue",
+"quien": "narrador"
+},
+{
+"t0": 40.11,
+"t1": 40.212,
+"w": "el",
+"quien": "narrador"
+},
+{
+"t0": 40.223,
+"t1": 40.701,
+"w": "cerdo.",
+"quien": "narrador"
+}
+]

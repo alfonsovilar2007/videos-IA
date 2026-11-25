@@ -555,3 +555,122 @@ Object.assign(PRESETS, {
 });
 PRESETS.meredith_susto = Object.assign({}, PRESETS.meredith, { expr: 'sorprendido', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
 PRESETS.soldado_susto = Object.assign({}, PRESETS.soldado_aus, { expr: 'sorprendido', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+
+// ---------- Short "La guerra del cerdo" (San Juan, 1859) ----------
+const Pc = (d, w, c) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 7}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+function cerdo({ come = false, angel = false, susto = false } = {}) {
+  const R = '#F4A6B4', R2 = '#E58A9C';
+  let g = `<g stroke-linejoin="round">`;
+  if (!angel) g += `<ellipse cx="0" cy="2" rx="120" ry="12" fill="#000" opacity=".15"/>`;
+  if (angel) g += `<g stroke="${INK}" stroke-width="5"><path d="M-30,-190 q-90,-120 -170,-60 q40,10 60,40 q-50,0 -70,30 q60,-6 100,20z" fill="#fff"/><path d="M30,-190 q90,-120 170,-60 q-40,10 -60,40 q50,0 70,30 q-60,-6 -100,20z" fill="#fff"/></g>`;
+  for (const [x, a] of [[-70, -6], [-40, 6], [50, -6], [80, 6]]) g += Pc(`M${x},-80 l${a},74`, 20, R2);
+  g += `<path d="M-115,-130 q-30,-20 -24,-44 q8,-16 20,-2 q4,14 -12,16" fill="none" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>`;
+  g += `<ellipse cx="0" cy="-130" rx="125" ry="78" fill="${R}" stroke="${INK}" stroke-width="7"/>`;
+  g += `<ellipse cx="-30" cy="-110" rx="30" ry="18" fill="${R2}" opacity=".5"/>`;
+  const [hx, hy] = come ? [118, -70] : [120, -170];
+  g += `<g transform="translate(${hx},${hy}) rotate(${come ? 30 : 0})">`;
+  g += `<path d="M-40,-50 l-6,-46 l34,26z M20,-56 l22,-40 l6,44z" fill="${R2}" stroke="${INK}" stroke-width="6"/>`;
+  g += `<circle r="62" fill="${R}" stroke="${INK}" stroke-width="7"/>`;
+  g += `<ellipse cx="44" cy="12" rx="26" ry="20" fill="${R2}" stroke="${INK}" stroke-width="6"/><ellipse cx="38" cy="12" rx="4" ry="7" fill="${INK}"/><ellipse cx="52" cy="12" rx="4" ry="7" fill="${INK}"/>`;
+  if (angel) g += `<path d="M-14,-14 q8,-8 16,0 M14,-16 q8,-8 16,0" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M0,30 q14,10 28,0" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+  else if (susto) g += `<ellipse cx="-4" cy="-16" rx="10" ry="13" fill="#fff" stroke="${INK}" stroke-width="4"/><circle cx="-3" cy="-15" r="5" fill="${INK}"/><ellipse cx="22" cy="-18" rx="10" ry="13" fill="#fff" stroke="${INK}" stroke-width="4"/><circle cx="23" cy="-17" r="5" fill="${INK}"/><ellipse cx="20" cy="40" rx="8" ry="10" fill="${INK}"/>`;
+  else g += `<ellipse cx="-2" cy="-14" rx="6" ry="9" fill="${INK}"/><ellipse cx="22" cy="-16" rx="6" ry="9" fill="${INK}"/><circle cx="0" cy="-18" r="2" fill="#fff"/><circle cx="24" cy="-20" r="2" fill="#fff"/><path d="M4,36 q12,8 24,0" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+  g += `<ellipse cx="-30" cy="14" rx="10" ry="6" fill="#E8607A" opacity=".5"/>`;
+  if (come) g += `<g transform="translate(40,58)"><ellipse rx="26" ry="18" fill="#C99A5A" stroke="${INK}" stroke-width="5"/><circle cx="-8" cy="-4" r="3" fill="#8a6a3a"/><circle cx="8" cy="5" r="3" fill="#8a6a3a"/></g>`;
+  g += `</g>`;
+  if (angel) g += `<ellipse cx="${hx}" cy="${hy - 92}" rx="50" ry="13" fill="none" stroke="#F2C14E" stroke-width="10"/>`;
+  return `<g transform="translate(0,0) scale(.95)">${g}</g></g>`;
+}
+PRESETS.cerdo = { svg: cerdo() };
+PRESETS.cerdo_come = { svg: cerdo({ come: true }) };
+PRESETS.cerdo_susto = { svg: cerdo({ susto: true }) };
+PRESETS.cerdo_angel = { svg: cerdo({ angel: true }) };
+const FUSIL = (x, y, rot) => `<g transform="translate(${x},${y}) rotate(${rot})" stroke="${INK}" stroke-width="5" stroke-linejoin="round"><rect x="-10" y="-14" width="80" height="26" rx="8" fill="#7a4a2a"/><rect x="60" y="-9" width="170" height="12" rx="4" fill="#3a3a40"/><rect x="40" y="-16" width="70" height="12" rx="3" fill="#8a5a34"/></g>`;
+const SOMBRERO_PAJA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-104,-46 q104,-24 208,0 q-104,18 -208,0z" fill="#E6C77A"/><path d="M-58,-52 q0,-52 58,-54 q58,2 58,54 q-58,10 -116,0z" fill="#EDD38E"/><path d="M-58,-60 q58,10 116,0" stroke="#B0452E" stroke-width="10" fill="none"/></g>`;
+const BARBA_C = `<path d="M-60,18 q60,40 120,0 q-4,52 -60,62 q-56,-10 -60,-62z" fill="#8a5a2e" stroke="${INK}" stroke-width="4"/>`;
+const CUADROS = `<g opacity=".55"><path d="M-44,-250 v100 M-22,-260 v110 M0,-262 v112 M22,-260 v110 M44,-250 v100" stroke="#7a1a1a" stroke-width="6"/><path d="M-50,-236 h100 M-52,-210 h104 M-54,-184 h108 M-56,-160 h112" stroke="#7a1a1a" stroke-width="6"/></g><path d="M-30,-268 v118 M30,-268 v118" stroke="#3a2a1e" stroke-width="9"/>`;
+const KEPI = (c = '#2a3a6a') => `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-62,-44 q-6,-60 54,-62 l64,14 q10,24 8,48z" fill="${c}"/><path d="M-66,-44 h138 q-10,16 -40,14 h-98z" fill="#1a1a1a"/><circle cx="-30" cy="-66" r="9" fill="#d8b440"/></g>`;
+const SHAKO = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><rect x="-56" y="-120" width="112" height="78" rx="6" fill="#1a1a22"/><path d="M-64,-44 h128 q-10,16 -40,14 h-48 q-30,2 -40,-14z" fill="#111"/><circle cx="0" cy="-90" r="14" fill="#d8b440"/><path d="M0,-124 v-26" stroke="#fff" stroke-width="10"/></g>`;
+const BICORNIO = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-130,-40 q130,-130 260,0 q-130,-30 -260,0z" fill="#1a1e2e"/><path d="M-124,-42 q124,-32 248,0" fill="none" stroke="#d8b440" stroke-width="7"/><circle cx="40" cy="-72" r="14" fill="#c0302a"/></g>`;
+const PATILLAS = `<g fill="#6a6a6a" stroke="${INK}" stroke-width="4"><path d="M-70,-10 q-8,40 16,62 q6,-30 4,-64z"/><path d="M70,-10 q8,40 -16,62 q-6,-30 -4,-64z"/></g>`;
+const CHARRETERAS = `<g fill="#d8b440" stroke="${INK}" stroke-width="4"><ellipse cx="-56" cy="-262" rx="26" ry="11"/><ellipse cx="56" cy="-262" rx="26" ry="11"/><path d="M-78,-256 v14 M-68,-254 v16 M-58,-254 v16 M-48,-254 v16 M78,-256 v14 M68,-254 v16 M58,-254 v16 M48,-254 v16" stroke="#d8b440" stroke-width="4"/></g>`;
+Object.assign(PRESETS, {
+  granjero_us: { expr: 'neutral', pantalon: '#4a5a7a', torso: '#C0392B', manga: '#C0392B',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: CUADROS, cabeza: SOMBRERO_PAJA + BARBA_C },
+  soldado_us: { expr: 'neutral', pantalon: '#6a86b0', torso: '#2a3a6a', manga: '#2a3a6a',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q20,40 10,90', manos: [[-80, -136], [56, -160]],
+    detalle: `<g fill="#d8b440" stroke="${INK}" stroke-width="2"><circle cx="0" cy="-236" r="5"/><circle cx="0" cy="-210" r="5"/><circle cx="0" cy="-184" r="5"/></g><path d="M-50,-160 h100" stroke="#1a1a1a" stroke-width="12"/>`,
+    objeto: FUSIL(56, -160, -80), cabeza: KEPI() },
+  marine_uk: { expr: 'neutral', pantalon: '#1a1e2e', torso: '#C0302A', manga: '#C0302A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q20,40 10,90', manos: [[-80, -136], [56, -160]],
+    detalle: `<path d="M-46,-264 l92,104 M46,-264 l-92,104" stroke="#f2f2ea" stroke-width="12"/><path d="M-50,-160 h100" stroke="#f2f2ea" stroke-width="12"/>`,
+    objeto: FUSIL(56, -160, -80), cabeza: SHAKO },
+  britanico: { expr: 'preocupado', pantalon: '#3a3a44', torso: '#2a2a34', manga: '#2a2a34',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]],
+    detalle: `<path d="M-14,-266 l14,30 14,-30z" fill="#fff" stroke="${INK}" stroke-width="4"/><path d="M-50,-262 l50,40 50,-40" fill="none" stroke="#1a1a22" stroke-width="6"/><path d="M-6,-238 l6,8 6,-8z" fill="#7a2a3a"/>`,
+    objeto: `<path d="M126,-366 v-34" stroke="${INK}" stroke-width="14" stroke-linecap="round"/><path d="M126,-366 v-34" stroke="${SKIN}" stroke-width="8" stroke-linecap="round"/>`,
+    cabeza: SOMBRERO_COPA + PATILLAS },
+  almirante: { expr: 'neutral', pantalon: '#f2f0e8', torso: '#1a1e3e', manga: '#1a1e3e',
+    brazoI: 'M-46,-250 q20,50 50,40', brazoD: 'M46,-250 q-20,50 -50,40', manos: [[4, -210], [-4, -206]],
+    detalle: `<g fill="#d8b440" stroke="${INK}" stroke-width="2"><circle cx="-16" cy="-236" r="5"/><circle cx="16" cy="-236" r="5"/><circle cx="-16" cy="-170" r="5"/><circle cx="16" cy="-170" r="5"/></g>` + CHARRETERAS,
+    cabeza: BICORNIO + PATILLAS.replace(/#6a6a6a/g, '#d8d4cc') },
+});
+PRESETS.granjero_dispara = Object.assign({}, PRESETS.granjero_us, { expr: 'preocupado', brazoI: 'M-46,-250 q50,30 90,10', brazoD: 'M46,-250 q50,10 90,-4', manos: [[-6, -240], [96, -254]], objeto: FUSIL(-40, -250, -4), brazoI: 'M-46,-250 q20,20 40,10', brazoD: 'M46,-250 q30,10 50,-4' });
+PRESETS.granjero_grita = Object.assign({}, PRESETS.granjero_us, { expr: 'sorprendido', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+PRESETS.granjero_paga = Object.assign({}, PRESETS.granjero_us, { expr: 'eureka', brazoD: 'M46,-250 q60,10 84,-40', manos: [[-80, -136], [130, -290]], objeto: `<g transform="translate(130,-300) rotate(-10)"><rect x="-34" y="-20" width="68" height="36" rx="4" fill="#9ACD8A" stroke="${INK}" stroke-width="4"/><text x="0" y="8" font-size="26" font-weight="900" text-anchor="middle" fill="#2a5a2a" font-family="DejaVu Sans">$10</text></g>` });
+PRESETS.britanico_cien = Object.assign({}, PRESETS.britanico, { expr: 'sorprendido', objeto: `<g transform="translate(126,-380)"><rect x="-44" y="-26" width="88" height="40" rx="4" fill="#9ACD8A" stroke="${INK}" stroke-width="4"/><text x="0" y="6" font-size="28" font-weight="900" text-anchor="middle" fill="#2a5a2a" font-family="DejaVu Sans">$100</text></g>` });
+PRESETS.almirante_no = Object.assign({}, PRESETS.almirante, { expr: 'preocupado', brazoD: 'M46,-250 q60,-10 74,-80', manos: [[4, -210], [120, -330]], brazoI: 'M-46,-250 q20,50 50,40', objeto: `<path d="M120,-346 v-30" stroke="${INK}" stroke-width="14" stroke-linecap="round"/><path d="M120,-346 v-30" stroke="${SKIN}" stroke-width="8" stroke-linecap="round"/>` });
+PRESETS.soldado_us_susto = Object.assign({}, PRESETS.soldado_us, { expr: 'sorprendido' });
+PRESETS.marine_uk_susto = Object.assign({}, PRESETS.marine_uk, { expr: 'sorprendido' });
+
+// ---------- Short "Onoda" (Lubang, 1944-1974) ----------
+const GORRA_JAP = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-70,-30 q-4,-70 70,-72 q74,2 70,72z" fill="#8a7a4a"/><path d="M-72,-34 h144 l2,10 h-148z" fill="#6a5a34"/><path d="M-10,-40 q60,-4 84,6 q-40,8 -84,4z" fill="#5a4a2a"/><path d="M-8,-74 l8,-8 8,8 -8,8z" fill="#d8b440"/><path d="M-74,-28 l-14,90 q20,6 26,-10 l4,-80z M74,-28 l14,90 q-20,6 -26,-10 l-4,-80z" fill="#9a8a5a"/></g>`;
+const PARCHES = `<g stroke="${INK}" stroke-width="3"><rect x="-40" y="-230" width="26" height="22" fill="#6a6a3a" transform="rotate(-8,-27,-219)"/><rect x="14" y="-190" width="28" height="24" fill="#7a5a3a" transform="rotate(10,28,-178)"/><path d="M-40,-160 l8,-14 8,14 8,-14 8,14" fill="none"/></g>`;
+const BARBA_CORTA = `<path d="M-56,20 q56,40 112,0 q-6,40 -56,48 q-50,-8 -56,-48z" fill="#3a3a3a" opacity=".55"/>`;
+const PELO_LARGO = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-72,40 C-90,-60 -50,-104 4,-100 C58,-100 92,-60 74,40 C70,0 64,-30 50,-56 C20,-66 -20,-66 -50,-56 C-64,-30 -70,0 -72,40Z" fill="#2a1e16"/><path d="M-74,-40 q74,-30 148,0" stroke="#c0302a" stroke-width="10" fill="none"/></g>`;
+const MOCHILA = `<g stroke="${INK}" stroke-width="5"><rect x="-64" y="-280" width="34" height="110" rx="10" fill="#C0602A"/><rect x="30" y="-280" width="34" height="110" rx="10" fill="#C0602A"/></g>`;
+const PELO_CANO = `<path d="M-68,-28 C-74,-80 -30,-98 4,-94 C40,-94 72,-76 68,-30 C50,-56 20,-60 0,-54 C-20,-60 -48,-56 -68,-28Z" fill="#d8d4cc" stroke="${INK}" stroke-width="5"/>`;
+const OCTAVILLA = `<g transform="rotate(-8)" stroke="${INK}" stroke-width="4"><rect x="-40" y="-56" width="80" height="62" rx="3" fill="#F7F1E1"/><path d="M-30,-42 h60 M-30,-30 h50 M-30,-18 h60 M-30,-6 h40" stroke="#8a3a2a" stroke-width="3"/></g>`;
+Object.assign(PRESETS, {
+  onoda: { expr: 'neutral', pantalon: '#7a7048', torso: '#8a8050', manga: '#8a8050',
+    brazoI: 'M-46,-250 q20,40 40,60', brazoD: 'M46,-250 q30,40 20,80', manos: [[-6, -190], [66, -170]],
+    detalle: `<g fill="#d8b440" stroke="${INK}" stroke-width="2"><circle cx="0" cy="-230" r="5"/><circle cx="0" cy="-200" r="5"/></g><path d="M-50,-160 h100" stroke="#4a3a20" stroke-width="12"/><rect x="-46" y="-266" width="18" height="10" fill="#c0302a"/>`,
+    objeto: FUSIL(-40, -150, -50), cabeza: GORRA_JAP },
+});
+PRESETS.onoda_lee = Object.assign({}, PRESETS.onoda, { expr: 'preocupado', brazoI: 'M-46,-250 q30,10 40,-30', brazoD: 'M46,-250 q-10,10 -30,-30', brazoI: 'M-46,-250 q20,30 34,10', brazoD: 'M46,-250 q-20,30 -34,10', manos: [[-12, -232], [12, -232]], objeto: `<g transform="translate(0,-200)">${OCTAVILLA}</g>` });
+PRESETS.onoda_viejo = Object.assign({}, PRESETS.onoda, { expr: 'preocupado', pantalon: '#6a6038', torso: '#7a7040', manga: '#7a7040', detalle: PRESETS.onoda.detalle + PARCHES, cabeza: GORRA_JAP.replace('#8a7a4a', '#7a6a3a') + BARBA_CORTA });
+PRESETS.onoda_saluda = Object.assign({}, PRESETS.onoda_viejo, { expr: 'neutral', brazoD: 'M46,-250 q80,-40 46,-160', manos: [[-6, -190], [92, -410]], objeto: FUSIL(-40, -150, -50) });
+PRESETS.onoda_rinde = Object.assign({}, PRESETS.onoda_viejo, { expr: 'eureka', brazoI: 'M-46,-250 q20,40 60,40', brazoD: 'M46,-250 q-20,40 -36,40', manos: [[14, -210], [10, -210]], objeto: FUSIL(-110, -216, 0) });
+PRESETS.onoda_susto = Object.assign({}, PRESETS.onoda_viejo, { expr: 'sorprendido' });
+Object.assign(PRESETS, {
+  suzuki: { expr: 'eureka', pantalon: '#3a5a8a', torso: '#E8C23A', manga: '#E8C23A',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]],
+    detalle: MOCHILA + `<path d="M-40,-266 l20,110 M40,-266 l-20,110" stroke="#8a4a1a" stroke-width="8"/>`, cabeza: PELO_LARGO },
+  comandante: { expr: 'neutral', pantalon: '#4a4a52', torso: '#5a5a64', manga: '#5a5a64',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,0 70,-60', manos: [[-80, -136], [116, -310]],
+    detalle: `<path d="M-14,-266 l14,30 14,-30z" fill="#fff" stroke="${INK}" stroke-width="4"/><path d="M-6,-238 l6,40 6,-40z" fill="#2a4a7a" stroke="${INK}" stroke-width="3"/><path d="M-50,-262 l50,40 50,-40" fill="none" stroke="#3a3a44" stroke-width="6"/>`,
+    objeto: `<g transform="translate(116,-300)">${PERGAMINO}</g>`, cabeza: PELO_CANO + GAFAS },
+});
+function panda() {
+  return `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round"><ellipse cx="0" cy="2" rx="90" ry="10" fill="#000" opacity=".15" stroke="none"/>
+  <ellipse cx="-40" cy="-30" rx="34" ry="30" fill="#1e1e22"/><ellipse cx="40" cy="-30" rx="34" ry="30" fill="#1e1e22"/>
+  <ellipse cx="0" cy="-130" rx="96" ry="104" fill="#fafaf5"/><path d="M-96,-160 q-40,40 -10,90 q30,0 30,-60z M96,-160 q40,40 10,90 q-30,0 -30,-60z" fill="#1e1e22"/>
+  <circle cx="-70" cy="-352" r="30" fill="#1e1e22"/><circle cx="70" cy="-352" r="30" fill="#1e1e22"/>
+  <ellipse cx="0" cy="-290" rx="96" ry="84" fill="#fafaf5"/>
+  <ellipse cx="-36" cy="-296" rx="24" ry="30" fill="#1e1e22" transform="rotate(20,-36,-296)" stroke="none"/><ellipse cx="36" cy="-296" rx="24" ry="30" fill="#1e1e22" transform="rotate(-20,36,-296)" stroke="none"/>
+  <circle cx="-32" cy="-298" r="7" fill="#fff" stroke="none"/><circle cx="32" cy="-298" r="7" fill="#fff" stroke="none"/>
+  <ellipse cx="0" cy="-260" rx="14" ry="9" fill="#1e1e22"/><path d="M-14,-242 q14,10 28,0" fill="none" stroke-width="5"/>
+  <g transform="translate(60,-170) rotate(-30)"><rect x="-6" y="-80" width="12" height="120" rx="5" fill="#7ab04a" stroke-width="4"/><path d="M-6,-40 h12 M-6,0 h12" stroke-width="3"/><path d="M6,-70 q30,-20 40,0 q-20,6 -40,0z" fill="#8ac05a" stroke-width="3"/></g></g>`;
+}
+function yeti() {
+  let g = `<g stroke="${INK}" stroke-width="6" stroke-linejoin="round"><ellipse cx="0" cy="2" rx="100" ry="10" fill="#000" opacity=".15" stroke="none"/>`;
+  g += `<path d="M-50,-140 l-14,130 h40 l10,-100 h28 l10,100 h40 l-14,-130z" fill="#e8eef4"/>`;
+  g += `<path d="M-100,-380 q-60,90 -40,200 q40,30 40,-40 M100,-380 q60,90 40,200 q-40,30 -40,-40" fill="#e8eef4"/>`;
+  g += `<path d="M-96,-400 C-110,-500 110,-500 96,-400 L84,-140 q-84,30 -168,0z" fill="#f2f6fa"/>`;
+  for (let i = 0; i < 14; i++) { const x = -80 + (i % 7) * 26, y = -360 + Math.floor(i / 7) * 120; g += `<path d="M${x},${y} q6,14 0,26" fill="none" stroke="#b8c4d0" stroke-width="4"/>`; }
+  g += `<ellipse cx="0" cy="-420" rx="54" ry="40" fill="#a8b4c8"/><ellipse cx="-20" cy="-428" rx="8" ry="10" fill="${INK}" stroke="none"/><ellipse cx="20" cy="-428" rx="8" ry="10" fill="${INK}" stroke="none"/><path d="M-20,-400 q20,14 40,0" fill="none" stroke-width="5"/><path d="M-12,-402 l4,8 4,-8 M8,-402 l4,8 4,-8" fill="#fff" stroke-width="2"/>`;
+  return g + '</g>';
+}
+PRESETS.panda = { svg: panda() };
+PRESETS.yeti = { svg: yeti() };

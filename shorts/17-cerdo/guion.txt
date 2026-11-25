@@ -1,0 +1,10 @@
+narrador|Estados Unidos e Inglaterra casi entran en guerra… por un cerdo.
+narrador|1859. Un granjero americano pilla a un cerdo comiéndose sus patatas… y le dispara.
+narrador|Pero el cerdo era de un británico. El granjero ofrece diez dólares. El británico pide cien.
+granjero[,,0.1]|¿¡Cien dólares por un cerdo!?
+narrador|Amenazan con arrestarlo, y Estados Unidos manda sesenta soldados.
+narrador|Inglaterra responde con tres buques de guerra. Y la cosa sube… y sube.
+narrador|Al final, cuatrocientos sesenta y un soldados con catorce cañones, contra cinco buques y más de dos mil hombres.
+narrador|Pero el almirante británico se niega a disparar.
+almirante[,,0.1]|No pienso meter a dos naciones en una guerra… por un cerdo.
+narrador|Y la única baja de toda la guerra… fue el cerdo.

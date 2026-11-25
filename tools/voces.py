@@ -20,6 +20,10 @@ VOCES = {
     "funcionario": ("es-ES-AlvaroNeural", "-2%", "-12Hz"),  # funcionario francés, estirado
     "abogado":  ("es-ES-AlvaroNeural", "+6%", "-8Hz"),    # abogado enfadado y rotundo
     "meredith": ("es-ES-AlvaroNeural", "-4%", "-10Hz"),   # mayor del ejército, muy seguro de sí mismo
+    "granjero": ("es-ES-AlvaroNeural", "+14%", "+4Hz"),   # granjero indignado
+    "almirante": ("es-ES-AlvaroNeural", "-8%", "-16Hz"),  # almirante británico, solemne
+    "onoda":    ("es-ES-AlvaroNeural", "-6%", "-8Hz"),    # soldado firme, desconfiado
+    "comandante": ("es-ES-AlvaroNeural", "-12%", "-18Hz"), # anciano comandante, sereno
     "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
 # Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;

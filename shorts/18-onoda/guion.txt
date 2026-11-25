@@ -1,0 +1,10 @@
+narrador|Este soldado siguió luchando veintinueve años… en una guerra que ya había terminado.
+narrador|1944. Japón lo manda a una isla de Filipinas con una orden: no rendirse jamás.
+narrador|En 1945 la guerra termina. Le tiran octavillas avisando… pero él cree que es una trampa.
+onoda[,,0.1]|Propaganda del enemigo.
+narrador|Y sigue en la selva. Un año. Diez años. Veinte años.
+narrador|En 1974 lo encuentra un aventurero que buscaba, por este orden: a Onoda, un panda y el Yeti.
+narrador|Pero Onoda no se rinde. Solo obedece a su comandante.
+narrador|Así que traen a su antiguo comandante… que ya era librero.
+comandante[,,0.1]|Teniente, la guerra ha terminado.
+narrador|Veintinueve años después… por fin se rindió.
