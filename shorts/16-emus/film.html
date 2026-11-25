@@ -251,7 +251,7 @@ const PLANOS = [
       C(v3(-6, 1.8, z + 2), v3(0, 1.2, z - 4), 46);
     } },
   { desde: 82, nombre: 'gastan casi diez mil balas: montaña de casquillos y contador', esc: 'campo', f(k, t) {
-      campo.preparar({ tiempo: t, pila: true, ver: { soldado_susto: SOLD } });
+      campo.preparar({ tiempo: t, pila: true, ver: {} });
       C(v3(lerp(.6, .3, k), lerp(1.4, 1.1, k), lerp(5.2, 4.5, k)), v3(-.5, .3, 2.6), 42); FOCO = v3(-.5, .2, 2.6);
     } },
   { desde: 94, nombre: 'Diez balas por pájaro: un emú solo, tan tranquilo', esc: 'campo', f(k, t) {
