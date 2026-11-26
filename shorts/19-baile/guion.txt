@@ -1,0 +1,10 @@
+narrador|En 1518, una ciudad entera… no podía dejar de bailar.
+narrador|Estrasburgo. Una mujer sale a la calle y se pone a bailar. Sin música. Sin parar.
+narrador|Un día. Dos. Seis días seguidos.
+narrador|A la semana ya son treinta y cuatro. Al mes… unos cuatrocientos.
+narrador|¿Y la solución de las autoridades?
+concejal[,,0.1]|¡Más música!
+narrador|Contratan músicos y montan un escenario… para que lo suelten bailando.
+narrador|¿Resultado? Baila todavía más gente.
+narrador|Al final se los llevan a un santuario, les dan zapatos rojos… y por fin, paran.
+narrador|Hoy se cree que fue una histeria colectiva. Pero nadie sabe por qué empezó.

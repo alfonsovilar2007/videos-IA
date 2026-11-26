@@ -674,3 +674,43 @@ function yeti() {
 }
 PRESETS.panda = { svg: panda() };
 PRESETS.yeti = { svg: yeti() };
+
+// ---------- Short "La epidemia de baile" (Estrasburgo, 1518) ----------
+const PIERNAS_BAILE = (c, lado = 1, zap = '#2B2B2B') => {
+  const pie = (x, y, r = 0) => `<ellipse cx="${x}" cy="${y}" rx="22" ry="11" fill="${zap}" stroke="${INK}" stroke-width="5" transform="rotate(${r},${x},${y})"/>`;
+  const quieta = lado > 0 ? 'M-16,-150 q-6,80 -20,148' : 'M16,-150 q8,80 20,148';
+  const patada = lado > 0 ? 'M16,-150 q50,30 90,-10' : 'M-16,-150 q-50,30 -90,-10';
+  const P2 = d => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="27" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="20" stroke-linecap="round"/>`;
+  return P2(quieta) + P2(patada) + (lado > 0 ? pie(-44, -2) + pie(112, -168, -30) : pie(44, -2) + pie(-112, -168, 30));
+};
+const COFIA = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-76,0 C-84,-80 -40,-108 2,-106 C46,-108 86,-80 76,0 C70,-50 50,-74 0,-76 C-50,-74 -70,-50 -76,0Z" fill="#F4F0E6"/><path d="M-76,0 q-6,30 8,50 M76,0 q6,30 -8,50" fill="none" stroke="#F4F0E6" stroke-width="10"/></g>`;
+const DELANTAL = `<path d="M-34,-166 h68 l10,120 q-44,12 -88,0z" fill="#F4F0E6" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>`;
+const GORRO_MED = c => `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-70,-44 q-4,-56 66,-60 q60,4 76,40 q-30,-6 -40,10z" fill="${c}"/><path d="M-74,-48 q74,-18 148,0 l0,12 q-74,-16 -148,0z" fill="${c}" opacity=".8"/></g>`;
+const BOINA = `<g stroke="${INK}" stroke-width="5"><ellipse cx="0" cy="-66" rx="96" ry="28" fill="#1e1e24"/><path d="M60,-80 q30,-20 40,-46" stroke="#c0302a" stroke-width="7" fill="none"/></g>`;
+const CADENA = `<path d="M-40,-262 q40,60 80,0" fill="none" stroke="#d8b440" stroke-width="8" stroke-dasharray="2 10" stroke-linecap="round"/><circle cx="0" cy="-212" r="12" fill="#d8b440" stroke="${INK}" stroke-width="3"/>`;
+const PIEL = `<path d="M-54,-268 q54,-26 108,0 l-6,30 q-48,-18 -96,0z" fill="#e8dcc4" stroke="${INK}" stroke-width="5"/>`;
+const TUNICA_MED = (c, cinto = '#5a3a20') => `<path d="M-52,-268 q52,-18 104,0 l18,150 q-70,18 -140,0z" fill="${c}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/><path d="M-60,-150 h120" stroke="${cinto}" stroke-width="10"/>`;
+const HABITO = `<path d="M-54,-268 q54,-18 108,0 l26,262 q-80,16 -160,0z" fill="#6a4a2e" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/><path d="M-48,-150 q48,10 96,0" stroke="#e8dcb0" stroke-width="6" fill="none"/>`;
+const TONSURA = `<path d="M-70,-10 C-78,-60 -50,-84 -30,-88 C-40,-60 -36,-40 -66,-10z M70,-10 C78,-60 50,-84 30,-88 C40,-60 36,-40 66,-10z" fill="#6a4a2e" stroke="${INK}" stroke-width="4"/>`;
+const brazosArriba = { brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] };
+const brazosMix = { brazoI: 'M-46,-250 q-60,-30 -60,-110', brazoD: 'M46,-250 q50,40 70,20', manos: [[-106, -360], [116, -230]] };
+const brazosMix2 = { brazoI: 'M-46,-250 q-50,40 -70,20', brazoD: 'M46,-250 q60,-30 60,-110', manos: [[-116, -230], [106, -360]] };
+function bailarin(base, nombre) { PRESETS[nombre + '_a'] = Object.assign({}, base, brazosMix, { piernas: PIERNAS_BAILE(base.pantalon, 1, base.zap) }); PRESETS[nombre + '_b'] = Object.assign({}, base, brazosMix2, { piernas: PIERNAS_BAILE(base.pantalon, -1, base.zap) }); }
+const BASE_TROFFEA = { expr: 'eureka', pantalon: '#c8b090', torso: '#6a3a5a', manga: '#6a3a5a', detalle: VESTIDO('#6a3a5a') + DELANTAL, cabeza: COFIA, ...brazosArriba };
+PRESETS.troffea = Object.assign({}, BASE_TROFFEA, { expr: 'neutral', brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]] });
+bailarin(BASE_TROFFEA, 'troffea');
+PRESETS.troffea_cansada_a = Object.assign({}, PRESETS.troffea_a, { expr: 'preocupado', cabeza: COFIA + SUDOR });
+PRESETS.troffea_cansada_b = Object.assign({}, PRESETS.troffea_b, { expr: 'preocupado', cabeza: COFIA + SUDOR });
+PRESETS.troffea_para = Object.assign({}, PRESETS.troffea, { expr: 'eureka', cabeza: COFIA + SUDOR, piernas: `<path d="M-16,-150 q-6,80 -20,148 M16,-150 q8,80 20,148" fill="none" stroke="${INK}" stroke-width="27" stroke-linecap="round"/><path d="M-16,-150 q-6,80 -20,148 M16,-150 q8,80 20,148" fill="none" stroke="#c8b090" stroke-width="20" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="24" ry="12" fill="#D6262E" stroke="${INK}" stroke-width="5"/><ellipse cx="44" cy="-2" rx="24" ry="12" fill="#D6262E" stroke="${INK}" stroke-width="5"/>` });
+bailarin({ expr: 'eureka', pantalon: '#4a7a3a', torso: '#9a6a3a', manga: '#9a6a3a', detalle: TUNICA_MED('#9a6a3a'), cabeza: GORRO_MED('#b3262e') + BIGOTE('#6a4a2a') }, 'aldeano');
+bailarin({ expr: 'eureka', pantalon: '#e8dcc4', torso: '#2f5a9a', manga: '#2f5a9a', detalle: VESTIDO('#2f5a9a') + DELANTAL, cabeza: COFIA.replace('#F4F0E6', '#c0302a').replace('#F4F0E6', '#c0302a') }, 'aldeana');
+bailarin({ expr: 'sorprendido', pantalon: '#6a4a2e', torso: '#6a4a2e', manga: '#6a4a2e', detalle: HABITO, cabeza: TONSURA }, 'monje');
+bailarin({ expr: 'eureka', pantalon: '#7a2a2a', torso: '#d8a030', manga: '#d8a030', detalle: TUNICA_MED('#d8a030', '#7a2a2a'), cabeza: GORRO_MED('#2e7d4f') }, 'panadero');
+Object.assign(PRESETS, {
+  concejal: { expr: 'sorprendido', pantalon: '#1e1e24', torso: '#9a1e2a', manga: '#9a1e2a', brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]],
+    detalle: `<path d="M-56,-268 q56,-18 112,0 l24,262 q-80,16 -160,0z" fill="#9a1e2a" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>` + PIEL + CADENA, cabeza: BOINA + BARBA('#5a4a3a') },
+  tamborilero: { expr: 'eureka', pantalon: '#2f5a9a', torso: '#c0302a', manga: '#c0302a', brazoI: 'M-46,-250 q-10,50 10,80', brazoD: 'M46,-250 q30,30 40,70', manos: [[-36, -170], [86, -180]],
+    detalle: TUNICA_MED('#c0302a', '#f2c14e'), objeto: `<g stroke="${INK}" stroke-width="5"><rect x="-56" y="-160" width="112" height="70" rx="10" fill="#d8b070"/><path d="M-56,-150 l28,60 l28,-60 l28,60 l28,-60" fill="none" stroke="#c0302a" stroke-width="5"/><ellipse cx="0" cy="-160" rx="56" ry="14" fill="#f4ecd8"/><path d="M-36,-170 l-30,-50 M86,-180 l20,-60" stroke="#7a4a2a" stroke-width="8"/></g>`, cabeza: GORRO_MED('#2e7d4f') },
+  flautista: { expr: 'neutral', pantalon: '#d8a030', torso: '#2e7d4f', manga: '#2e7d4f', brazoI: 'M-46,-250 q30,10 60,-70', brazoD: 'M46,-250 q30,10 50,-90', manos: [[14, -322], [96, -342]],
+    detalle: TUNICA_MED('#2e7d4f', '#d8a030'), cabeza: GORRO_MED('#7a2a5a') + `<g transform="rotate(-8)"><rect x="-4" y="30" width="130" height="12" rx="5" fill="#c99a5a" stroke="${INK}" stroke-width="4"/><circle cx="40" cy="36" r="3" fill="${INK}"/><circle cx="62" cy="36" r="3" fill="${INK}"/><circle cx="84" cy="36" r="3" fill="${INK}"/></g>` },
+});

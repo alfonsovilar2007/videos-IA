@@ -24,6 +24,7 @@ VOCES = {
     "almirante": ("es-ES-AlvaroNeural", "-8%", "-16Hz"),  # almirante británico, solemne
     "onoda":    ("es-ES-AlvaroNeural", "-6%", "-8Hz"),    # soldado firme, desconfiado
     "comandante": ("es-ES-AlvaroNeural", "-12%", "-18Hz"), # anciano comandante, sereno
+    "concejal": ("es-ES-AlvaroNeural", "+12%", "-6Hz"),   # concejal medieval, convencido
     "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
 # Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;
