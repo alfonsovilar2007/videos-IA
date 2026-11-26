@@ -212,7 +212,7 @@ const rp = new RenderPass(plaza.escena, plaza.cam); comp.addPass(rp);
 const dof = new PaseDOF(); comp.addPass(dof);
 const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), .16, .4, .96); comp.addPass(bloom); comp.addPass(new OutputPass());
 const satU = { value: 1.25 };
-comp.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null }, sat: satU }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D tDiffuse; uniform float sat; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(.299,.587,.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = (c.rgb - .5) * 1.07 + .5; gl_FragColor = c; }' }));
+const pSat = new ShaderPass({ uniforms: { tDiffuse: { value: null }, sat: satU }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D tDiffuse; uniform float sat; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(.299,.587,.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = (c.rgb - .5) * 1.07 + .5; gl_FragColor = c; }' }); comp.addPass(pSat);
 window.DBG = { plaza, THREE };
 
 // =================== PLANOS ===================
@@ -336,7 +336,7 @@ const FIN_GANCHO = T(10) - .06;
 const $ = id => document.getElementById(id);
 const golpes = [[0, 44], [T(17), 16], [T(22), 12], [T(24), 12], [T(27), 14], [T(28), 14], [T(29), 18], [T(37), 16], [T(43), 30], [T(44), 20], [T(50), 40], [T(64), 18], [T(83), 26], [T(96), 30]];
 const POPS = [[T(10), T(11) - .06, 'ESTRASBURGO', 540, 560], [T(17), T(22) - .06, '¡!', 820, 640], [T(22), T(24) - .06, 'SIN MÚSICA', 540, 560], [T(24), T(26) - .06, '¡SIN PARAR!', 540, 560], [T(44), T(50) - .06, '¿?', 300, 600],
-  [T(50), T(52) - .06, '¡MÁS MÚSICA!', 540, 600], [T(53), T(55) - .06, '♪', 820, 620], [T(56), T(58) - .06, '♫', 260, 640], [T(63), T(64) - .06, '¿RESULTADO?', 540, 560], [T(64), T(68) - .06, '¡MÁS GENTE!', 540, 640], [T(78), T(80) - .06, 'ZAPATOS ROJOS', 540, 600], [T(83), T(84) + .5, '¡PARAN!', 540, 600], [T(90), T(92) - .06, 'HISTERIA COLECTIVA', 540, 640], [T(93), T(97) + .3, '?', 800, 560]];
+  [T(50), T(52) - .06, '¡MÁS MÚSICA!', 540, 600], [T(53), T(55) - .06, '♪', 820, 620], [T(56), T(58) - .06, '♫', 260, 640], [T(63), T(64) - .06, '¿RESULTADO?', 540, 560], [T(64), T(68) - .06, '¡MÁS GENTE!', 540, 640], [T(78), T(80) - .06, 'ZAPATOS ROJOS', 540, 600], [T(83), T(84) - .06, '¡PARAN!', 540, 600], [T(90), T(92) - .06, 'HISTERIA COLECTIVA', 540, 640], [T(93), T(97) + .3, '?', 800, 560]];
 const granoCanvas = document.createElement('canvas'); granoCanvas.width = granoCanvas.height = 256;
 { const g = granoCanvas.getContext('2d'), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = rnd() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); }
 $('grano').style.backgroundImage = `url(${granoCanvas.toDataURL()})`;
@@ -357,7 +357,6 @@ function edicion(t) {
   $('noche').style.opacity = noche(t) * .75;
   const fiesta = t >= T(50) && t < T(68) - .06; const luz = $('luz');
   if (fiesta) { const c = ['#ff3a6a', '#3ac8ff', '#ffd23a', '#7a3aff'][Math.floor(t / BEAT) % 4]; luz.style.background = `radial-gradient(ellipse at ${Math.floor(t / BEAT) % 2 ? 20 : 80}% 30%, ${c} 0%, transparent 60%)`; luz.style.opacity = .25 + Math.exp(-((t % BEAT) / BEAT) * 5) * .3; } else luz.style.opacity = 0;
-  satU.value = congelado(t) ? .08 : t >= T(50) && t < T(50) + .5 ? lerp(2.2, 1.25, (t - T(50)) / .5) : 1.25;
   let escala = 1, barrido = 0; for (const p of PLANOS) { const d = t - p.t0; if (d >= 0 && d < .22) { escala = Math.max(escala, lerp(1.14, 1, salida(d / .22))); if (BARRIDOS.has(p.desde) && d < .16) barrido = 1 - d / .16; } }
   for (const i of [3, 12, 16, 21, 23, 25, 27, 28, 31, 34, 39, 41, 43, 46, 49, 51, 53, 57, 62, 66, 67, 75, 79, 83, 87, 91, 94, 97]) { const d = t - T(i); if (d >= 0 && d < .25) escala = Math.max(escala, lerp(1.08, 1, salida(d / .25))); }
   if (!congelado(t)) escala *= 1 + Math.exp(-((t % BEAT) / BEAT) * 7) * .03;
@@ -379,6 +378,7 @@ window.renderAt = (t) => {
   rp.scene = plaza.escena; rp.camera = c; dof.escena = plaza.escena; dof.cam = c;
   if (FOCO) { dof.foco = -FOCO.clone().applyMatrix4(c.matrixWorldInverse).z; dof.apertura = .003; } else dof.apertura = 0;
   renderer.toneMappingExposure = 1.0;
+  pSat.uniforms.sat.value = congelado(t) ? .08 : t >= T(50) && t < T(50) + .5 ? lerp(2.2, 1.25, (t - T(50)) / .5) : 1.25;
   if (window.ANTES) window.ANTES(t);
   comp.render(); edicion(t);
 };
