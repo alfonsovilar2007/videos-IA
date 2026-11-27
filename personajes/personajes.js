@@ -775,3 +775,24 @@ Object.assign(PRESETS, {
   comerciante3: COMERCIANTE('#4a3a5a', '#2e2a3a', SOMBRERO_COPA + BARBA('#6a6a6a')),
   comerciante4: COMERCIANTE('#7a5a3a', '#4a3a2a', GAFAS + PELO.replace('#3A2A22', '#9a8a7a'), 'eureka'),
 });
+
+// ---------- Short "Dalí y el logo de Chupa Chups" (Barcelona, 1958-1969) ----------
+const BIGOTE_DALI = `<g fill="none" stroke-linecap="round"><path d="M-2,22 q-20,6 -34,-6 q-6,-8 -4,-40" stroke="${INK}" stroke-width="8"/><path d="M2,22 q20,6 34,-6 q6,-8 4,-40" stroke="${INK}" stroke-width="8"/><path d="M-2,22 q-20,6 -34,-6 q-6,-8 -4,-40 M2,22 q20,6 34,-6 q6,-8 4,-40" stroke="#14110f" stroke-width="4"/><path d="M-12,22 q12,-6 24,0" stroke="#14110f" stroke-width="7"/></g>`;
+const PELO_DALI = `<path d="M-70,-20 C-76,-84 -26,-104 8,-100 C46,-98 76,-76 70,-24 C58,-58 34,-70 0,-68 C-30,-66 -56,-54 -70,-20Z" fill="#14110f" stroke="${INK}" stroke-width="5"/>`;
+const BASTON = `<g stroke="${INK}" stroke-width="4"><path d="M0,0 v150" stroke="#3a2418" stroke-width="10"/><circle cx="0" cy="-4" r="11" fill="#d8b440"/></g>`;
+const LAPIZ = `<g transform="rotate(30)"><rect x="-5" y="-50" width="10" height="56" fill="#f2c14e" stroke="${INK}" stroke-width="3"/><path d="M-5,6 l5,14 5,-14z" fill="#e8c8a0" stroke="${INK}" stroke-width="3"/></g>`;
+const PERIODICO_DALI = `<g transform="rotate(-8)" stroke="${INK}" stroke-width="4"><rect x="-46" y="-36" width="92" height="66" rx="2" fill="#f0ebe0"/><rect x="-38" y="-28" width="76" height="10" fill="#2a2a2a"/><path d="M-38,-10 h34 M-38,0 h34 M-38,10 h34 M-38,20 h34" stroke="#9a9a9a" stroke-width="3"/><g transform="translate(20,6)"><circle r="14" fill="#f2c14e" stroke="#d8303a" stroke-width="3"/><circle r="5" fill="#d8303a" stroke="none"/></g></g>`;
+Object.assign(PRESETS, {
+  dali: { expr: 'sorprendido', pantalon: '#1a1e36', torso: '#1a1e36', manga: '#1a1e36', pelo: '#14110f',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,40 40,90', manos: [[-80, -136], [86, -160]],
+    detalle: TRAJE('#1a1e36', false) + `<path d="M24,-250 l16,8 -16,8z" fill="#d8b440" stroke="${INK}" stroke-width="2"/>`, objeto: `<g transform="translate(86,-160)">${BASTON}</g>`, cabeza: PELO_DALI + BIGOTE_DALI },
+  bernat: { expr: 'neutral', pantalon: '#4a4e56', torso: '#5a5e68', manga: '#5a5e68', pelo: '#2a2420',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: TRAJE('#5a5e68', false), cabeza: PELO.replace('#3A2A22', '#2a2420') + GAFAS },
+});
+PRESETS.dali_grita = Object.assign({}, PRESETS.dali, { brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]], objeto: '' });
+PRESETS.dali_dibuja = Object.assign({}, PRESETS.dali, { expr: 'eureka', brazoI: 'M-46,-250 q20,30 50,10', brazoD: 'M46,-250 q20,30 -10,20', manos: [[4, -240], [36, -232]], objeto: `<g transform="translate(14,-226)">${PERIODICO_DALI}</g><g transform="translate(40,-236)">${LAPIZ}</g>` });
+PRESETS.dali_muestra = Object.assign({}, PRESETS.dali, { expr: 'eureka', brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]], objeto: `<g transform="translate(126,-390)">${PERIODICO_DALI}</g>` });
+PRESETS.bernat_triste = Object.assign({}, PRESETS.bernat, { expr: 'preocupado', cabeza: PRESETS.bernat.cabeza + SUDOR, brazoI: 'M-46,-250 q20,50 40,60', brazoD: 'M46,-250 q-20,50 -40,60', manos: [[-6, -190], [6, -190]] });
+PRESETS.bernat_feliz = Object.assign({}, PRESETS.bernat, { expr: 'eureka', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+PRESETS.bernat_palo = Object.assign({}, PRESETS.bernat, { expr: 'eureka', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]], objeto: `<g transform="translate(126,-350)"><path d="M0,0 v-60" stroke="#f4f0e8" stroke-width="7"/><circle cx="0" cy="-74" r="20" fill="#e8403a" stroke="${INK}" stroke-width="4"/><path d="M-8,-82 q8,-6 14,2" stroke="#fff" stroke-width="4" fill="none" opacity=".7"/></g>` });
