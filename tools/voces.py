@@ -30,13 +30,15 @@ VOCES = {
     "lustig":   ("en-GB-RyanNeural", "-4%", "-6Hz"),   # estafador elegante, susurrante y seguro
     "dali":     ("it-IT-GiuseppeMultilingualNeural", "+4%", "-6Hz"),  # Dalí: teatral, con acento
     "bernat":   ("es-ES-AlvaroNeural", "+0%", "-4Hz"),
+    "remy_es":  ("fr-FR-RemyMultilingualNeural", "+32%", "+20Hz"),  # narrador en español (Remy)
+    "dali_es":  ("es-ES-AlvaroNeural", "-6%", "-12Hz"),  # Dalí en español, teatral
     "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
 # Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;
 # un tercer valor fija el hueco tras la línea en segundos: "narrador[+10%,-2Hz,0.05]|texto".
 
 async def sintetizar(texto, voz, rate, pitch):
-    for intento in range(8):   # el servicio gratuito a veces no devuelve audio: reintentar con espera
+    for intento in range(20):   # el servicio gratuito a veces no devuelve audio: reintentar con espera
         try:
             com = edge_tts.Communicate(texto, voz, rate=rate, pitch=pitch, boundary="WordBoundary", proxy=PROXY)
             audio, pal = b"", []
@@ -45,8 +47,8 @@ async def sintetizar(texto, voz, rate, pitch):
                 elif c["type"] == "WordBoundary": pal.append((c["offset"] / 1e7, (c["offset"] + c["duration"]) / 1e7, c["text"]))
             break
         except edge_tts.exceptions.NoAudioReceived:
-            if intento == 7: raise
-            await asyncio.sleep(3 + intento * 3)
+            if intento == 19: raise
+            await asyncio.sleep(4 + min(intento, 6) * 4)
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", "-", "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], input=audio, capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.float32).copy(), pal
 

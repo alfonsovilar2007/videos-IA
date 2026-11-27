@@ -1,0 +1,9 @@
+remy_es|Este logo lo diseñó Salvador Dalí. Sí… ese Dalí.
+remy_es[+30%,,0.12]|Barcelona, mil novecientos cincuenta y ocho. El confitero Enric Bernat pone un caramelo en un palo.
+remy_es[+33%,,0.1]|Lo llama Gol… y no lo compra nadie.
+remy_es[+32%,,0.12]|Así que le cambia el nombre a Chupa Chups, de chupar. Y las ventas explotan.
+remy_es[+31%,,0.12]|Pero el envoltorio es aburrido. Así que en mil novecientos sesenta y nueve llama a su amigo… el surrealista más famoso del mundo.
+dali_es[,,0.12]|¡Dadme un periódico!
+remy_es[+32%,,0.12]|Tomando un café, Dalí dibuja una margarita con el nombre dentro. Dicen que en más o menos una hora.
+remy_es[+33%,,0.12]|Y le da un consejo genial: ponerlo arriba, para que se vea desde cualquier ángulo.
+remy_es[+30%,,0.1]|¿Más de cincuenta años después? Sigue ahí. Fíjate en tu próximo chupachups.
