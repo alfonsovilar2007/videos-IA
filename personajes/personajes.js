@@ -35,11 +35,15 @@ function face(expr){
   }
   return f+m;
 }
-function head(x,y,sc,expr,hat){
+// Vista de espaldas: de la ropa solo quedan las piezas del color del torso (vestido, túnica…); de la cabeza se quitan barbas, bigotes y gafas.
+function soloEspalda(det,color){const piezas=det.match(/<path[^>]*\/>/g)||[];return piezas.filter(x=>x.includes(`fill="${color}"`)).join('');}
+function quitarCara(cab){if(!cab)return cab;cab=cab.split(GAFAS).join('');if(typeof QUEVEDOS!=='undefined')cab=cab.split(QUEVEDOS).join('');
+  return cab.replace(/<path d="M-?(30,18 q15,-12|48,40 q48,22|30,14 q15,-12|46,16 q22,-16|60,18 q60,40|56,20 q56,40|44,16 q22,-18|40,14 q20,-16|62,20 q62,30|34,16 q17,-12)[^>]*\/>/g,'');}
+function head(x,y,sc,expr,hat,espalda=false,pelo='#3a2a22'){
   let g=`<g transform="translate(${x},${y}) scale(${sc})">`;
   if(ESTILO===2) g+=`<ellipse cx="-70" cy="8" rx="13" ry="18" fill="${SKIN}" stroke="${INK}" stroke-width="6"/><ellipse cx="72" cy="8" rx="13" ry="18" fill="${SKIN}" stroke="${INK}" stroke-width="6"/><path d="M-72,2 q5,6 0,12 M74,2 q-5,6 0,12" fill="none" stroke="${INK}" stroke-width="3" opacity=".6"/>`;
   g+=V2(`<path d="M-70,10 C-74,-60 -40,-92 2,-92 C46,-92 76,-58 72,6 C70,58 40,80 0,80 C-42,80 -68,56 -70,10 Z" fill="${SKIN}" stroke="${INK}" stroke-width="7"/>`);
-  g+=face(expr);
+  if(espalda) g+=V2(`<path d="M-70,10 C-74,-60 -40,-92 2,-92 C46,-92 76,-58 72,6 C72,40 52,62 30,66 Q0,58 -30,66 C-54,62 -72,40 -70,10Z" fill="${pelo}" stroke="${INK}" stroke-width="6"/>`); else g+=face(expr);
   if(hat) g+=V2(hat);
   return g+'</g>';
 }
@@ -68,7 +72,7 @@ function personaje(x,y,sc,o){
   g+=V2(`<path d="${o.brazoI}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoI}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`);
   g+=V2(`<path d="${o.brazoD}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoD}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`);
   // torso
-  g+=V2(`<path d="M-50,-268 q50,-18 100,0 l10,118 q-60,16 -120,0 z" fill="${o.torso}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>`+(o.detalle||''));
+  g+=V2(`<path d="M-50,-268 q50,-18 100,0 l10,118 q-60,16 -120,0 z" fill="${o.torso}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>`+(o.espalda?soloEspalda(o.detalle||'',o.torso)+`<path d="M0,-262 v104" stroke="#000" stroke-opacity=".2" stroke-width="4"/>`:(o.detalle||'')));
   // manos
   if(ESTILO===2){
     g+=`<path d="M-44,-226 q10,14 4,28 M44,-226 q-10,14 -4,28 M-40,-168 q22,8 44,2" fill="none" stroke="#000" stroke-opacity=".16" stroke-width="4" stroke-linecap="round"/>`;
@@ -79,7 +83,7 @@ function personaje(x,y,sc,o){
   g+=o.manos.map(([a,b])=>`<circle cx="${a}" cy="${b}" r="15" fill="${SKIN}" stroke="${INK}" stroke-width="6"/>`).join('');
   g+=o.objeto||'';
   g+='</g>';
-  g+=head(x, y-370*sc, sc*1.0, o.expr, o.cabeza);
+  g+=head(x, y-370*sc, sc*1.0, o.expr, o.espalda?quitarCara(o.cabeza):o.cabeza, o.espalda, o.pelo||'#3a2a22');
   return g;
 }
 

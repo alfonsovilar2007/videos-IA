@@ -74,17 +74,21 @@ const texTexto = (txt, w = 512, h = 160, color = '#fff', fuente = '900 110px Mon
 
 const CARGAS = []; const cargador = new THREE.TextureLoader(); const texturas = {};
 const spriteTex = n => { if (texturas[n]) return texturas[n]; let ok; CARGAS.push(new Promise(r => ok = r)); const t = cargador.load('sprites2/' + n + '.png', ok, undefined, ok); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return texturas[n] = t; };
-function personaje(padre, nombre, alto, { rim = '#fff4dc', brillo = .06, tono = .9 } = {}) {
-  const t = spriteTex(nombre), g = new THREE.Group();
+function personaje(padre, nombre, alto, { rim = '#fff4dc', brillo = .06, tono = .9, espalda = false } = {}) {
+  const g = new THREE.Group();
   const geo = new THREE.PlaneGeometry(alto * 400 / 640, alto); geo.translate(0, alto / 2 + .035, 0);
-  const p = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: brillo, side: THREE.DoubleSide }));
-  p.material.color.setScalar(tono); p.castShadow = true; p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
-  const r = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, color: rim, transparent: true, opacity: .55, alphaTest: .5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
-  r.scale.set(1.045, 1.02, 1); r.position.set(0, -alto * .01, -.03);
-  g.add(r, p); padre.add(g); g.userData.alto = alto; return g;
+  const capa = (n) => { const t = spriteTex(n), c = new THREE.Group();
+    const p = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .5, roughness: 1, emissive: '#fff', emissiveMap: t, emissiveIntensity: brillo, side: THREE.DoubleSide }));
+    p.material.color.setScalar(tono); p.castShadow = true; p.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+    const r = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, color: rim, transparent: true, opacity: .55, alphaTest: .5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+    r.scale.set(1.045, 1.02, 1); r.position.set(0, -alto * .01, -.03); c.add(r, p); g.add(c); return c; };
+  g.userData.cara = capa(nombre); if (espalda) { g.userData.dorso = capa(nombre + '_espalda'); g.userData.dorso.visible = false; }
+  padre.add(g); g.userData.alto = alto; return g;
 }
 let CAMARA = null;
-const mirar = p => { const w = p.getWorldPosition(v3()); p.rotation.y = Math.atan2(CAMARA.position.x - w.x, CAMARA.position.z - w.z); };
+// mirar: el dibujo mira a cámara; si el personaje tiene orientación (yaw) y dibujo de espaldas, al rodearlo gira como un papel y enseña la espalda
+const mirar = p => { const w = p.getWorldPosition(v3()); const a = Math.atan2(CAMARA.position.x - w.x, CAMARA.position.z - w.z); p.rotation.y = a; const u = p.userData;
+  if (u.yaw !== undefined && u.dorso) { const c = Math.cos(a - u.yaw), s = Math.max(.04, Math.abs(c)); u.cara.visible = c >= 0; u.dorso.visible = c < 0; u.cara.scale.x = s; u.dorso.scale.x = -s; } };
 class PaseDOF extends Pass {
   constructor() { super(); this.rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType }); this.matProf = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, blending: THREE.NoBlending }); const u = THREE.UniformsUtils.clone(BokehShader.uniforms); this.mat = new THREE.ShaderMaterial({ defines: Object.assign({}, BokehShader.defines), uniforms: u, vertexShader: BokehShader.vertexShader, fragmentShader: BokehShader.fragmentShader }); this.u = u; this.quad = new FullScreenQuad(this.mat); this.copia = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: 'uniform sampler2D t; varying vec2 vUv; void main(){ gl_FragColor=texture2D(t,vUv); }' }); this.apertura = 0; this.maxBlur = .012; }
   render(renderer, writeBuffer, readBuffer) {
@@ -195,10 +199,10 @@ function crearPlaza() {
   const velas = []; for (let i = 0; i < 10; i++) { const vx = -2.6 + (i % 5) * .5 + (i > 4 ? 3.6 : 0) - (i > 4 ? 1.2 : 0), vz = 4.6 + (i % 2) * .3; caja(cap, .1, .4 + (i % 3) * .1, .1, new THREE.MeshStandardMaterial({ color: '#f4ecd0' }), vx, .2, vz); const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: BRILLO, color: '#ffb84a', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); f.position.set(vx, .55 + (i % 3) * .1, vz); f.scale.setScalar(.35); cap.add(f); velas.push(f); }
   // bailarines (dos poses que se alternan al ritmo)
   const TIPOS = ['aldeano', 'aldeana', 'monje', 'panadero'];
-  const bail = [...Array(110)].map((_, i) => { const tipo = TIPOS[i % 4]; const a = personaje(e, tipo + '_a', 1.75, O), b = personaje(e, tipo + '_b', 1.75, O); let px, pz; do { px = (rnd() - .5) * (i < 70 ? 11 : 20); pz = -4.6 + rnd() * (i < 70 ? 9 : 16); } while ((Math.abs(px) < 1.3 && pz > 1.6 && pz < 6) || Math.hypot(px, pz - 1) < 1.1 || (Math.abs(px - 2.2) < 1.3 && pz > 2 && pz < 7)); return { a, b, x: px, z: pz, f: rnd(), d: rnd() }; });
+  const bail = [...Array(110)].map((_, i) => { const tipo = TIPOS[i % 4]; const a = personaje(e, tipo + '_a', 1.75, O), b = personaje(e, tipo + '_b', 1.75, O); let px, pz; do { px = (rnd() - .5) * (i < 70 ? 11 : 20); pz = -4.6 + rnd() * (i < 70 ? 9 : 16); } while ((Math.abs(px) < 1.3 && pz > 1.6 && pz < 6) || Math.hypot(px, pz - 1) < 2.7 || (Math.abs(px - 2.2) < 1.3 && pz > 2 && pz < 7)); return { a, b, x: px, z: pz, f: rnd(), d: rnd() }; });
   bail.sort((p, q) => Math.hypot(p.x, p.z - 1) - Math.hypot(q.x, q.z - 1));
   const N = ['troffea', 'troffea_a', 'troffea_b', 'troffea_cansada_a', 'troffea_cansada_b', 'troffea_para', 'concejal', 'tamborilero', 'flautista'];
-  const P = {}; N.forEach(n => P[n] = personaje(e, n, 1.75, O));
+  const P = {}; N.forEach(n => { const esp = ['troffea', 'troffea_a', 'troffea_b', 'concejal'].includes(n); P[n] = personaje(e, n, 1.75, { ...O, espalda: esp }); if (esp) P[n].userData.yaw = 0; });
   const zap = new THREE.Sprite(new THREE.SpriteMaterial({ map: BRILLO, color: '#ff6060', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); e.add(zap);
   const cam = new THREE.PerspectiveCamera(42, W / H, .1, 2000);
   const ponerPose = (pa, pb, pos, t, f, salta = true) => { const on = Math.floor(t / (BEAT / 2) + f * 2) % 2 === 0; pa.visible = on; pb.visible = !on; for (const p of [pa, pb]) { p.position.copy(pos); if (salta) p.position.y += Math.abs(Math.sin((t / BEAT + f) * Math.PI)) * .14; mirar(p); p.rotation.z = salta ? Math.sin((t / BEAT + f) * Math.PI) * .09 : 0; } };
@@ -239,9 +243,10 @@ const PLANOS = [
       pr({ tiempo: t, gente: 110, baila: { n: 'troffea', pos: TF } });
       orbita(TF, lerp(7.5, 5.5, k), lerp(-.6, .5, k), lerp(2.4, 1.6, k), 1.0, 48); FOCO = v3(0, 1, 1);
     } },
-  { desde: 5, nombre: 'no podía dejar de bailar: primer plano de Troffea bailando con la multitud detrás', f(k, t) {
+  { desde: 5, nombre: 'TRANSICIÓN 3D: la cámara rodea a Troffea y acaba a su espalda, viendo la plaza bailar', f(k, t) {
       pr({ tiempo: t, gente: 110, baila: { n: 'troffea', pos: TF } });
-      orbita(TF, lerp(2.6, 2.2, k), lerp(.3, -.2, k), 1.2, 1.15, 44); FOCO = v3(0, 1.1, 1);
+      const u = suave(k), ang = lerp(.15, Math.PI - .38, u), r = lerp(2.4, 2.7, u), w = Math.pow(u, 4);
+      C(v3(TF.x + Math.sin(ang) * r, lerp(1.2, 1.5, u), TF.z + Math.cos(ang) * r), v3(lerp(0, -.5, w), lerp(1.15, 1.05, w), lerp(1, 4.5, w)), lerp(44, 50, u)); FOCO = v3(0, 1.1, 1);
     } },
   { desde: 10, nombre: 'Estrasburgo: la ciudad desde el aire con la catedral', f(k, t) {
       pr({ tiempo: t });
@@ -298,7 +303,7 @@ const PLANOS = [
     } },
   { desde: 63, nombre: '¿Resultado? (el concejal mira, sorprendido)', f(k, t) {
       pr({ tiempo: t, gente: 110, ver: { concejal: v3(2.2, 0, 3.4) } });
-      C(v3(2.4, 1.3, lerp(5.4, 5, k)), v3(2.2, 1.3, 3.4), 42); FOCO = v3(2.2, 1.3, 3.4);
+      const d = lerp(1.6, 3.8, suave(k)), fov = 2 * Math.atan(Math.tan(25 * Math.PI / 180) * 1.6 / d) * 180 / Math.PI; C(v3(2.3, 1.3, 3.4 + d), v3(2.2, 1.3, 3.4), fov); FOCO = v3(2.2, 1.3, 3.4);
     } },
   { desde: 64, nombre: 'Baila todavía más gente (zoom hacia atrás enorme)', f(k, t) {
       pr({ tiempo: t, gente: 110, baila: { n: 'troffea_cansada', pos: TF }, ver: { tamborilero: { pos: v3(-.8, .8, -7), salto: true }, flautista: { pos: v3(.8, .8, -7.2), salto: true } } });
@@ -328,7 +333,14 @@ const PLANOS = [
 ];
 PLANOS.forEach((p, i) => { p.t0 = i === 0 ? 0 : T(p.desde) - .06; });
 PLANOS.forEach((p, i) => { p.t1 = i + 1 < PLANOS.length ? PLANOS[i + 1].t0 : DURACION; });
-const BARRIDOS = new Set([10, 17, 32, 40, 52, 64, 68, 84]);
+const BARRIDOS = new Set([40, 84]);
+// Transición de entrada de cada plano (la salida del plano anterior se adapta): zoom = crash zoom a través, giro = giro con desenfoque, flash = destello, barrido = latigazo lateral
+const TRANS = { 10: 'zoom', 11: 'flash', 17: 'giro', 22: 'zoom', 26: 'flash', 32: 'zoom', 40: 'barrido', 50: 'flash', 52: 'giro', 55: 'zoom', 58: 'giro', 63: 'zoom', 64: 'barrido', 68: 'giro', 76: 'zoom', 80: 'flash', 84: 'barrido', 92: 'zoom' };
+function transicion(t) { let sc = 1, rot = 0, blur = 0, tx = 0, fl = 0; for (const p of PLANOS) { const tipo = TRANS[p.desde]; if (!tipo) continue; const o = (t - (p.t0 - .16)) / .16, i = (t - p.t0) / .2;
+    if (o >= 0 && o < 1) { const x = o * o; if (tipo === 'zoom') { sc *= 1 + x * 1.4; blur = Math.max(blur, x * 16); } if (tipo === 'giro') { rot += x * 24; blur = Math.max(blur, x * 12); } if (tipo === 'barrido') { tx += x * 320; blur = Math.max(blur, x * 12); } }
+    if (i >= 0 && i < 1) { const y = 1 - salida(i); if (tipo === 'zoom') { sc *= 1 + y * .7; blur = Math.max(blur, y * 12); } if (tipo === 'giro') { rot -= y * 24; blur = Math.max(blur, y * 10); } if (tipo === 'barrido') { tx -= y * 320; blur = Math.max(blur, y * 10); } if (tipo === 'flash') fl = Math.max(fl, y * .85); } }
+  const ra = Math.abs(rot) * Math.PI / 180; sc *= Math.cos(ra) + 1.78 * Math.sin(ra);
+  return { sc, rot, blur, tx, fl }; }
 function noche(t) { const marcas = [[T(26), 0], [T(27) + .1, 1], [T(28), 0], [T(28) + .25, 1], [T(29), 0]]; if (t < T(27) || t >= T(32) - .06) return 0; if (t >= T(29)) { const ph = ((t - T(29)) / .22) % 2; return ph < 1 ? .9 : 0; } if (t < T(28)) return clamp((t - T(27)) / .15) * .9; return 0; }
 
 // =================== SUBTÍTULOS ===================
@@ -376,7 +388,9 @@ function edicion(t) {
   let sx = 0, sy = 0; for (const [gp, fuerza] of golpes) { const d = t - gp; if (d >= 0 && d < .5) { const a = Math.pow(1 - d / .5, 2) * fuerza; sx += Math.sin(d * 90) * a; sy += Math.cos(d * 77) * a; } }
   if (t < T(10)) { sx += Math.sin(t * 50) * 3; sy += Math.cos(t * 43) * 3; }
   sx += barrido * barrido * 300 * (Math.floor(t) % 2 ? 1 : -1);
-  const lz = $('lienzo'); lz.style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.05}) rotate(${congelado(t) ? 0 : Math.sin(t / BEAT * Math.PI) * .6}deg)`; lz.style.filter = barrido > 0 ? `blur(${(barrido * 12).toFixed(1)}px)` : 'none';
+  const tr = transicion(t); sx += tr.tx;
+  const lz = $('lienzo'); lz.style.transform = `translate(${sx}px,${sy}px) scale(${escala * 1.05 * tr.sc}) rotate(${(congelado(t) ? 0 : Math.sin(t / BEAT * Math.PI) * .6) + tr.rot}deg)`; const bl = Math.max(barrido * 12, tr.blur); lz.style.filter = bl > .3 ? `blur(${bl.toFixed(1)}px)` : 'none';
+  if (tr.fl > 0) $('flash').style.opacity = Math.max(+$('flash').style.opacity, tr.fl);
   $('grano').style.backgroundPosition = `${Math.floor(t * 30 * 97) % 256}px ${Math.floor(t * 30 * 53) % 256}px`;
 }
 
