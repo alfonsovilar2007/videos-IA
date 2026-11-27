@@ -236,7 +236,7 @@ function crearParis() {
   mBolas.castShadow = true; mBolas.frustumCulled = mPalos.frustumCulled = false; e.add(mBolas, mPalos);
   // estanterías de la tienda (pared del fondo)
   const mEst = new THREE.MeshStandardMaterial({ color: '#f4f0e6', roughness: .6 }); for (const y of [1.2, 1.9, 2.6, 3.3]) caja(hotel, 7, .06, .5, mEst, 0, y, -3.6);
-  const tarro = (x, y) => { const j = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .45, 16, 1, true), new THREE.MeshPhysicalMaterial({ color: '#ffffff', transmission: .9, roughness: .05, transparent: true, opacity: .35 })); j.position.set(x, y + .25, -3.6); hotel.add(j); };
+  const tarro = (x, y) => { const j = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .45, 16, 1, true), new THREE.MeshStandardMaterial({ color: '#e8f4ff', roughness: .05, metalness: .1, transparent: true, opacity: .28, depthWrite: false })); j.position.set(x, y + .25, -3.6); hotel.add(j); };
   for (const y of [1.2, 1.9, 2.6, 3.3]) for (let x = -3; x <= 3; x += .75) tarro(x, y);
   const telefono = new THREE.Group(); hotel.add(telefono); telefono.position.set(1.4, .9, -1.8); { const b = new THREE.Mesh(new THREE.BoxGeometry(.3, .14, .22), new THREE.MeshStandardMaterial({ color: '#151515', roughness: .3 })); b.position.y = .07; telefono.add(b); }
   const cam = new THREE.PerspectiveCamera(42, W / H, .1, 3000);
