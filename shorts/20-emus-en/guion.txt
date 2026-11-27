@@ -1,0 +1,11 @@
+remy|Australia went to war… against birds. And lost.
+remy[+34%,,0.12]|Nineteen thirty-two. Twenty thousand emus are wrecking the farmers' wheat.
+remy[+38%,,0.12]|So the army sends in Major Meredith. Two machine guns. Ten thousand bullets.
+meredith_en[,,0.1]|This'll take a few days, tops.
+remy[+33%,,0.25]|Spoiler: it did not.
+remy[+38%,,0.1]|The emus split into tiny groups… and scatter everywhere.
+remy[+35%,,0.12]|A few bursts in? One gun jams.
+remy[+37%,,0.12]|So they bolt the other one onto a truck… and the emus outrun the truck.
+remy[+34%,,0.14]|In the end? Almost ten thousand bullets, for under a thousand emus. Ten bullets per bird!
+remy[+36%,,0.12]|Meredith said the emus could face machine guns… like tanks.
+remy[+34%,,0.1]|And the wheat fields? Still full of emus.
