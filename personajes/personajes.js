@@ -742,3 +742,36 @@ Object.assign(PRESETS, {
   flautista: { expr: 'neutral', pantalon: '#d8a030', torso: '#2e7d4f', manga: '#2e7d4f', brazoI: 'M-46,-250 q30,10 60,-70', brazoD: 'M46,-250 q30,10 50,-90', manos: [[14, -322], [96, -342]],
     detalle: TUNICA_MED('#2e7d4f', '#d8a030'), cabeza: GORRO_MED('#7a2a5a') + `<g transform="rotate(-8)"><rect x="-4" y="30" width="130" height="12" rx="5" fill="#c99a5a" stroke="${INK}" stroke-width="4"/><circle cx="40" cy="36" r="3" fill="${INK}"/><circle cx="62" cy="36" r="3" fill="${INK}"/><circle cx="84" cy="36" r="3" fill="${INK}"/></g>` },
 });
+
+// ---------- Short "The man who sold the Eiffel Tower" (París, 1925) ----------
+const PELO_ENGOMINADO = `<path d="M-68,-26 C-74,-84 -24,-102 10,-98 C48,-96 74,-74 68,-30 C56,-52 30,-64 -6,-62 C-34,-60 -54,-48 -68,-26Z" fill="#14110f" stroke="${INK}" stroke-width="5"/><path d="M-30,-80 q30,-14 64,-6" stroke="#3a3530" stroke-width="4" fill="none"/>`;
+const BIGOTITO = `<path d="M-22,16 q11,-8 22,-2 q11,-6 22,2 q-11,4 -22,0 q-11,4 -22,0z" fill="#14110f" stroke="${INK}" stroke-width="2.5"/>`;
+const TRAJE = (c, rayas = true) => `<path d="M-50,-268 q50,-18 100,0 l10,118 q-60,16 -120,0 z" fill="${c}"/>` + (rayas ? `<g stroke="#ffffff" stroke-opacity=".14" stroke-width="2">${[-36, -22, -8, 8, 22, 36].map(x => `<path d="M${x},-262 v108"/>`).join('')}</g>` : '') + `<path d="M-16,-266 l16,46 16,-46z" fill="#f4f0e8" stroke="${INK}" stroke-width="4"/><path d="M-5,-246 l5,52 5,-52z" fill="#b3262e" stroke="${INK}" stroke-width="3"/><path d="M-50,-262 l38,60 M50,-262 l-38,60" stroke="${INK}" stroke-width="4" fill="none" opacity=".7"/>`;
+const CLAVEL = `<g transform="translate(-30,-236)"><circle r="7" fill="#d8303a" stroke="${INK}" stroke-width="2.5"/><path d="M0,6 v10" stroke="#2e7d4f" stroke-width="3"/></g>`;
+const FAJO = `<g stroke="${INK}" stroke-width="4"><rect x="-30" y="-22" width="60" height="34" rx="4" fill="#8fc07a"/><rect x="-30" y="-30" width="60" height="10" rx="3" fill="#a6d48e"/><rect x="-8" y="-24" width="16" height="36" fill="#e8dcb0"/></g>`;
+const PAPEL_OFICIAL = `<g transform="rotate(-6)" stroke="${INK}" stroke-width="4"><rect x="-34" y="-48" width="68" height="88" rx="3" fill="#f7f1e1"/><path d="M-24,-34 h48 M-24,-22 h40 M-24,-10 h48 M-24,2 h30" stroke="#5a6a8a" stroke-width="3"/><circle cx="16" cy="24" r="10" fill="#b3262e"/><path d="M-24,22 q10,-8 20,0" stroke="#2a2a6a" stroke-width="3" fill="none"/></g>`;
+const KEPI_GEND = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round"><path d="M-60,-44 l6,-56 h108 l6,56z" fill="#1a2a5a"/><rect x="-62" y="-60" width="124" height="16" fill="#b3262e"/><path d="M-66,-44 h132 q-10,16 -40,14 h-52 q-30,2 -40,-14z" fill="#111"/><circle cx="0" cy="-80" r="8" fill="#d8b440"/></g>`;
+Object.assign(PRESETS, {
+  lustig: { expr: 'eureka', pantalon: '#1e2232', torso: '#262b3e', manga: '#262b3e', pelo: '#14110f',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]],
+    detalle: TRAJE('#262b3e') + CLAVEL, cabeza: PELO_ENGOMINADO + BIGOTITO },
+  poisson: { expr: 'neutral', pantalon: '#5a4632', torso: '#6e5236', manga: '#6e5236', pelo: '#4a3020',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]],
+    detalle: TRAJE('#6e5236', false) + `<path d="M30,-200 q14,10 0,24" stroke="#d8b440" stroke-width="4" fill="none"/>`, cabeza: BOMBIN + BIGOTE_FR },
+  gendarme: { expr: 'sorprendido', pantalon: '#1a2a5a', torso: '#1a2a5a', manga: '#1a2a5a',
+    brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q60,-30 80,-100', manos: [[-80, -136], [126, -350]],
+    detalle: `<g fill="#d8b440" stroke="${INK}" stroke-width="2"><circle cx="0" cy="-236" r="5"/><circle cx="0" cy="-210" r="5"/><circle cx="0" cy="-184" r="5"/></g><path d="M-50,-160 h100" stroke="#111" stroke-width="12"/>`, objeto: `<g transform="translate(126,-370)"><rect x="-6" y="-14" width="22" height="12" rx="4" fill="#c8ccd2" stroke="${INK}" stroke-width="3"/></g>`, cabeza: KEPI_GEND + BIGOTE('#3a2a1e') },
+});
+PRESETS.lustig_papeles = Object.assign({}, PRESETS.lustig, { expr: 'neutral', brazoD: 'M46,-250 q40,0 50,-60', manos: [[-80, -136], [96, -310]], objeto: `<g transform="translate(110,-300)">${PAPEL_OFICIAL}</g>` });
+PRESETS.lustig_cash = Object.assign({}, PRESETS.lustig, { brazoI: 'M-46,-250 q-60,-20 -70,-100', manos: [[-116, -350], [126, -350]], objeto: `<g transform="translate(-116,-376)">${FAJO}</g><g transform="translate(126,-376)">${FAJO}</g>` });
+PRESETS.lustig_corre = Object.assign({}, PRESETS.lustig, { expr: 'eureka', brazoI: 'M-46,-250 q-50,40 -70,20', brazoD: 'M46,-250 q50,-30 60,-100', manos: [[-116, -230], [106, -350]], objeto: `<g transform="translate(106,-376)">${FAJO}</g>`, piernas: PIERNAS_BAILE('#1e2232', 1) });
+PRESETS.lustig_susto = Object.assign({}, PRESETS.lustig, { expr: 'sorprendido', brazoI: 'M-46,-250 q-60,-20 -70,-100', brazoD: 'M46,-250 q60,-20 70,-100', manos: [[-116, -350], [116, -350]] });
+PRESETS.poisson_paga = Object.assign({}, PRESETS.poisson, { expr: 'eureka', brazoD: 'M46,-250 q60,10 84,-40', manos: [[-80, -136], [130, -290]], objeto: `<g transform="translate(130,-312)">${FAJO}</g>` });
+PRESETS.poisson_verguenza = Object.assign({}, PRESETS.poisson, { expr: 'preocupado', brazoI: 'M-46,-250 q20,50 40,60', brazoD: 'M46,-250 q-20,50 -40,60', manos: [[-6, -190], [6, -190]], cabeza: BOMBIN + BIGOTE_FR + SUDOR });
+const COMERCIANTE = (torso, pant, cab, expr = 'neutral') => ({ expr, pantalon: pant, torso, manga: torso, brazoI: 'M-46,-250 q-30,60 -34,112', brazoD: 'M46,-250 q30,60 34,112', manos: [[-80, -136], [80, -136]], detalle: TRAJE(torso, false), cabeza: cab });
+Object.assign(PRESETS, {
+  comerciante1: COMERCIANTE('#5a6068', '#3a3e44', GORRA_PLANA + BIGOTE('#6a4a2a')),
+  comerciante2: COMERCIANTE('#3e5a3e', '#2e3a2e', FEDORA, 'sorprendido'),
+  comerciante3: COMERCIANTE('#4a3a5a', '#2e2a3a', SOMBRERO_COPA + BARBA('#6a6a6a')),
+  comerciante4: COMERCIANTE('#7a5a3a', '#4a3a2a', GAFAS + PELO.replace('#3A2A22', '#9a8a7a'), 'eureka'),
+});

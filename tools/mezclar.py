@@ -1,10 +1,12 @@
 """Mezcla final de un short: voz delante, música y efectos por debajo (con ducking) y -14 LUFS.
-Uso: python3 tools/mezclar.py <carpeta_del_short> <duracion_s>
+Uso: python3 tools/mezclar.py <carpeta_del_short> <duracion_s> [musica_dB]
 Lee voz_ritmo.wav, musica.wav y efectos.wav; escribe mezcla.wav e informa de cuántos LU queda la voz por encima del fondo."""
 import subprocess, sys, re
 c, dur = sys.argv[1], sys.argv[2]
 VOZ = "aformat=sample_rates=48000:channel_layouts=stereo,highpass=f=90,acompressor=threshold=-22dB:ratio=3.5:attack=4:release=90:makeup=2,volume=6dB"
 MUS, FX = -13, -4          # dB: música muy por debajo; efectos presentes pero sin tapar la voz
+if len(sys.argv) > 3: MUS = float(sys.argv[3])   # opcional: nivel de la música en dB
+if len(sys.argv) > 4: FX = float(sys.argv[4])    # opcional: nivel de los efectos en dB
 def correr(filtro, salida):
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f"{c}/voz_ritmo.wav", "-i", f"{c}/musica.wav", "-i", f"{c}/efectos.wav",
                     "-filter_complex", filtro, "-map", "[out]", "-ar", "48000", "-t", dur, salida], check=True)

@@ -27,6 +27,7 @@ VOCES = {
     "concejal": ("es-ES-AlvaroNeural", "+12%", "-6Hz"),   # concejal medieval, convencido
     "remy":     ("fr-FR-RemyMultilingualNeural", "+36%", "+20Hz"),  # narrador inglés: presentador agudo y rápido (muestra 13)
     "meredith_en": ("en-AU-WilliamMultilingualNeural", "+6%", "-8Hz"),  # mayor australiano, muy seguro de sí mismo
+    "lustig":   ("en-GB-RyanNeural", "-4%", "-6Hz"),   # estafador elegante, susurrante y seguro
     "mehmed":   ("es-ES-AlvaroNeural", "-8%", "-15Hz"),   # sultán: grave, seguro, solemne
 }
 # Variación por línea (voz con carisma): "narrador[+22%,+4Hz]|texto" cambia velocidad y tono de esa frase;

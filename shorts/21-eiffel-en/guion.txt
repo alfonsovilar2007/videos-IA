@@ -1,0 +1,9 @@
+remy|This man sold the Eiffel Tower… and then came back to sell it again.
+remy[+34%,,0.12]|Paris, nineteen twenty-five. Victor Lustig reads that the tower is rusting… and costs a fortune to maintain.
+remy[+38%,,0.12]|So he forges government papers, and invites five scrap dealers to one of the fanciest hotels in Paris.
+lustig[,,0.12]|Gentlemen… the city is selling the Eiffel Tower. For scrap.
+remy[+36%,,0.12]|One dealer, André Poisson, takes the bait. He pays… and even slips him a bribe!
+remy[+38%,,0.1]|Lustig grabs the cash… and leaves the country.
+remy[+33%,,0.2]|But here's the crazy part. Poisson is so embarrassed… he never goes to the police.
+remy[+37%,,0.12]|So months later, Lustig comes back… and tries it again!
+remy[+35%,,0.1]|This time? The dealer calls the cops. And Lustig… gets away. Again.
