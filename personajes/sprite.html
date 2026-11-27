@@ -5,5 +5,6 @@
 // sprite.html?p=toni&e=sorprendido&cambios=<json>  -> personaje suelto, pies en la parte de abajo
 const q=new URLSearchParams(location.search);
 const c=JSON.parse(q.get('cambios')||'{}'); if(q.get('e')) c.expr=q.get('e');
-document.getElementById('s').innerHTML=dibujar(q.get('p')||'toni',0,0,1,c);
+if(q.get('estilo')==='2'){ESTILO=2;const pr=PRESETS[q.get('p')||'toni'];let h=dibujar(q.get('p')||'toni',0,0,1,c);if(pr&&pr.svg)h=V2(h);document.getElementById('s').innerHTML=DEFS_V2+('<g filter="url(#tinta)">'+h+'</g>').replaceAll('#1F2A44','#2b211b').replaceAll('#FFF1DC','#fdfaf4');}
+else document.getElementById('s').innerHTML=dibujar(q.get('p')||'toni',0,0,1,c);
 </script></body></html>

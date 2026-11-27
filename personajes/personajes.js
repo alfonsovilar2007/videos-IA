@@ -1,6 +1,13 @@
 // Personajes del canal: estilo propio (cabeza de judía crema, contorno azul marino, brazos fideo).
 
 const INK='#1F2A44', SKIN='#FFF1DC', BLUSH='#F6A5A0';
+// Estilo 2 (tipo Ricks): volumen sombreado en cada pieza, tinta marrón irregular y grano. Se activa con ESTILO = 2 (sprite.html?estilo=2).
+var ESTILO = 1;
+const DEFS_V2 = `<defs>
+<filter id="vol" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceAlpha" stdDeviation="11" result="b"/><feDiffuseLighting in="b" surfaceScale="16" diffuseConstant="1.0" lighting-color="#ffffff" result="l"><feDistantLight azimuth="225" elevation="55"/></feDiffuseLighting><feComponentTransfer in="l" result="l2"><feFuncR type="linear" slope="1.15" intercept="0.12"/><feFuncG type="linear" slope="1.15" intercept="0.09"/><feFuncB type="linear" slope="1.15" intercept="0.06"/></feComponentTransfer><feComposite in="SourceGraphic" in2="l2" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="m"/><feComposite in="m" in2="SourceAlpha" operator="in"/></filter>
+<filter id="tinta" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="9" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0 0.1  0 0 0 0.3 0" result="g2"/><feComposite in="g2" in2="d" operator="in" result="g3"/><feMerge><feMergeNode in="d"/><feMergeNode in="g3"/></feMerge></filter>
+</defs>`;
+const V2 = (g, f = 'vol') => ESTILO === 2 ? `<g filter="url(#${f})">${g}</g>` : g;
 function face(expr){
   let f='';
   // ojos
@@ -26,9 +33,9 @@ function face(expr){
 }
 function head(x,y,sc,expr,hat){
   let g=`<g transform="translate(${x},${y}) scale(${sc})">`;
-  g+=`<path d="M-70,10 C-74,-60 -40,-92 2,-92 C46,-92 76,-58 72,6 C70,58 40,80 0,80 C-42,80 -68,56 -70,10 Z" fill="${SKIN}" stroke="${INK}" stroke-width="7"/>`;
+  g+=V2(`<path d="M-70,10 C-74,-60 -40,-92 2,-92 C46,-92 76,-58 72,6 C70,58 40,80 0,80 C-42,80 -68,56 -70,10 Z" fill="${SKIN}" stroke="${INK}" stroke-width="7"/>`);
   g+=face(expr);
-  if(hat) g+=hat;
+  if(hat) g+=V2(hat);
   return g+'</g>';
 }
 // accesorios
@@ -46,11 +53,10 @@ function personaje(x,y,sc,o){
   g+=`<ellipse cx="-44" cy="-2" rx="22" ry="11" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/><ellipse cx="44" cy="-2" rx="22" ry="11" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/>`;
   }
   // brazos
-  g+=`<path d="${o.brazoI}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoI}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`;
-  g+=`<path d="${o.brazoD}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoD}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`;
+  g+=V2(`<path d="${o.brazoI}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoI}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`);
+  g+=V2(`<path d="${o.brazoD}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoD}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`);
   // torso
-  g+=`<path d="M-50,-268 q50,-18 100,0 l10,118 q-60,16 -120,0 z" fill="${o.torso}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>`;
-  g+=o.detalle||'';
+  g+=V2(`<path d="M-50,-268 q50,-18 100,0 l10,118 q-60,16 -120,0 z" fill="${o.torso}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>`+(o.detalle||''));
   // manos
   g+=o.manos.map(([a,b])=>`<circle cx="${a}" cy="${b}" r="15" fill="${SKIN}" stroke="${INK}" stroke-width="6"/>`).join('');
   g+=o.objeto||'';
