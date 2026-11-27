@@ -137,3 +137,10 @@ Referencia: youtube.com/shorts/i4hYq1oSXTg. Parecerse en la animación **sin per
 
 ## Histórico
 - Shorts 01-02 (v1, 52 s, palabra a palabra). Shorts 03-05 (v2, 30-40 s, bucle repitiendo la frase del gancho; ya no vale en v3).
+
+## 11. ESTILO 2 (desde nov 2026, inspirado en Ricks, diseño propio)
+- Personajes: `ESTILO=2 node tools/sprite.js <preset> "" out.png`. Volumen sombreado por pieza (cara, ropa, sombreros), tinta marrón #2b211b irregular, grano, cara blanca cálida, orejas, nariz, párpados, cuello, manos con pulgar y puño de camisa, pantalón con contorno y zapatos de verdad.
+- Escenarios: geometría de verdad en primer plano (adoquines/grava/piedras instanciados uno a uno), relieve en fachadas (contraventanas, alféizares, macetas, vigas), luz cálida fuerte (sol #ffd8a0 ~3.4), saturación 1.35.
+- Los personajes se elevan 0.035 m (geo.translate alto/2 + .035) para pisar encima de los adoquines: nunca hundidos.
+- NO usar GTAOPass: trata los sprites como rectángulos opacos y deja bandas negras.
+- Narrador en inglés: Remy (fr-FR-RemyMultilingualNeural, +36 %, +20 Hz), guion de presentador hablado (skill voz-gratis-shorts).

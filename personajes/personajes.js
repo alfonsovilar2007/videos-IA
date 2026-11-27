@@ -29,10 +29,15 @@ function face(expr){
     sorprendido:`<ellipse cx="0" cy="30" rx="8" ry="11" fill="${INK}"/>`,
     preocupado:`<path d="M-14,32 q5,-6 9,0 q5,6 10,0 q4,-6 9,0" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`,
     eureka:`<path d="M-20,20 q20,28 40,0 z" fill="${INK}"/><path d="M-11,30 q11,8 22,0" fill="#E8636B"/>`}[expr];
+  if(ESTILO===2){
+    f+=`<path d="M2,6 q9,4 3,14 q-4,3 -9,1" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round" opacity=".75"/>`;
+    if(expr==='neutral'||expr==='preocupado') f+=`<path d="M-37,-11 q11,-7 22,0 M15,-11 q11,-7 22,0" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`;
+  }
   return f+m;
 }
 function head(x,y,sc,expr,hat){
   let g=`<g transform="translate(${x},${y}) scale(${sc})">`;
+  if(ESTILO===2) g+=`<ellipse cx="-70" cy="8" rx="13" ry="18" fill="${SKIN}" stroke="${INK}" stroke-width="6"/><ellipse cx="72" cy="8" rx="13" ry="18" fill="${SKIN}" stroke="${INK}" stroke-width="6"/><path d="M-72,2 q5,6 0,12 M74,2 q-5,6 0,12" fill="none" stroke="${INK}" stroke-width="3" opacity=".6"/>`;
   g+=V2(`<path d="M-70,10 C-74,-60 -40,-92 2,-92 C46,-92 76,-58 72,6 C70,58 40,80 0,80 C-42,80 -68,56 -70,10 Z" fill="${SKIN}" stroke="${INK}" stroke-width="7"/>`);
   g+=face(expr);
   if(hat) g+=V2(hat);
@@ -47,17 +52,30 @@ function personaje(x,y,sc,o){
   let g=`<g transform="translate(${x},${y}) scale(${sc})">`;
   g+=`<ellipse cx="0" cy="6" rx="70" ry="12" fill="#000" opacity=".12"/>`;
   // piernas fideo
-  if(o.piernas) g+=o.piernas; else {
+  if(ESTILO===2 && !o.piernas){
+    for(const [d,pie] of [[`M-16,-150 q-6,80 -20,148`,-1],[`M16,-150 q8,80 20,148`,1]]){
+      g+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="31" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${o.pantalon}" stroke-width="23" stroke-linecap="round"/>`;
+      g+=`<path d="M${pie*14},-110 q${pie*4},30 ${pie*6},50" fill="none" stroke="#000" stroke-opacity=".18" stroke-width="3"/>`;
+      const x=pie*36; g+=`<path d="M${x-pie*16},6 q${-pie*2},-22 ${pie*14},-24 q${pie*26},-2 ${pie*34},16 q${pie*2},10 ${-pie*8},10 z" fill="#2B2420" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M${x-pie*14},4 h${pie*44}" stroke="#6a5a50" stroke-width="3"/>`;
+    }
+  } else if(o.piernas) g+=o.piernas; else {
   g+=`<path d="M-16,-150 q-6,80 -20,148" fill="none" stroke="${o.pantalon}" stroke-width="20" stroke-linecap="round"/><path d="M16,-150 q8,80 20,148" fill="none" stroke="${o.pantalon}" stroke-width="20" stroke-linecap="round"/>`;
   g+=`<path d="M-16,-150 q-6,80 -20,148 M16,-150 q8,80 20,148" fill="none" stroke="${INK}" stroke-width="26" stroke-linecap="round" opacity="0"/>`;
   g+=`<ellipse cx="-44" cy="-2" rx="22" ry="11" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/><ellipse cx="44" cy="-2" rx="22" ry="11" fill="#2B2B2B" stroke="${INK}" stroke-width="5"/>`;
   }
+  if(ESTILO===2) g+=`<path d="M-15,-300 v36 h30 v-36z" fill="${SKIN}" stroke="${INK}" stroke-width="6"/>`;
   // brazos
   g+=V2(`<path d="${o.brazoI}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoI}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`);
   g+=V2(`<path d="${o.brazoD}" fill="none" stroke="${INK}" stroke-width="24" stroke-linecap="round"/><path d="${o.brazoD}" fill="none" stroke="${o.manga}" stroke-width="15" stroke-linecap="round"/>`);
   // torso
   g+=V2(`<path d="M-50,-268 q50,-18 100,0 l10,118 q-60,16 -120,0 z" fill="${o.torso}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>`+(o.detalle||''));
   // manos
+  if(ESTILO===2){
+    g+=`<path d="M-44,-226 q10,14 4,28 M44,-226 q-10,14 -4,28 M-40,-168 q22,8 44,2" fill="none" stroke="#000" stroke-opacity=".16" stroke-width="4" stroke-linecap="round"/>`;
+    const dir=(path,mx,my)=>{const n=path.match(/-?[\d.]+/g).map(Number);if(n.length<6)return[0,1];const ex=n[0]+n[4],ey=n[1]+n[5],cx=n[0]+n[2],cy=n[1]+n[3];const dx=ex-cx,dy=ey-cy,l=Math.hypot(dx,dy)||1;return Math.hypot(ex-mx,ey-my)<40?[dx/l,dy/l]:null;};
+    g+=o.manos.map(([a,b])=>{const d=dir(o.brazoI,a,b)||dir(o.brazoD,a,b)||[0,1];const ang=Math.atan2(d[1],d[0])*180/Math.PI-90;const lado=a<0?-1:1;
+      return `<g transform="translate(${a},${b}) rotate(${ang})"><rect x="-13" y="-20" width="26" height="9" rx="3" fill="${o.manga==='#FAFAF7'?'#e8e4da':'#f2ede2'}" stroke="${INK}" stroke-width="4"/><ellipse cx="0" cy="2" rx="15" ry="15" fill="${SKIN}" stroke="${INK}" stroke-width="5"/><ellipse cx="${lado*-13}" cy="-3" rx="6" ry="9" transform="rotate(${lado*-30},${lado*-13},-3)" fill="${SKIN}" stroke="${INK}" stroke-width="4"/><path d="M-7,12 v-7 M0,14 v-8 M7,12 v-7" stroke="${INK}" stroke-width="2.5" opacity=".6"/></g>`;}).join('');
+  } else
   g+=o.manos.map(([a,b])=>`<circle cx="${a}" cy="${b}" r="15" fill="${SKIN}" stroke="${INK}" stroke-width="6"/>`).join('');
   g+=o.objeto||'';
   g+='</g>';
